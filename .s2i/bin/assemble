@@ -1,0 +1,81 @@
+#!/bin/bash
+
+# Prevent running assemble in builders different than official STI image.
+# The official nodejs:4-onbuild already run npm install and use different
+# application folder.
+[ -d "/usr/src/app" ] && exit 0
+
+set -e
+
+# FIXME: Linking of global modules is disabled for now as it causes npm failures
+#        under RHEL7
+# Global modules good to have
+# npmgl=$(grep "^\s*[^#\s]" ../etc/npm_global_module_list | sort -u)
+# Available global modules; only match top-level npm packages
+#global_modules=$(npm ls -g 2> /dev/null | perl -ne 'print "$1\n" if /^\S+\s(\S+)\@[\d\.-]+/' | sort -u)
+# List all modules in common
+#module_list=$(/usr/bin/comm -12 <(echo "${global_modules}") | tr '\n' ' ')
+# Link the modules
+#npm link $module_list
+
+echo "--> Set timezone"
+export TZ="/usr/share/zoneinfo/Asia/Singapore"
+
+shopt -s dotglob
+echo "---> Installing application source ..."
+
+#read linux information
+cat /proc/version
+
+#end read linux version
+
+mv /tmp/src/* ./
+
+if [ ! -z $HTTP_PROXY ]; then
+	echo "---> Setting npm http proxy to $HTTP_PROXY"
+	npm config set proxy $HTTP_PROXY
+fi
+
+if [ ! -z $http_proxy ]; then
+	echo "---> Setting npm http proxy to $http_proxy"
+	npm config set proxy $http_proxy
+fi
+
+if [ ! -z $HTTPS_PROXY ]; then
+	echo "---> Setting npm https proxy to $HTTPS_PROXY"
+	npm config set https-proxy $HTTPS_PROXY
+fi
+
+if [ ! -z $https_proxy ]; then
+	echo "---> Setting npm https proxy to $https_proxy"
+	npm config set https-proxy $https_proxy
+fi
+
+# Change the npm registry mirror if provided
+if [ -n "$NPM_MIRROR" ]; then
+	npm config set registry $NPM_MIRROR
+fi
+
+
+#echo "--> wget http://192.168.225.168:18080/nm-init.tar -O n.tar"
+#wget -q http://192.168.225.168:18080/nm-init.tar -O n.tar
+#echo "--> tar xvf n.tar > /dev/null"
+#tar xvf n.tar > /dev/null
+
+
+
+
+#echo "---> Fix self signed certificate in certificate chain issue"
+#npm config set strict-ssl false
+
+echo "---> npm updating ..... "
+npm install -g npm
+echo "---> npm installing..... "
+npm install
+echo "---> npm installed  "
+
+# Fix source directory permissions
+fix-permissions ./
+#chmod -R 777 ./
+
+echo "---> Assemble done  "

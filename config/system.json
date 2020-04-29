@@ -1,0 +1,37 @@
+{
+    "sshConnection":false,
+    "sshConfig": {
+        "sshUserName":"ec2-user",
+        "sshHost":"18.219.180.157",
+        "sshPrivateKeyFile":"D:\\amazon\\zfzEC2keypair.pem",
+        "sshPort":22,
+        "sshDstHost":"docdb-2020-04-23-03-40-59.cluster-cpa0olbu8y6p.us-east-2.docdb.amazonaws.com",
+        "sshDstPort":27017,
+        "sshLocalHost":"localhost",
+        "sshLocalPort": 27016,
+
+        "databaseURL": "localhost:27016",
+        "databaseName":"admin",
+        "databaseUsername":"axasgcr253",
+        "databasePassword":"AAbb1122"
+    },
+        "dbInUse":"AWS-NSSH",
+        "dbSetting":{
+            "AWS-SSH":{
+                "dbType":"mongo",
+                "databaseURL": "localhost:27016",
+                "databaseName":"admin",
+                "databaseUsername":"axasgcr253",
+                "databasePassword":"AAbb1122"
+            },
+            "AWS-NSSH":{
+                "dbType":"mongo",
+                "databaseURL": "192.168.225.180:47017",
+                "databaseName":"AXASG_DEV",
+                "databaseUsername":"admin",
+                "databasePassword":"x9NaTtr9"
+            }
+        }
+
+  }
+  
