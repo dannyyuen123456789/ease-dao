@@ -3,13 +3,13 @@ import indexController from '../controller/index.controller';
 
 const router = express.Router();
 
-router.get('/getDoc/:docType/:docId', indexController.api.getDoc);
-router.get('/getDocById/:docType/:docId', indexController.api.getDoc);
-router.get('/insertDoc/:docType/:docId', indexController.api.getDoc);
-router.get('/updateDoc/:docType/:docId', indexController.api.getDoc);
-router.get('/deleteDoc/:docType/:docId', indexController.api.getDoc);
-router.get('/getAttachtment/:docType/:docId', indexController.api.getDoc);
-router.get('/insertAttachtment/:docType/:docId', indexController.api.getDoc);
-router.get('/updateAttachtment/:docType/:docId', indexController.api.getDoc);
-router.get('/deleteAttachtment/:docType/:docId', indexController.api.getDoc);
+router.get('/getDoc/:docId', indexController.api.getDoc);
+router.get('/getDocById/:docId', indexController.api.getDocById);
+router.put('/insertDoc/:docId', indexController.api.insertDoc);
+router.put('/updateDoc/:docId', indexController.api.updateDoc);
+router.get('/deleteDoc/:docId', indexController.api.deleteDoc);
+router.get('/getAttachtment/:docType/:docId', indexController.api.getAttachtment);
+router.get('/insertAttachtment/:docType/:docId', indexController.api.insertAttachtment);
+router.get('/updateAttachtment/:docType/:docId', indexController.api.updateAttachtment);
+router.get('/deleteAttachtment/:docType/:docId', indexController.api.deleteAttachtment);
 export default router;
