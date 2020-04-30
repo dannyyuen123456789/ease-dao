@@ -1,0 +1,15 @@
+# Node modules
+#
+node_modules/
+
+# Test coverage report
+coverage/
+
+# Spec Documentation
+docs/
+
+# Jsdoc Documentation
+jsdoc
+
+# build folder
+lib/

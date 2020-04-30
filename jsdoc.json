@@ -1,0 +1,52 @@
+{
+  "source": {
+    "exclude": [
+      ".s2i",
+      "coverage",
+      "docs",
+      "loadTest",
+      "node_modules",
+      "unitTest",
+      "uploads",
+      ".eslintignore",
+      ".eslintrc.js",
+      ".gitignore",
+      ".gitlab-ci.yml",
+      "artillery.yml",
+      "package-lock.json"
+    ]
+  },
+  "opts": {
+    "destination": "jsdoc/",
+    "readme": "./README.md",
+    "package": "package.json",
+    "recurse": true,
+    "encoding": "utf8",
+    "template": "node_modules/docdash"
+  },
+  "docdash": {
+    "openGraph": {
+      "title": "MAS external api project jsdoc",
+      "type": "website",
+      "image": "http://192.168.222.60:8001/uploads/-/system/group/avatar/107/121.PNG?width=67",
+      "site_name": "MAS External Api"
+    },
+    "meta": {
+      "title": "MAS External Api jsdoc",
+      "description": "A clean, responsive documentation template theme for JSDoc 3.",
+      "keyword": "MAS, External, Api, jsdoc"
+    },
+    "search": true,
+    "collapse": true,
+    "typedefs": true,
+    "removeQuotes": "none",
+    "menu":{
+      "Gitlab repo":{
+        "href":"http://192.168.222.60:8001/well-link/development/mas-external-api",
+        "target":"_blank",
+        "class":"menu-item",
+        "id":"repository"
+      }
+    }
+  }
+}

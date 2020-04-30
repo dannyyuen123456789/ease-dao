@@ -1,0 +1,13 @@
+# Node modules
+#
+node_modules/
+
+# Test coverage report
+coverage/
+
+# Jsdoc Documentation
+jsdoc
+
+# build folder
+lib/
+package-lock.json

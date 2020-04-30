@@ -1,0 +1,55 @@
+image: node:12-alpine
+
+stages:
+  - checking
+  - deployPages
+
+checking:
+  stage: checking
+  script:
+    - echo "$(date)"
+    # Install dependencies
+    - npm i --registry http://192.168.222.170:4873
+    - echo "$(date)"
+    # For detect vulnerable dependencies
+    # Refer to: https://github.com/goldbergyoni/nodebestpractices#-46-constantly-inspect-for-vulnerable-dependencies
+    - npm run vulnerabilitiesChecking
+    - echo "$(date)"
+    # For checking eslint
+    # Refer to: https://github.com/goldbergyoni/nodebestpractices#-31-use-eslint
+    - npm run eslintChecking
+    - echo "$(date)"
+    # For unit test checking
+    # Refer to: https://github.com/goldbergyoni/nodebestpractices#-41-at-the-very-least-write-api-component-testing
+    - npm run unitTest
+    - echo "$(date)"
+    # For generating JSDoc comment document
+    - npm run createJsdoc
+    - echo "$(date)"
+  cache:
+    key: "cms-admin-backend"
+    paths:
+      - node_modules/
+  artifacts:
+    paths:
+      - coverage/
+      - jsdoc/
+
+pages:
+  stage: deployPages
+  dependencies:
+    - checking
+  script:
+    - echo "$(date)"
+    - mkdir public
+    - cd public
+    - mkdir unitTest
+    - mkdir jsdoc
+    - cd ..
+    - mv coverage/ public/unitTest/
+    - mv docs/ public/
+    - mv jsdoc/ public/
+    - echo "$(date)"
+  artifacts:
+    paths:
+      - public
