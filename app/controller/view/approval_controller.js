@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 const _ = require('lodash');
 
 exports.api = {
-  approvalDetails(req, res, next) {
+  approvalDetails(req, res) {
     // doc.type === 'approval') {
     //   emit(['01', doc.approvalStatus, doc.approvalCaseId], emitObj);
     const aggregateStr = [];
@@ -53,37 +53,37 @@ exports.api = {
       },
     };
 
-    const startkey = req.query.startkey || '';
-    const endkey = req.query.endkey || '';
+    const startKey = req.query.startkey || '';
+    const endKey = req.query.endkey || '';
     const keys = req.query.keys || '';
     // const key = req.query.key || '';
 
 
     //  emit(['01', doc.agentId], emitObject);
     const matchStr = {};
-    if (startkey !== '' && endkey !== '') {
-      const startkeys = JSON.parse(startkey);
-      const endkeys = JSON.parse(endkey);
-      if (startkeys && startkeys.length > 1) {
+    if (startKey !== '' && endKey !== '') {
+      const startKeys = JSON.parse(startKey);
+      const endKeys = JSON.parse(endKey);
+      if (startKeys && startKeys.length > 1) {
         const where = {};
-        if (startkeys.length > 1 && endkeys.length > 1 && _.isEqual(startkeys[1], endkeys[1])) {
-          _.set(where, 'approvalStatus', startkeys[1]);
+        if (startKeys.length > 1 && endKeys.length > 1 && _.isEqual(startKeys[1], endKeys[1])) {
+          _.set(where, 'approvalStatus', startKeys[1]);
         } else {
-          if (startkeys.length > 1) {
-            _.set(where, 'approvalStatus.$gte', startkeys[1]);
+          if (startKeys.length > 1) {
+            _.set(where, 'approvalStatus.$gte', startKeys[1]);
           }
-          if (endkeys.length > 1) {
-            _.set(where, 'approvalStatus.$lte', endkeys[1]);
+          if (endKeys.length > 1) {
+            _.set(where, 'approvalStatus.$lte', endKeys[1]);
           }
         }
-        if (startkeys.length > 2 && endkeys.length > 2 && _.isEqual(startkeys[2], endkeys[2])) {
-          _.set(where, 'approvalCaseId', startkeys[2]);
+        if (startKeys.length > 2 && endKeys.length > 2 && _.isEqual(startKeys[2], endKeys[2])) {
+          _.set(where, 'approvalCaseId', startKeys[2]);
         } else {
-          if (startkeys.length > 2) {
-            _.set(where, 'approvalCaseId.$gte', startkeys[2]);
+          if (startKeys.length > 2) {
+            _.set(where, 'approvalCaseId.$gte', startKeys[2]);
           }
-          if (endkeys.length > 2) {
-            _.set(where, 'approvalCaseId.$lte', endkeys[2]);
+          if (endKeys.length > 2) {
+            _.set(where, 'approvalCaseId.$lte', endKeys[2]);
           }
         }
         if (!_.isEmpty(where)) {
@@ -92,9 +92,6 @@ exports.api = {
       }
     } else if (keys !== '') {
       const keysList = JSON.parse(keys);
-      //  console.log(" >>>>> keysList=", JSON.stringify(keysList));
-      // [["01","113097"],["01","333333"],["01","987654"],["01","010010"],
-      //  ["01","022222"],["01","007007"],["01","006006"]
       const inArray = [];
       if (keysList && keysList.length > 0) {
         _.forEach(keysList, (keyItem) => {
