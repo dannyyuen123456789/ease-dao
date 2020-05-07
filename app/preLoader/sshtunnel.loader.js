@@ -11,8 +11,10 @@ const initSshTunnel = async () => {
   const dbInUse = _.get(systemConfig, 'dbInUse');
   const dbSetting = _.get(systemConfig, 'dbSetting');
 
-  const userName = _.get(dbSetting, _.join([dbInUse, 'databaseUsername'], '.'));
-  const pwd = _.get(dbSetting, _.join([dbInUse, 'databasePassword'], '.'));
+  var userName = _.get(dbSetting, _.join([dbInUse, 'databaseUsername'], '.'));
+  userName = escape(userName);
+  var pwd = _.get(dbSetting, _.join([dbInUse, 'databasePassword'], '.'));
+  pwd = escape(pwd);
   const url = _.get(dbSetting, _.join([dbInUse, 'databaseURL'], '.'));
   const databaseName = _.get(dbSetting, _.join([dbInUse, 'databaseName'], '.'));
   // var ssh = _.get(dbSetting,_.join([dbInUse,"ssh"],"."));
@@ -43,7 +45,7 @@ const initSshTunnel = async () => {
         if (server) {
           console.log('SSH connected ....... ');
         }
-        // console.log("Mongo Db loading ----",DB_URL);
+        console.log("Mongo Db loading ----",DB_URL);
         if (_.eq(dbType, 'mongo')) {
           mongoose.connect(DB_URL, {
             ssl: true,
