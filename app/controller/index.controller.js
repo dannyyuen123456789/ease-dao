@@ -4,6 +4,7 @@
 import log4jUtil from '../utils/log4j.util';
 import mongoose from 'mongoose';
 import collectionMapping from '../../config/collectionMapping';
+// import log4jUtil from '../database/DAO';
 const _ = require('lodash');
 const getColNameById = (docId)=>{
   var colName = "";
