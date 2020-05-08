@@ -56,8 +56,7 @@ const initSshTunnel = async () => {
           }).then((result) => {
             if (result) { console.log('Mongo Db init success ----', DB_URL); }
           }).catch((err) => {
-            if (err) { console.log('Mongo Db init failed ----', DB_URL); }
-            console.log('Mongo Db init failed ----', err.message);
+            if (error) { console.log('Mongo Db:', DB_URL," init failed->",error.message);}
           });
         }
       });
@@ -70,10 +69,10 @@ const initSshTunnel = async () => {
       // sslCA:fs.readFileSync("D:\\amazon\\rds-combined-ca-bundle.pem"),
       useUnifiedTopology: true,
     }).then((result) => {
-      if (result) { console.log('Mongo Db init success ----', DB_URL); }
+      if (result) { console.log('Mongo Db init success ----', DB_URL); return true;}
+      
     }).catch((error) => {
-      if (error) { console.log('Mongo Db init failed ----', DB_URL); }
-      console.log('Mongo Db init failed ----', error.message);
+      if (error) { console.log('Mongo Db:', DB_URL," init failed->",error.message);}
     });
   }
 };

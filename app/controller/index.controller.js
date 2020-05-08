@@ -3,8 +3,8 @@
  */
 import log4jUtil from '../utils/log4j.util';
 import mongoose from 'mongoose';
-import collectionMapping from '../../config/collectionMapping';
-// import log4jUtil from '../database/DAO';
+// import collectionMapping from '../../config/collectionMapping';
+import DAO from '../database/DAO';
 const _ = require('lodash');
 const getColNameById = (docId)=>{
   var colName = "";
@@ -20,22 +20,14 @@ exports.api = {
     var errMessage = "";
     // const docType = _.get(req.params,"docType",_.get(req.query,"docType"));
     const docId = _.get(req.params,"docId",_.get(req.query,"docId"));
-    var docType = getColNameById(docId);
-    log4jUtil.log("getDoc --> docType = ",docType)
-    log4jUtil.log("getDoc --> docId = ",docId)
-    if(docType && !_.isEmpty(docType)){
-      var result = await mongoose.connection.collection(docType).findOne({"_id":docId}).catch(error=>
-        {
-          if(error){
-            errMessage = error.message;
-          }
-        });
-    }
+      var dao = new DAO("AWS");
+      var awsDao = dao.getInstance();
+      var result = await awsDao.getDoc(docId).catch(error=>{if(error){errMessage = error.message}});
     // console.log("result = ",result);
-    if(errMessage){
-      res.json({"status":400,message:errMessage});
+    if(!result.success || errMessage){
+      res.json({"status":400,message:result.result});
     }else{
-      res.json({"status":200,result:result});
+      res.json({"status":200,result:result.result});
     }
   },
   getDocById:async function(req,res,next){
