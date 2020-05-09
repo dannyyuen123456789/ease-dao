@@ -88,12 +88,12 @@ exports.api = {
     if (!_.isEmpty(approvalResult)) {
       result = _.concat(result, approvalResult);
     }
-    const bundleResult = await mongoose.connection.collection('bundle').aggregate(aggregateStr).toArray();
+    const bundleResult = await mongoose.connection.collection('fna').aggregate(aggregateStr).toArray();
     // log4jUtil.log('bundleResult = ', JSON.stringify(bundleResult));
     if (!_.isEmpty(bundleResult)) {
       result = _.concat(result, bundleResult);
     }
-    const custResult = await mongoose.connection.collection('cust').aggregate(aggregateStr).toArray();
+    const custResult = await mongoose.connection.collection('customer').aggregate(aggregateStr).toArray();
     // log4jUtil.log('custResult = ', JSON.stringify(custResult));
     if (!_.isEmpty(custResult)) {
       result = _.concat(result, custResult);

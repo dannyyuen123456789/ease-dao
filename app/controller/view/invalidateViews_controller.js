@@ -7,18 +7,6 @@ exports.api = {
     // console.log(">>>>>",req.query);
     const aggregateStr = [];
     // This is the query result and alias -> projectStr
-
-
-    // quotationsByBaseProductCode: function(doc) {
-    //     if (doc && doc.type === 'quotation') {
-    //         var emitObj = {
-    //             bundleId: doc.bundleId,
-    //             clientId: doc.pCid
-    //         };
-    //         // eslint-disable-next-line no-undef
-    //         emit(['01', doc.baseProductCode], emitObj);
-    //     }
-    // },
     const projectStr = {
       $project: {
         _id: 0, // 0 is not selected
@@ -67,6 +55,7 @@ exports.api = {
     if (!_.isEmpty(matchStr)) {
       aggregateStr.push(matchStr);
     }
+    aggregateStr.push({ $sort: { baseProductCode: 1 } });
     //  console.log(" >>>>> aggregateStr=", JSON.stringify(aggregateStr));
     aggregateStr.push(projectStr);
     mongoose.connection.collection('quotation').aggregate(aggregateStr).toArray((err, docs) => {
@@ -138,6 +127,7 @@ exports.api = {
     if (!_.isEmpty(matchStr)) {
       aggregateStr.push(matchStr);
     }
+    aggregateStr.push({ $sort: { baseProductCode: 1 } });
     // console.log(' >>>>> aggregateStr=', JSON.stringify(aggregateStr));
     aggregateStr.push(projectStr);
     mongoose.connection.collection('quotation').aggregate(aggregateStr).toArray((err, docs) => {
@@ -226,9 +216,10 @@ exports.api = {
     if (!_.isEmpty(matchStr)) {
       aggregateStr.push(matchStr);
     }
+    aggregateStr.push({ $sort: { agentId: 1 } });
     // console.log(' >>>>> aggregateStr=', JSON.stringify(aggregateStr));
     aggregateStr.push(projectStr);
-    mongoose.connection.collection('cust').aggregate(aggregateStr).toArray((err, docs) => {
+    mongoose.connection.collection('customer').aggregate(aggregateStr).toArray((err, docs) => {
       if (err) {
         res.json({ status: 400, message: err.message });
       } else {

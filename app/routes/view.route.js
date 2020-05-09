@@ -13,6 +13,15 @@ const $invalidateViews = require('../controller/view/invalidateViews_controller.
 
 router.get('/main/_view/contacts', $main.api.contacts);
 router.get('/main/_view/applicationsByAgent', $main.api.applicationsByAgent);
+router.get('/main/_view/approvalDetails', $main.api.approvalDetails);
+router.get('/main/_view/directorDownline', $main.api.directorDownline);
+router.get('/main/_view/inProgressQuotFunds', $main.api.inProgressQuotFunds);
+router.get('/main/_view/managerDownline', $main.api.managerDownline);
+router.get('/main/_view/masterApprovalDetails', $main.api.masterApprovalDetails);
+router.get('/main/_view/pdfTemplates', $main.api.pdfTemplates);
+router.get('/main/_view/quickQuotes', $main.api.quickQuotes);
+router.get('/main/_view/quotationByAgent', $main.api.quotationByAgent);
+router.get('/main/_view/quotationCampaign', $main.api.quotationCampaign);
 
 
 router.get('/dataSync/_view/agentDocuments', $dataSync.api.agentDocuments);

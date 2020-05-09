@@ -20,7 +20,7 @@ exports.api = {
           product: '$productName',
           agentId: '$agentId',
           agentName: '$agentName',
-          'managerName ': '$managerName',
+          managerName: '$managerName',
           managerId: '$managerId',
           directorId: '$directorId',
           directorName: '$directorName',
@@ -117,6 +117,7 @@ exports.api = {
     if (!_.isEmpty(matchStr)) {
       aggregateStr.push(matchStr);
     }
+    aggregateStr.push({ $sort: { approvalStatus: 1, approvalCaseId: 1 } });
     // console.log(' >>>>> matchStr=', JSON.stringify(matchStr));
     aggregateStr.push(projectStr);
     mongoose.connection.collection('approval').aggregate(aggregateStr).toArray((err, docs) => {
