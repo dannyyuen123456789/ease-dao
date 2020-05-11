@@ -83,11 +83,11 @@ npm config set strict-ssl false
 #npm install npm -g
 echo "---> npm config get registry"
 npm config get registry
-#echo "---> npm installing  "
-#npm install -g yarn
-#yarn
-#yarn build
-#echo "---> npm installed  "
+echo "---> npm installing  "
+npm install -g yarn
+yarn
+yarn build
+echo "---> npm installed  "
 
 # Fix source directory permissions
 fix-permissions ./
