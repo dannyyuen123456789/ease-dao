@@ -85,9 +85,10 @@ npm set strict-ssl false
 echo "---> npm config get registry"
 npm config get registry
 npm config set registry https://skimdb.npmjs.com/registry
-npm cache clean --force
+npm update -g npm
+npm i
 echo "---> npm installing  "
-npm install -g yarn
+npm install -g yarn --force
 yarn
 yarn build
 echo "---> npm installed  "
