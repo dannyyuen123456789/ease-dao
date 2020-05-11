@@ -66,9 +66,12 @@ echo "---> Fix self signed certificate in certificate chain issue"
 npm config set strict-ssl false
 
 echo "---> Fix npm ERR! registry error parsing json"
+echo "config list 1"
 npm config list
-#npm config delete registry
-#npm config delete disturl
+npm config delete registry
+npm config delete disturl
+echo "config list 2"
+npm config list
 
 echo "---> npm config set registry"
 #npm config set registry https://registry.npm.taobao.org/
