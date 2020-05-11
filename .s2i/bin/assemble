@@ -28,7 +28,7 @@ echo "---> Installing application source ..."
 cat /proc/version
 
 #end read linux version
-USER 1001
+
 mv /tmp/src/* ./
 
 if [ ! -z $HTTP_PROXY ]; then
@@ -92,5 +92,6 @@ echo "---> npm installed  "
 # Fix source directory permissions
 fix-permissions ./
 #chmod -R 777 ./
-
+RUN chown -R 1001:0 /opt/app-root && chmod -R ug+rwx /opt/app-root
+USER 1001
 echo "---> Assemble done  "
