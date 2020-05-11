@@ -81,6 +81,8 @@ npm config set strict-ssl false
 #npm config set disturl https://npm.taobao.org/dist
 #npm cache clean 
 #npm install npm -g
+echo "---> npm config get registry"
+npm config get registry
 echo "---> npm installing  "
 npm install -g yarn
 yarn
