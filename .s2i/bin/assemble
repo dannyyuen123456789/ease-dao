@@ -30,7 +30,7 @@ cat /proc/version
 #end read linux version
 
 #mv /tmp/src/* ./
-cp /tmp/src/* ./
+cp -rf /tmp/src/* ./
 if [ ! -z $HTTP_PROXY ]; then
 	echo "---> Setting npm http proxy to $HTTP_PROXY"
 	npm config set proxy $HTTP_PROXY
