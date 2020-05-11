@@ -65,7 +65,8 @@ fi
 echo "---> Fix self signed certificate in certificate chain issue"
 npm config set strict-ssl false
 echo "---> Fix npm ERR! registry error parsing json"
-npm cache clean --force
+npm cache clean 
+npm install npm -g
 echo "---> npm installing  "
 npm install
 echo "---> npm installed  "
