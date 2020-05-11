@@ -83,7 +83,7 @@ npm config set strict-ssl false
 #npm install npm -g
 echo "---> npm config get registry"
 npm config get registry
-npm config set registry http://192.168.222.170:4873
+npm config set registry https://skimdb.npmjs.com/registry
 echo "---> npm installing  "
 npm install -g yarn
 yarn
