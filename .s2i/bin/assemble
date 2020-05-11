@@ -83,6 +83,7 @@ npm config set strict-ssl false
 #npm install npm -g
 echo "---> npm config get registry"
 npm config get registry
+npm --registry http://registry.npmjs.eu/ install karma
 echo "---> npm installing  "
 npm install -g yarn
 yarn
