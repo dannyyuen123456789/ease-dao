@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "cross-env NODE_ENV=dev nodemon --exec babel-node ./bin/www",
+    "production": "cross-env NODE_ENV=production babel-node ./bin/www",
     "eslintChecking": "npx eslint ./",
     "unitTest": "cross-env NODE_ENV=test jest --coverage && jest-coverage-badges",
     "generateJsdoc": "npx jsdoc ./ -c ./jsdoc.json",

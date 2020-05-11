@@ -12,21 +12,8 @@ fi
 # hot deploy and debugging are enabled.
 run_node() {
   echo -e "Environment: \n\tDEV_MODE=${DEV_MODE}\n\tNODE_ENV=${NODE_ENV}\n\tDEBUG_PORT=${DEBUG_PORT}"
- 
- # echo "sleeping to check"
- # exec sleep 2m
- # mv .aws ~
   
-  if [ "$DEV_MODE" == true ]; then
-    echo "Launching via nodemon..."
-    exec nodemon --debug="$DEBUG_PORT"
-  else
-    echo "Launching via npm..."
-
-    echo "npm run dev"
-    exec npm run dev
-  fi
-
+  exec npm run production
 } 
 
 #Set the debug port to 5858 by default.
