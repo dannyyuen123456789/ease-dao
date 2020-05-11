@@ -82,8 +82,7 @@ npm config set strict-ssl false
 #npm cache clean 
 #npm install npm -g
 echo "---> npm installing  "
-npm install yarn -g
-yarn install
+npm install
 echo "---> npm installed  "
 
 # Fix source directory permissions
