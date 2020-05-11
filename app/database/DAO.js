@@ -3,9 +3,7 @@ const util = require('util');
 const _ = require('lodash');
 class DAO {
     constructor(dbType) {
-        this.dbType = dbType; 
-        
-       
+        this.dbType = dbType;       
     };
     getInstance(){
         var dao = "";
