@@ -3,6 +3,212 @@ import mongoose from 'mongoose';
 const _ = require('lodash');
 
 exports.api = {
+  agentDetails(req, res) {
+    const aggregateStr = [];
+    const projectStr = {
+    };
+    const startKey = req.query.startkey || '';
+    const endKey = req.query.endkey || '';
+    const keys = req.query.keys || '';
+    // const key = req.query.key || '';
+    const matchStr = {};
+    let caseUser = false;
+    let caseAgent = false;
+    let caseFafirmCode = false;
+    let caseProxy = false;
+    if (startKey !== '' && endKey !== '') {
+      const startKeys = JSON.parse(startKey);
+      const endKeys = JSON.parse(endKey);
+      if (startKeys.length > 2 && endKeys.length > 2) {
+        if (_.isEqual(startKeys, endKeys)) {
+          if (_.isEqual(startKeys[1], 'userId')) {
+            caseUser = true;
+            matchStr.$match = { 'rawData.agentCode': startKeys[2] };
+          }
+          if (_.isEqual(startKeys[1], 'agentCode')) {
+            caseAgent = true;
+            matchStr.$match = { agentCode: startKeys[2] };
+          }
+          if (_.isEqual(startKeys[1], 'fafirmCode')) {
+            caseFafirmCode = true;
+            matchStr.$match = { 'rawData.upline2Code': startKeys[2] };
+          }
+          if (_.isEqual(startKeys[1], 'proxy')) {
+            caseProxy = true;
+            matchStr.$match = {
+              $or: [{ 'rawData.proxy1UserId': startKeys[2] }, { 'rawData.proxy2UserId': startKeys[2] }],
+            };
+          }
+        } else {
+          if (_.isEqual(startKeys[1], 'userId')) {
+            caseUser = true;
+            matchStr.$match = { 'rawData.agentCode': { $gte: startKeys[2], $lte: endKeys[2] } };
+          }
+          if (_.isEqual(startKeys[1], 'agentCode')) {
+            caseAgent = true;
+            matchStr.$match = { agentCode: { $gte: startKeys[2], $lte: endKeys[2] } };
+          }
+          if (_.isEqual(startKeys[1], 'fafirmCode')) {
+            caseFafirmCode = true;
+            matchStr.$match = { 'rawData.upline2Code': { $gte: startKeys[2], $lte: endKeys[2] } };
+          }
+          if (_.isEqual(startKeys[1], 'proxy')) {
+            caseProxy = true;
+            matchStr.$match = {
+              $or: [
+                { 'rawData.proxy1UserId': { $gte: startKeys[2], $lte: endKeys[2] } },
+                { 'rawData.proxy2UserId': { $gte: startKeys[2], $lte: endKeys[2] } },
+              ],
+            };
+          }
+        }
+      }
+    } else if (keys !== '') {
+      const keysList = JSON.parse(keys);
+      const inArray = [];
+      if (keysList && keysList.length > 0) {
+        _.forEach(keysList, (keyItem) => {
+          if (keyItem && keyItem.length > 2) {
+            if (_.isEqual(keyItem[1], 'userId')) {
+              caseUser = true;
+              inArray.push({
+                'rawData.agentCode': keyItem[2],
+              });
+            }
+            if (_.isEqual(keyItem[1], 'agentCode')) {
+              caseAgent = true;
+              inArray.push({
+                agentCode: keyItem[2],
+              });
+            }
+            if (_.isEqual(keyItem[1], 'fafirmCode')) {
+              caseFafirmCode = true;
+              inArray.push({
+                'rawData.upline2Code': keyItem[2],
+              });
+            }
+            if (_.isEqual(keyItem[1], 'proxy')) {
+              caseProxy = true;
+              inArray.push({
+                'rawData.proxy1UserId': keyItem[2],
+              });
+              inArray.push({
+                'rawData.proxy2UserId': keyItem[2],
+              });
+            }
+          }
+        });
+      }
+      if (!_.isEmpty(inArray)) {
+        _.set(matchStr, '$match.$or', inArray);
+        // matchStr.$match = { $or: inArray };
+      }
+    } else {
+      caseUser = true;
+      caseAgent = true;
+      caseFafirmCode = true;
+      caseProxy = true;
+    }
+    // } else if (key !== '' && key !== '[null]') {
+
+    // }
+    if (!_.isEmpty(matchStr)) {
+      aggregateStr.push(matchStr);
+    }
+    if (caseAgent) {
+      aggregateStr.push({ $sort: { agentCode: 1 } });
+    } else if (caseUser) {
+      aggregateStr.push({ $sort: { 'rawData.agentCode': 1 } });
+    } else if (caseFafirmCode) {
+      aggregateStr.push({ $sort: { 'rawData.upline2Code': 1 } });
+    } else if (caseProxy) {
+      aggregateStr.push({ $sort: { 'rawData.proxy1UserId': 1, 'rawData.proxy2UserId': 1 } });
+    }
+    if (caseUser || caseAgent || caseFafirmCode) {
+      projectStr.$project = {
+        _id: 0, // 0 is not selected
+      };
+    } else if (caseProxy) {
+      projectStr.$project = {
+        _id: 0, // 0 is not selected
+        id: '$id',
+        agentCode: '$agentCode',
+        rawData: '$rawData',
+      };
+    }
+    aggregateStr.push(projectStr);
+    // console.log(' >>>>> matchStr=', JSON.stringify(aggregateStr));
+    mongoose.connection.collection('agent').aggregate(aggregateStr).toArray((err, docs) => {
+      if (err) {
+        res.json({ status: 400, message: err.message });
+      } else {
+        // console.log(' >>>>> docs=', docs);
+        const resultTemp = {};
+        const userResult = [];
+        const agentResult = [];
+        const fafirmCodeResult = [];
+        const proxy1Result = [];
+        const proxy2Result = [];
+        if (docs && docs.length > 0) {
+          _.forEach(docs, (item) => {
+            if (caseUser) {
+              const doc = _.cloneDeep(item);
+              if (doc.rawData) {
+                userResult.push({
+                  id: doc.id,
+                  key: ['01', 'userId', doc.rawData.agentCode],
+                  value: Object.assign({}, doc),
+                });
+              }
+            }
+            if (caseAgent) {
+              const doc = _.cloneDeep(item);
+              agentResult.push({
+                id: doc.id,
+                key: ['01', 'agentCode', doc.agentCode],
+                value: Object.assign({}, doc),
+              });
+            }
+            if (caseFafirmCode) {
+              if ((item.channel === 'BROKER' || item.channel === 'SYNERGY') && item.rawData && item.rawData.upline2Code) {
+                const doc = _.cloneDeep(item);
+                fafirmCodeResult.push({
+                  id: doc.id,
+                  key: ['01', 'fafirmCode', doc.rawData.upline2Code],
+                  value: Object.assign({}, doc),
+                });
+              }
+            }
+            if (caseProxy) {
+              if (item.rawData && item.rawData.proxy1UserId) {
+                proxy1Result.push({
+                  id: item.id,
+                  key: ['01', 'proxy', item.rawData.proxy1UserId],
+                  value: {
+                    agentCode: item.agentCode,
+                  },
+                });
+              }
+              if (item.rawData && item.rawData.proxy2UserId) {
+                proxy2Result.push({
+                  id: item.id,
+                  key: ['01', 'proxy', item.rawData.proxy2UserId],
+                  value: {
+                    agentCode: item.agentCode,
+                  },
+                });
+              }
+            }
+          });
+        }
+        const result = _.concat(agentResult, userResult,
+          fafirmCodeResult, proxy1Result, proxy2Result);
+        resultTemp.total_rows = result.length;
+        resultTemp.rows = result;
+        res.json(resultTemp);
+      }
+    });
+  },
   contacts(req, res) {
     // console.log(">>>>>",req.query);
     const aggregateStr = [];

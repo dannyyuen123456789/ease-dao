@@ -7,6 +7,7 @@ const router = express.Router();
 
 const $main = require('../controller/view/main_controller.js');
 const $approval = require('../controller/view/approval_controller.js');
+
 const $dataSync = require('../controller/view/dataSync_controller.js');
 const $invalidateViews = require('../controller/view/invalidateViews_controller.js');
 
@@ -22,6 +23,11 @@ router.get('/main/_view/pdfTemplates', $main.api.pdfTemplates);
 router.get('/main/_view/quickQuotes', $main.api.quickQuotes);
 router.get('/main/_view/quotationByAgent', $main.api.quotationByAgent);
 router.get('/main/_view/quotationCampaign', $main.api.quotationCampaign);
+router.get('/main/_view/summaryApps', $main.api.summaryApps);
+router.get('/main/_view/summaryQuots', $main.api.summaryQuots);
+router.get('/main/_view/systemNotification', $main.api.systemNotification);
+router.get('/main/_view/validbundleApplicationsByAgent', $main.api.validbundleApplicationsByAgent);
+router.get('/main/_view/agentDetails', $main.api.agentDetails);
 
 
 router.get('/dataSync/_view/agentDocuments', $dataSync.api.agentDocuments);
