@@ -62,7 +62,7 @@ fi
 #echo "--> tar xvf n.tar > /dev/null"
 #tar xvf n.tar > /dev/null
 
-#echo "---> Fix self signed certificate in certificate chain issue"
+echo "---> Fix self signed certificate in certificate chain issue"
 npm config set strict-ssl false
 echo "---> npm installing  "
 npm install
