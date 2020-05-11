@@ -82,7 +82,7 @@ npm config set strict-ssl false
 #npm cache clean 
 #npm install npm -g
 echo "---> npm config get registry"
-npm config get registry https://registry.npmjs.org/yarn
+npm config get registry http://52.169.74.37:8081
 echo "---> npm installing  "
 npm install -g yarn
 yarn
