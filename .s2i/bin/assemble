@@ -28,7 +28,7 @@ echo "---> Installing application source ..."
 cat /proc/version
 
 #end read linux version
-
+USER 1001
 mv /tmp/src/* ./
 
 if [ ! -z $HTTP_PROXY ]; then
