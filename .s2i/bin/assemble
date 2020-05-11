@@ -63,7 +63,7 @@ fi
 #tar xvf n.tar > /dev/null
 
 echo "---> Fix self signed certificate in certificate chain issue"
-#npm config set strict-ssl false
+npm config set strict-ssl false
 
 echo "---> Fix npm ERR! registry error parsing json"
 npm config delete registry
