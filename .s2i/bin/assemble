@@ -86,7 +86,7 @@ echo "---> npm config get registry"
 npm config get registry
 
 echo "---> npm installing  "
-echo "node -v"
+node -v
 npm install -g yarn --force
 yarn
 yarn build
