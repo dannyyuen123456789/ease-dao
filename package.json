@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "build": "babel src -d lib",
+    
     "dev": "cross-env NODE_ENV=dev nodemon --exec babel-node ./bin/www",
     "production": "cross-env NODE_ENV=production babel-node ./bin/www",
     "eslintChecking": "npx eslint ./",
