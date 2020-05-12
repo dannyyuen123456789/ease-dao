@@ -7,6 +7,7 @@ const router = express.Router();
 
 const $main = require('../controller/view/main_controller.js');
 const $approval = require('../controller/view/approval_controller.js');
+const $dataAnalyze = require('../controller/view/dataAnalyze_controller.js');
 
 const $dataSync = require('../controller/view/dataSync_controller.js');
 const $invalidateViews = require('../controller/view/invalidateViews_controller.js');
@@ -28,10 +29,14 @@ router.get('/main/_view/summaryQuots', $main.api.summaryQuots);
 router.get('/main/_view/systemNotification', $main.api.systemNotification);
 router.get('/main/_view/validbundleApplicationsByAgent', $main.api.validbundleApplicationsByAgent);
 router.get('/main/_view/agentDetails', $main.api.agentDetails);
+router.get('/main/_view/agentWithDescendingOrder', $main.api.agentWithDescendingOrder);
 
 
 router.get('/dataSync/_view/agentDocuments', $dataSync.api.agentDocuments);
 router.get('/approval/_view/approvalDetails', $approval.api.approvalDetails);
+
+router.get('/dataAnalyze/_view/documentByLstChgDate', $dataAnalyze.api.documentByLstChgDate);
+router.get('/dataAnalyze/_view/documentsWithoutLstChgDate', $dataAnalyze.api.documentsWithoutLstChgDate);
 
 
 router.get('/invalidateViews/_view/quotationsByBaseProductCode', $invalidateViews.api.quotationsByBaseProductCode);

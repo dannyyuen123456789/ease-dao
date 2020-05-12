@@ -16,6 +16,11 @@ exports.api = {
     let caseAgent = false;
     let caseFafirmCode = false;
     let caseProxy = false;
+
+    const userIds = [];
+    const agentIds = [];
+    const fafirmCodeIds = [];
+    const proxyIds = [];
     if (startKey !== '' && endKey !== '') {
       const startKeys = JSON.parse(startKey);
       const endKeys = JSON.parse(endKey);
@@ -24,20 +29,24 @@ exports.api = {
           if (_.isEqual(startKeys[1], 'userId')) {
             caseUser = true;
             matchStr.$match = { 'rawData.agentCode': startKeys[2] };
+            userIds.push(startKeys[2]);
           }
           if (_.isEqual(startKeys[1], 'agentCode')) {
             caseAgent = true;
             matchStr.$match = { agentCode: startKeys[2] };
+            agentIds.push(startKeys[2]);
           }
           if (_.isEqual(startKeys[1], 'fafirmCode')) {
             caseFafirmCode = true;
             matchStr.$match = { 'rawData.upline2Code': startKeys[2] };
+            fafirmCodeIds.push(startKeys[2]);
           }
           if (_.isEqual(startKeys[1], 'proxy')) {
             caseProxy = true;
             matchStr.$match = {
               $or: [{ 'rawData.proxy1UserId': startKeys[2] }, { 'rawData.proxy2UserId': startKeys[2] }],
             };
+            proxyIds.push(startKeys[2]);
           }
         } else {
           if (_.isEqual(startKeys[1], 'userId')) {
@@ -74,18 +83,21 @@ exports.api = {
               inArray.push({
                 'rawData.agentCode': keyItem[2],
               });
+              userIds.push(keyItem[2]);
             }
             if (_.isEqual(keyItem[1], 'agentCode')) {
               caseAgent = true;
               inArray.push({
                 agentCode: keyItem[2],
               });
+              agentIds.push(keyItem[2]);
             }
             if (_.isEqual(keyItem[1], 'fafirmCode')) {
               caseFafirmCode = true;
               inArray.push({
                 'rawData.upline2Code': keyItem[2],
               });
+              fafirmCodeIds.push(keyItem[2]);
             }
             if (_.isEqual(keyItem[1], 'proxy')) {
               caseProxy = true;
@@ -95,6 +107,7 @@ exports.api = {
               inArray.push({
                 'rawData.proxy2UserId': keyItem[2],
               });
+              proxyIds.push(keyItem[2]);
             }
           }
         });
@@ -153,56 +166,781 @@ exports.api = {
           _.forEach(docs, (item) => {
             if (caseUser) {
               const doc = _.cloneDeep(item);
-              if (doc.rawData) {
-                userResult.push({
-                  id: doc.id,
-                  key: ['01', 'userId', doc.rawData.agentCode],
-                  value: Object.assign({}, doc),
-                });
+              if (_.isEmpty(userIds)
+              || (!_.isEmpty(userIds) && _.indexOf(userIds, doc.rawData.agentCode) > -1)) {
+                if (doc.rawData) {
+                  userResult.push({
+                    id: doc.id,
+                    key: ['01', 'userId', doc.rawData.agentCode],
+                    value: Object.assign({}, doc),
+                  });
+                }
               }
             }
             if (caseAgent) {
               const doc = _.cloneDeep(item);
-              agentResult.push({
-                id: doc.id,
-                key: ['01', 'agentCode', doc.agentCode],
-                value: Object.assign({}, doc),
-              });
-            }
-            if (caseFafirmCode) {
-              if ((item.channel === 'BROKER' || item.channel === 'SYNERGY') && item.rawData && item.rawData.upline2Code) {
-                const doc = _.cloneDeep(item);
-                fafirmCodeResult.push({
+              if (_.isEmpty(agentIds)
+              || (!_.isEmpty(agentIds) && _.indexOf(agentIds, doc.agentCode) > -1)) {
+                agentResult.push({
                   id: doc.id,
-                  key: ['01', 'fafirmCode', doc.rawData.upline2Code],
+                  key: ['01', 'agentCode', doc.agentCode],
                   value: Object.assign({}, doc),
                 });
               }
             }
+            if (caseFafirmCode) {
+              if ((item.channel === 'BROKER' || item.channel === 'SYNERGY') && item.rawData && item.rawData.upline2Code) {
+                const doc = _.cloneDeep(item);
+                if (_.isEmpty(fafirmCodeIds)
+                || (!_.isEmpty(fafirmCodeIds)
+                 && _.indexOf(fafirmCodeIds, doc.rawData.upline2Code) > -1)) {
+                  fafirmCodeResult.push({
+                    id: doc.id,
+                    key: ['01', 'fafirmCode', doc.rawData.upline2Code],
+                    value: Object.assign({}, doc),
+                  });
+                }
+              }
+            }
             if (caseProxy) {
               if (item.rawData && item.rawData.proxy1UserId) {
-                proxy1Result.push({
-                  id: item.id,
-                  key: ['01', 'proxy', item.rawData.proxy1UserId],
-                  value: {
-                    agentCode: item.agentCode,
-                  },
-                });
+                if (_.isEmpty(proxyIds)
+                || (!_.isEmpty(proxyIds)
+                 && _.indexOf(proxyIds, item.rawData.proxy1UserId) > -1)) {
+                  proxy1Result.push({
+                    id: item.id,
+                    key: ['01', 'proxy', item.rawData.proxy1UserId],
+                    value: {
+                      agentCode: item.agentCode,
+                    },
+                  });
+                }
               }
               if (item.rawData && item.rawData.proxy2UserId) {
-                proxy2Result.push({
-                  id: item.id,
-                  key: ['01', 'proxy', item.rawData.proxy2UserId],
-                  value: {
-                    agentCode: item.agentCode,
-                  },
-                });
+                if (_.isEmpty(proxyIds)
+                || (!_.isEmpty(proxyIds)
+                 && _.indexOf(proxyIds, item.rawData.proxy2UserId) > -1)) {
+                  proxy2Result.push({
+                    id: item.id,
+                    key: ['01', 'proxy', item.rawData.proxy2UserId],
+                    value: {
+                      agentCode: item.agentCode,
+                    },
+                  });
+                }
               }
             }
           });
         }
         const result = _.concat(agentResult, userResult,
           fafirmCodeResult, proxy1Result, proxy2Result);
+        resultTemp.total_rows = result.length;
+        resultTemp.rows = result;
+        res.json(resultTemp);
+      }
+    });
+  },
+  agentWithDescendingOrder(req, res) {
+    const aggregateStr = [];
+    // This is the query result and alias -> projectStr
+    const projectStr = {
+      $project: {
+        _id: 0, // 0 is not selected
+        id: '$id',
+        email: '$email',
+        tel: '$tel',
+        agentCode: '$agentCode',
+        agentName: '$name',
+        mobile: '$mobile',
+        manager: '$manager',
+        managerCode: '$managerCode',
+        compCode: '$compCode',
+        company: '$company',
+        faAdminCode: '',
+        profileId: '$profileId',
+        lstChgDate: '$lstChgDate',
+        lastUpdateDate: '$lastUpdateDate',
+        faAdvisorRole: '$rawData.faAdvisorRole',
+        upline2Code: '$rawData.upline2Code',
+      },
+    };
+    const startKey = req.query.startkey || '';
+    const endKey = req.query.endkey || '';
+    const keys = req.query.keys || '';
+    const descending = req.query.descending || false;
+    // console.log('>>>>> descending ', descending);
+    // const key = req.query.key || '';
+    const matchStr = {
+    };
+    let caseTime = false;
+    let caseAgent = false;
+    const fistAgent = [];
+    const fistTime = [];
+    if (startKey !== '' && endKey !== '') {
+      const startKeys = JSON.parse(startKey);
+      const endKeys = JSON.parse(endKey);
+      const orInArray = [];
+      if (startKeys.length > 2 && endKeys.length > 2) {
+        if (_.isEqual(startKeys, endKeys)) {
+          if (_.isEqual(startKeys[1], 'timeFirst')) {
+            caseTime = true;
+            orInArray.push(
+              {
+                $and: [
+                  {
+                    lstChgDate: {
+                      $exists: true,
+                    },
+                  },
+                  {
+                    lstChgDate: startKeys[2],
+                  },
+                ],
+              },
+            );
+            orInArray.push(
+              {
+                $and: [
+                  {
+                    $or: [{
+                      lstChgDate: {
+                        $exists: false,
+                      },
+                    },
+                    {
+                      lstChgDate: '',
+                    },
+                    ],
+                  },
+                  {
+                    lastUpdateDate: {
+                      $exists: true,
+                    },
+                  },
+                  {
+                    lastUpdateDate: new Date(startKeys[2]).toISOString(),
+                  },
+                ],
+              },
+            );
+            if (startKeys[2] === 0) {
+              orInArray.push(
+                {
+                  $and: [
+                    {
+                      $or: [{
+                        lstChgDate: {
+                          $exists: false,
+                        },
+                      },
+                      {
+                        lstChgDate: '',
+                      },
+                      ],
+                    },
+                    {
+                      $or: [{
+                        lastUpdateDate: {
+                          $exists: false,
+                        },
+                      },
+                      {
+                        lastUpdateDate: '',
+                      },
+                      ],
+                    },
+                  ],
+                },
+              );
+            }
+            if (startKeys.length > 3) {
+              matchStr.$match = {
+                agentCode: startKeys[3],
+              };
+            }
+          }
+          if (_.isEqual(startKeys[1], 'agentCodeFirst')) {
+            caseAgent = true;
+            matchStr.$match = {
+              agentCode: startKeys[2],
+            };
+            if (startKeys.length > 3) {
+              orInArray.push(
+                {
+                  $and: [
+                    {
+                      lstChgDate: {
+                        $exists: true,
+                      },
+                    },
+                    {
+                      lstChgDate: startKeys[3],
+                    },
+                  ],
+                },
+              );
+              orInArray.push(
+                {
+                  $and: [
+                    {
+                      $or: [{
+                        lstChgDate: {
+                          $exists: false,
+                        },
+                      },
+                      {
+                        lstChgDate: {
+                          $ne: '',
+                        },
+                      },
+                      ],
+                    },
+                    {
+                      lastUpdateDate: {
+                        $exists: true,
+                      },
+                    },
+                    {
+                      lastUpdateDate: new Date(startKeys[3]).toISOString(),
+                    },
+                  ],
+                },
+              );
+            } else {
+              orInArray.push(
+                {
+                  $and: [
+                    {
+                      $or: [{
+                        lstChgDate: {
+                          $exists: false,
+                        },
+                      },
+                      {
+                        lstChgDate: '',
+                      },
+                      ],
+                    },
+                    {
+                      $or: [{
+                        lastUpdateDate: {
+                          $exists: false,
+                        },
+                      },
+                      {
+                        lastUpdateDate: '',
+                      },
+                      ],
+                    },
+                  ],
+                },
+              );
+            }
+          }
+          if (!_.isEmpty(orInArray)) {
+            _.set(matchStr, '$match.$or', orInArray);
+          }
+        } else { // startkey !== endkey
+          if (_.isEqual(startKeys[1], 'timeFirst')) {
+            caseTime = true;
+            const lstChgDateTemp = {};
+            const lastUpdateDateTemp = {};
+            if (descending) {
+              _.set(lstChgDateTemp, 'lstChgDate', {
+                $lte: startKeys[2],
+                $gte: endKeys[2],
+              });
+              _.set(lastUpdateDateTemp, 'lastUpdateDate', {
+                $lte: new Date(startKeys[2]).toISOString(),
+                $gte: new Date(endKeys[2]).toISOString(),
+              });
+            } else {
+              _.set(lstChgDateTemp, 'lstChgDate', {
+                $gte: startKeys[2],
+                $lte: endKeys[2],
+              });
+              _.set(lastUpdateDateTemp, 'lastUpdateDate', {
+                $gte: new Date(startKeys[2]).toISOString(),
+                $lte: new Date(endKeys[2]).toISOString(),
+              });
+            }
+            orInArray.push(
+              {
+                $and: [
+                  {
+                    lstChgDate: {
+                      $exists: true,
+                    },
+                  },
+                  ...lstChgDateTemp,
+                ],
+              },
+            );
+            orInArray.push(
+              {
+                $and: [
+                  {
+                    $or: [{
+                      lstChgDate: {
+                        $exists: false,
+                      },
+                    },
+                    {
+                      lstChgDate: '',
+                    },
+                    ],
+                  },
+                  {
+                    lastUpdateDate: {
+                      $exists: true,
+                    },
+                  },
+                  ...lastUpdateDateTemp,
+                ],
+              },
+            );
+            if (startKeys[2] === 0 && endKeys[2] === 0) {
+              orInArray.push(
+                {
+                  $and: [
+                    {
+                      $or: [{
+                        lstChgDate: {
+                          $exists: false,
+                        },
+                      },
+                      {
+                        lstChgDate: '',
+                      },
+                      ],
+                    },
+                    {
+                      $or: [{
+                        lastUpdateDate: {
+                          $exists: false,
+                        },
+                      },
+                      {
+                        lastUpdateDate: '',
+                      },
+                      ],
+                    },
+                  ],
+                },
+              );
+            }
+            if (startKeys.length > 3) {
+              if (descending) {
+                _.set(matchStr, '$match.agentCode.$lte', startKeys[3]);
+              } else {
+                _.set(matchStr, '$match.agentCode.$gte', startKeys[3]);
+              }
+            }
+            if (endKeys.length > 3) {
+              if (descending) {
+                _.set(matchStr, '$match.agentCode.$gte', endKeys[3]);
+              } else {
+                _.set(matchStr, '$match.agentCode.$lte', endKeys[3]);
+              }
+            }
+          }
+          if (_.isEqual(startKeys[1], 'agentCodeFirst')) {
+            caseAgent = true;
+            if (descending) {
+              _.set(matchStr, '$match.agentCode.$lte', startKeys[2]);
+              _.set(matchStr, '$match.agentCode.$gte', endKeys[2]);
+            } else {
+              _.set(matchStr, '$match.agentCode.$gte', startKeys[2]);
+              _.set(matchStr, '$match.agentCode.$lte', endKeys[2]);
+            }
+
+            if (startKeys.length > 3 || endKeys.length > 3) {
+              const lstTemp = {};
+              const lastUpTemp = {};
+              console.log('>>>>> startKeys ', startKeys);
+              console.log('>>>>> endKeys ', endKeys);
+              if (startKeys.length > 3) {
+                if (descending) {
+                  _.set(lstTemp, 'lstChgDate.$lte', startKeys[3]);
+                  console.log('>>>>>  lte ', startKeys[3]);
+
+                  console.log('>>>>>  startKeys ISO= ', new Date(startKeys[3]).toISOString());
+
+                  const tempDate = startKeys[3] > 253402271999000 ? 253402271999000 : startKeys[3];
+                  _.set(lastUpTemp, 'lastUpdateDate.$lte', new Date(tempDate).toISOString());
+                } else {
+                  _.set(lstTemp, 'lstChgDate.$gte', startKeys[3]);
+                  const tempDate = startKeys[3] < 25139000 ? 25139000 : startKeys[3];
+                  _.set(lastUpTemp, 'lastUpdateDate.$gte', new Date(tempDate).toISOString());
+                }
+              }
+              if (endKeys.length > 3) {
+                if (descending) {
+                  _.set(lstTemp, 'lstChgDate.$gte', endKeys[3]);
+
+                  const tempDate = endKeys[3] < 25139000 ? 25139000 : endKeys[3];
+                  _.set(lastUpTemp, 'lastUpdateDate.$gte', new Date(tempDate).toISOString());
+                } else {
+                  _.set(lstTemp, 'lstChgDate.$lte', endKeys[3]);
+                  const tempDate = endKeys[3] > 253402271999000 ? 253402271999000 : endKeys[3];
+                  _.set(lastUpTemp, 'lastUpdateDate.$lte', new Date(tempDate).toISOString());
+                }
+              }
+              orInArray.push(
+                {
+                  $and: [
+                    {
+                      lstChgDate: {
+                        $exists: true,
+                      },
+                    },
+                    lstTemp,
+                  ],
+                },
+              );
+              orInArray.push(
+                {
+                  $and: [
+                    {
+                      $or: [{
+                        lstChgDate: {
+                          $exists: false,
+                        },
+                      },
+                      {
+                        lstChgDate: '',
+                      },
+                      ],
+                    },
+                    {
+                      lastUpdateDate: {
+                        $exists: true,
+                      },
+                    },
+                    lastUpTemp,
+                  ],
+                },
+              );
+              if (startKeys[3] === 0 && startKeys[3] === 0) {
+                orInArray.push(
+                  {
+                    $and: [
+                      {
+                        $or: [{
+                          lstChgDate: {
+                            $exists: false,
+                          },
+                        },
+                        {
+                          lstChgDate: '',
+                        },
+                        ],
+                      },
+                      {
+                        $or: [{
+                          lastUpdateDate: {
+                            $exists: false,
+                          },
+                        },
+                        {
+                          lastUpdateDate: '',
+                        },
+                        ],
+                      },
+                    ],
+                  },
+                );
+              }
+            }
+          }
+          if (!_.isEmpty(orInArray)) {
+            _.set(matchStr, '$match.$or', orInArray);
+          }
+        }
+      }
+    } else if (keys !== '') {
+      const keysList = JSON.parse(keys);
+      //  console.log(" >>>>> keysList=", JSON.stringify(keysList));
+      const inArray = [];
+      if (keysList && keysList.length > 0) {
+        _.forEach(keysList, (keyItem) => {
+          if (keyItem && keyItem.length > 2) {
+            const orInArray = [];
+            const orTemp = {};
+            if (_.isEqual(keyItem[1], 'timeFirst')) {
+              caseTime = true;
+              fistTime.push({
+                time: keyItem[2],
+                agentCode: keyItem.length > 2 ? keyItem[3] : '',
+              });
+              orInArray.push(
+                {
+                  $and: [
+                    {
+                      lstChgDate: {
+                        $exists: true,
+                      },
+                    },
+                    {
+                      lstChgDate: keyItem[2],
+                    },
+                  ],
+                },
+              );
+              orInArray.push(
+                {
+                  $and: [
+                    {
+                      $or: [{
+                        lstChgDate: {
+                          $exists: false,
+                        },
+                      },
+                      {
+                        lstChgDate: '',
+                      },
+                      ],
+                    },
+                    {
+                      lastUpdateDate: {
+                        $exists: true,
+                      },
+                    },
+                    {
+                      lastUpdateDate: new Date(keyItem[2]).toISOString(),
+                    },
+                  ],
+                },
+              );
+
+              if (keyItem[2] === 0) {
+                orInArray.push(
+                  {
+                    $and: [
+                      {
+                        $or: [{
+                          lstChgDate: {
+                            $exists: false,
+                          },
+                        },
+                        {
+                          lstChgDate: '',
+                        },
+                        ],
+                      },
+                      {
+                        $or: [{
+                          lastUpdateDate: {
+                            $exists: false,
+                          },
+                        },
+                        {
+                          lastUpdateDate: '',
+                        },
+                        ],
+                      },
+                    ],
+                  },
+                );
+              }
+              if (keyItem.length > 3) {
+                _.set(orTemp, 'agentCode', keyItem[3]);
+              }
+            }
+            if (_.isEqual(keyItem[1], 'agentCodeFirst')) {
+              fistAgent.push({
+                agentCode: keyItem[2],
+                time: keyItem.length > 2 ? keyItem[3] : '',
+              });
+              caseAgent = true;
+              _.set(orTemp, 'agentCode', keyItem[2]);
+              if (keyItem.length > 3) {
+                orInArray.push(
+                  {
+                    $and: [
+                      {
+                        lstChgDate: {
+                          $exists: true,
+                        },
+                      },
+                      {
+                        lstChgDate: keyItem[3],
+                      },
+                    ],
+                  },
+                );
+                orInArray.push(
+                  {
+                    $and: [
+                      {
+                        $or: [{
+                          lstChgDate: {
+                            $exists: false,
+                          },
+                        },
+                        {
+                          lstChgDate: '',
+                        },
+                        ],
+                      },
+                      {
+                        lastUpdateDate: {
+                          $exists: true,
+                        },
+                      },
+                      {
+                        lastUpdateDate: new Date(keyItem[3]).toISOString(),
+                      },
+                    ],
+                  },
+                );
+              } else {
+                orInArray.push(
+                  {
+                    $and: [
+                      {
+                        $or: [{
+                          lstChgDate: {
+                            $exists: false,
+                          },
+                        },
+                        {
+                          lstChgDate: '',
+                        },
+                        ],
+                      },
+                      {
+                        $or: [{
+                          lastUpdateDate: {
+                            $exists: false,
+                          },
+                        },
+                        {
+                          lastUpdateDate: '',
+                        },
+                        ],
+                      },
+                    ],
+                  },
+                );
+              }
+            }
+            if (!_.isEmpty(orInArray)) {
+              _.set(orTemp, '$or', orInArray);
+            }
+            if (!_.isEmpty(orTemp)) {
+              inArray.push(orTemp);
+            }
+          }
+        });
+      }
+      if (!_.isEmpty(inArray)) {
+        matchStr.$match = { $or: inArray };
+      }
+    } else {
+      caseTime = true;
+      caseAgent = true;
+    }
+    // } else if (key !== '' && key !== '[null]') {
+
+    // }
+    if (!_.isEmpty(matchStr)) {
+      aggregateStr.push(matchStr);
+    }
+    if (caseTime) {
+      aggregateStr.push({ $sort: { lstChgDate: 1, lastUpdateDate: 1, agentCode: 1 } });
+    } else if (caseAgent) {
+      aggregateStr.push({ $sort: { agentCode: 1, lstChgDate: 1, lastUpdateDate: 1 } });
+    }
+
+    console.log(' >>>>> aggregateStr=', JSON.stringify(aggregateStr));
+    aggregateStr.push(projectStr);
+
+    const createRow = (item, keyType) => {
+      const doc = _.cloneDeep(item);
+      let faadminCode;
+      if (doc.rawData && _.get(doc, 'faAdvisorRole', '') !== '') {
+        faadminCode = doc.upline2Code;
+      }
+      let lastChangedTime = _.get(doc, 'lstChgDate', '');
+      const lastUpdateDate = _.get(doc, 'lastUpdateDate', '');
+      if ((lastChangedTime === null || lastChangedTime === '')
+         && lastUpdateDate !== '') {
+        lastChangedTime = new Date(lastUpdateDate).getTime();
+      } else if (!lastChangedTime) {
+        lastChangedTime = 0;
+      }
+
+      const docKey = [];
+      docKey.push('01');
+      docKey.push(keyType);
+      if (keyType === 'timeFirst') {
+        docKey.push(lastChangedTime);
+        docKey.push(doc.agentCode);
+      } else if (keyType === 'agentCodeFirst') {
+        docKey.push(doc.agentCode);
+        docKey.push(lastChangedTime);
+      }
+      if (faadminCode) {
+        _.set(doc, 'faAdminCode', faadminCode);
+      }
+      return {
+        id: doc.id,
+        key: docKey,
+        value: _.omit(doc, ['lstChgDate', 'lastUpdateDate', 'faAdvisorRole', 'upline2Code']),
+
+      };
+    };
+    // console.log('>>>>>>matchStr  ', JSON.stringify(matchStr));
+    mongoose.connection.collection('agent').aggregate(aggregateStr).toArray((err, docs) => {
+      if (err) {
+        res.json({ status: 400, message: err.message });
+      } else {
+        console.log('>>>>>> ', docs.length);
+        const resultTemp = {};
+        let result = [];
+        const resultTime = [];
+        const resultAgent = [];
+        if (docs && docs.length > 0) {
+          _.forEach(docs, (item) => {
+            const lstChgDate = _.get(item, 'lstChgDate', '');
+            const lastUpdateDate = _.get(item, 'lastUpdateDate', '');
+            if (caseTime) {
+              if (_.isEmpty(fistTime) || (!_.isEmpty(fistTime)
+              && _.some(fistTime, it => (
+                ((it.agentCode !== '' && it.agentCode === item.agentCode) || it.agentCode === '')
+                && (
+                  (it.time !== ''
+                   && (
+                     lstChgDate === it.time
+                    || (
+                      lstChgDate === '' && lastUpdateDate !== ''
+                    && new Date(lastUpdateDate).getTime() === it.time)))
+                )
+              )))) {
+                resultTime.push(createRow(item, 'timeFirst'));
+              }
+            }
+            if (caseAgent) {
+              if (_.isEmpty(fistAgent) || (!_.isEmpty(fistAgent)
+               && _.some(fistAgent, it => (
+                 it.agentCode === item.agentCode
+                 && (
+                   (it.time === '' && lstChgDate === '' && lastUpdateDate === '')
+                   || (it.time !== ''
+                    && (
+                      lstChgDate === it.time
+                     || (
+                       lstChgDate === '' && lastUpdateDate !== ''
+                     && new Date(lastUpdateDate).getTime() === it.time)))
+                 )
+               )))) {
+                resultAgent.push(createRow(item, 'agentCodeFirst'));
+              }
+            }
+          });
+        }
+        result = _.concat(resultAgent, resultTime);
         resultTemp.total_rows = result.length;
         resultTemp.rows = result;
         res.json(resultTemp);
@@ -599,7 +1337,7 @@ exports.api = {
     // const key = req.query.key || '';
     const matchStr = {
       $match: {
-        'rawData.upline2Code': { $exists: true },
+        'rawData.upline2Code': { $exists: true, $ne: '' },
       },
     };
     if (startKey !== '' && endKey !== '') {
@@ -1643,6 +2381,7 @@ exports.api = {
     if (!_.isEmpty(emitResult)) {
       result = _.concat(result, emitResult);
     }
+    // console.log(' >>>>> matchStr111=', JSON.stringify(mastAggregateStr));
     const emitMasterResult = await mongoose.connection.collection('shieldApplication').aggregate(mastAggregateStr).toArray();
     if (!_.isEmpty(emitMasterResult)) {
       result = _.concat(result, emitMasterResult);
@@ -1699,12 +2438,16 @@ exports.api = {
     const endKey = req.query.endkey || '';
     const keys = req.query.keys || '';
     // const key = req.query.key || '';
-    const matchStr = {};
+    const matchStr = {
+      $match: { quickQuote: false },
+    };
     if (startKey !== '' && endKey !== '') {
       const startKeys = JSON.parse(startKey);
       const endKeys = JSON.parse(endKey);
       if (startKeys || endKeys) {
-        const where = {};
+        const where = {
+          quickQuote: false,
+        };
         if (_.isEqual(startKeys, endKeys)) {
           if (startKeys.length > 1) {
             _.set(where, 'pCid', startKeys[1]);
@@ -1748,7 +2491,10 @@ exports.api = {
         });
       }
       if (!_.isEmpty(inArray)) {
-        matchStr.$match = { $or: inArray };
+        matchStr.$match = {
+          quickQuote: false,
+          $or: inArray,
+        };
       }
     }
     // else if (key !== '' && key !== '[null]') {
@@ -1758,7 +2504,7 @@ exports.api = {
       aggregateStr.push(matchStr);
       aggregateStr.push({ $sort: { pCid: 1, id: 1 } });
     }
-
+    // console.log('?????>>>>  ', matchStr);
     aggregateStr.push(projectStr);
     mongoose.connection.collection('quotation').aggregate(aggregateStr).toArray((err, docs) => {
       if (err) {
