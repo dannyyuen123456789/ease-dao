@@ -64,7 +64,7 @@ fi
 
 echo "---> Fix self signed certificate in certificate chain issue"
 npm config set strict-ssl false
-npm set strict-ssl false
+
 
 #echo "---> Fix npm ERR! registry error parsing json"
 #echo "config list 1"
@@ -84,9 +84,7 @@ npm set strict-ssl false
 #npm install npm -g
 echo "---> npm config get registry"
 npm config get registry
-npm config set registry https://skimdb.npmjs.com/registry
-npm update -g npm
-npm i
+
 echo "---> npm installing  "
 npm install -g yarn --force
 yarn
