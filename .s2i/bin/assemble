@@ -84,7 +84,7 @@ npm config set strict-ssl false
 #npm install npm -g
 echo "---> npm config get registry"
 npm config get registry
-npm config set registry https://registry.npmjs.org/
+npm config set registry http://registry.npmjs.org/
 echo "---> npm installing  "
 #npm install -g yarn --force
 #yarn
