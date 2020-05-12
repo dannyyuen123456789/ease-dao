@@ -2439,14 +2439,30 @@ exports.api = {
     const keys = req.query.keys || '';
     // const key = req.query.key || '';
     const matchStr = {
-      $match: { quickQuote: false },
+      $match: {
+        $or: [
+          {
+            quickQuote: false,
+          },
+          {
+            quickQuote: { $exists: false },
+          },
+        ],
+      },
     };
     if (startKey !== '' && endKey !== '') {
       const startKeys = JSON.parse(startKey);
       const endKeys = JSON.parse(endKey);
       if (startKeys || endKeys) {
         const where = {
-          quickQuote: false,
+          $or: [
+            {
+              quickQuote: false,
+            },
+            {
+              quickQuote: { $exists: false },
+            },
+          ],
         };
         if (_.isEqual(startKeys, endKeys)) {
           if (startKeys.length > 1) {
@@ -2492,8 +2508,20 @@ exports.api = {
       }
       if (!_.isEmpty(inArray)) {
         matchStr.$match = {
-          quickQuote: false,
-          $or: inArray,
+          $and: [
+            {
+              $or: [
+                {
+                  quickQuote: false,
+                },
+                {
+                  quickQuote: { $exists: false },
+                },
+              ],
+            },
+
+            { $or: inArray },
+          ],
         };
       }
     }
