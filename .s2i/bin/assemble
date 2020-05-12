@@ -86,10 +86,10 @@ echo "---> npm config get registry"
 npm config get registry
 
 echo "---> npm installing  "
-#npm install -g yarn --force
-#yarn
-#yarn build
-npm install
+npm install -g yarn --force
+yarn
+yarn build
+#npm install
 echo "---> npm installed  "
 
 # Fix source directory permissions
