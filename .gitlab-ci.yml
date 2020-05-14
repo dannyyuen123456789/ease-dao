@@ -3,6 +3,7 @@ image: node:12-alpine
 stages:
   - checking
   - deployPages
+  - deploy
 
 checking:
   stage: checking
@@ -53,3 +54,8 @@ pages:
   artifacts:
     paths:
       - public
+
+deploy:
+  stage: deploy
+  script:
+    - curl -X POST --insecure "${SIT_OPENSHIFT_WEBHOOK}"
