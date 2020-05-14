@@ -1252,7 +1252,7 @@ exports.api = {
           policyNumber: '$policyNumber',
           type: '$type',
           isCrossAge: '$isCrossAge',
-          isBackDate: null,
+          isBackDate: '$applicationForm.values.planDetails.isBackDate',
           applicationSubmittedDate: '$applicationSubmittedDate',
           lastUpdateDate: '$applicationSubmittedDate',
           agentCode: '$quotation.agent.agentCode',
@@ -1428,10 +1428,10 @@ exports.api = {
                 _.set(doc, 'value.plans', plansTemp);
               }
             }
-            const isBackDate = _.get(doc, 'planDetails.isBackDate', '');
-            if (isBackDate !== '') {
-              _.set(doc, 'value.isBackDate', isBackDate);
-            }
+            // const isBackDate = _.get(doc, 'planDetails.isBackDate', '');
+            // if (isBackDate !== '') {
+            //   _.set(doc, 'value.isBackDate', isBackDate);
+            // }
             if (paymentMode !== '') {
               _.set(doc, 'value.paymentMode', paymentMode);
             }
@@ -1469,6 +1469,258 @@ exports.api = {
                 'insured',
                 'cashPortion',
                 'quotType', 'planDetails',
+              ]));
+          });
+        }
+        resultTemp.total_rows = result.length;
+        resultTemp.rows = result;
+        res.json(resultTemp);
+      }
+    });
+  },
+  appWithoutSubmitDate(req, res) {
+    const aggregateStr = [];
+    // This is the query result and alias -> projectStr
+    const projectStr = {
+      $project: {
+        _id: 0, // 0 is not selected
+        id: '$id',
+        key: ['01'],
+        value: {
+          id: '$id',
+          appStatus: '$appStatus',
+          parentId: '$parentId',
+          policyNumber: '$policyNumber',
+          type: '$type',
+          isCrossAge: '$isCrossAge',
+          isBackDate: '$applicationForm.values.planDetails.isBackDate',
+          applicationSubmittedDate: '$applicationSubmittedDate',
+          lastUpdateDate: null,
+          agentCode: '$quotation.agent.agentCode',
+          agentName: '$quotation.agent.name',
+          channel: '$quotation.agent.dealerGroup',
+          premium: '$quotation.premium',
+          ccy: '$quotation.ccy',
+          sameAs: '$quotation.sameAs',
+          paymentMode: null,
+          pTrustedIndividuals: '$applicationForm.values.proposer.personalInfo.trustedIndividuals',
+          pFullName: '$applicationForm.values.proposer.personalInfo.fullName',
+          pLastName: '$applicationForm.values.proposer.personalInfo.lastName',
+          pFirstName: '$applicationForm.values.proposer.personalInfo.firstName',
+          pOthName: '$applicationForm.values.proposer.personalInfo.othName',
+          pHanyuPinyinName: '$applicationForm.values.proposer.personalInfo.hanyuPinyinName',
+          iFullName: null,
+          iLastName: null,
+          iFirstName: null,
+          iOthName: null,
+          iHanyuPinyinName: null,
+          iUndischargedBankrupt: null,
+          pUndischargedBankrupt: '$applicationForm.values.proposer.declaration.BANKRUPTCY01',
+          payorSurname: '$applicationForm.values.proposer.declaration.FUND_SRC03',
+          payorGivenName: '$applicationForm.values.proposer.declaration.FUND_SRC04',
+          payorOtherName: '$applicationForm.values.proposer.declaration.FUND_SRC05',
+          payorPinYinName: '$applicationForm.values.proposer.declaration.FUND_SRC06',
+          initPayMethod: '$payment.initPayMethod',
+          trxStatus: '$payment.trxStatus',
+          trxNo: '$payment.trxNo',
+          plans: null,
+        },
+        plans: '$quotation.plans',
+        paymentMode: '$quotation.paymentMode',
+        insured: '$applicationForm.values.insured',
+        cashPortion: '$payment.cashPortion',
+        quotType: '$quotation.quotType',
+        planDetails: '$applicationForm.values.planDetails',
+        applicationSignedDate: '$applicationSignedDate',
+        applicationStartedDate: '$applicationStartedDate',
+        lastUpdateDate: '$lastUpdateDate',
+      },
+    };
+    const startKey = req.query.startkey || '';
+    const endKey = req.query.endkey || '';
+    const keys = req.query.keys || '';
+    const key = req.query.key || '';
+    const matchStr = {
+      $match: {
+        $and: [
+          {
+            applicationSubmittedDate: { $exists: true, $ne: 0 },
+          },
+          {
+            policyNumber: { $exists: true, $ne: '' },
+          },
+        ],
+
+      },
+    };
+    if (startKey !== '' && endKey !== '') {
+      const startKeys = JSON.parse(startKey);
+      const endKeys = JSON.parse(endKey);
+      if (startKeys.length > 1 && endKeys.length > 1) {
+        if (_.isEqual(startKeys, endKeys)) {
+          _.get(matchStr, '$match.$and', []).push({
+            $or: [
+              { applicationSubmittedDate: new Date(startKeys[1]).toISOString() },
+              { applicationSubmittedDate: startKeys[1] },
+            ],
+          });
+        } else {
+          _.get(matchStr, '$match.$and', []).push({
+            $or: [
+              {
+                applicationSubmittedDate: {
+                  $gte: new Date(startKeys[1]).toISOString(),
+                  $lte: new Date(endKeys[1]).toISOString(),
+                },
+              },
+              {
+                applicationSubmittedDate: {
+                  $gte: startKeys[1],
+                  $lte: endKeys[1],
+                },
+              },
+            ],
+          });
+          // matchStr.$match = { policyNumber: { $gte: startKeys[1], $lte: endKeys[1] } };
+        }
+      }
+    } else if (keys !== '') {
+      const keysList = JSON.parse(keys);
+      const inArray = [];
+      if (keysList && keysList.length > 0) {
+        _.forEach(keysList, (keyItem) => {
+          if (keyItem && keyItem.length > 1) {
+            inArray.push({
+              $or: [
+                { applicationSubmittedDate: new Date(keyItem[1]).toISOString() },
+                { applicationSubmittedDate: keyItem[1] },
+              ],
+            });
+          }
+        });
+      }
+      if (!_.isEmpty(inArray)) {
+        _.get(matchStr, '$match.$and', []).push({
+          $or: inArray,
+        });
+        // matchStr.$match = { policyNumber: { $in: inArray } };
+      }
+    } else if (key !== '' && key !== '[null]') {
+      const keyJson = JSON.parse(key);
+      if (keyJson && keyJson.length > 1) {
+        _.get(matchStr, '$match.$and', []).push({
+          $or: [
+            { applicationSubmittedDate: new Date(keyJson[1]).toISOString() },
+            { applicationSubmittedDate: keyJson[1] },
+          ],
+        });
+      }
+    }
+    if (!_.isEmpty(matchStr)) {
+      aggregateStr.push(matchStr);
+    }
+    aggregateStr.push({ $sort: { applicationSubmittedDate: 1 } });
+    // console.log(' >>>>> aggregateStr=', JSON.stringify(aggregateStr));
+    aggregateStr.push(projectStr);
+    mongoose.connection.collection('application').aggregate(aggregateStr).toArray((err, docs) => {
+      if (err) {
+        res.json({ status: 400, message: err.message });
+      } else {
+        const resultTemp = {};
+        const result = [];
+        if (docs && docs.length > 0) {
+          _.forEach(docs, (item) => {
+            const doc = _.cloneDeep(item);
+            const quotType = _.get(doc, 'quotType', '');
+            let paymentMode = _.get(doc, 'paymentMode', '');
+            if (quotType === 'SHIELD') {
+              if (_.get(doc, 'cashPortion', '') === 0) {
+                // initPayMethod = '-';
+                _.set(doc, 'value.initPayMethod', '-');
+              }
+              const planDetails = _.get(doc, 'planDetails', {});
+              if (!_.isEmpty(planDetails)) {
+                _.set(doc, 'value.ccy', _.get(planDetails, 'ccy'));
+                let premium = 0;
+                const planList = _.get(planDetails, 'planList', []);
+                if (!_.isEmpty(planList)) {
+                  const plans = [];
+                  _.forEach(planList, (plan, index) => {
+                    plans.push({
+                      covName: _.get(plan, 'covName'),
+                      sumInsured: _.get(plan, 'sumInsured'),
+                    });
+                    premium += _.get(plan, 'premium', 0);
+                    if (index === 0) {
+                      paymentMode = _.get(plan, 'payFreq');
+                    }
+                  });
+                  _.set(doc, 'value.plans', plans);
+                }
+                _.set(doc, 'value.premium', premium);
+              }
+            } else {
+              const plans = _.get(doc, 'plans', []);
+              if (!_.isEmpty(plans)) {
+                const plansTemp = [];
+                _.forEach(plans, (plan) => {
+                  plansTemp.push({
+                    covName: _.get(plan, 'covName'),
+                    sumInsured: _.get(plan, 'sumInsured'),
+                  });
+                });
+                _.set(doc, 'value.plans', plansTemp);
+              }
+            }
+            // const isBackDate = _.get(doc, 'planDetails.isBackDate', '');
+            // if (isBackDate !== '') {
+            //   _.set(doc, 'value.isBackDate', isBackDate);
+            // }
+            if (paymentMode !== '') {
+              _.set(doc, 'value.paymentMode', paymentMode);
+            }
+            const insured = _.get(doc, 'insured', []);
+            if (!_.isEmpty(insured)) {
+              const insuredTemp = insured[0];
+              if (insuredTemp) {
+                const personalInfo = _.get(insuredTemp, 'personalInfo', {});
+                const iFullName = _.get(personalInfo, 'fullName', '');
+                _.set(doc, 'value.iFullName', iFullName);
+                const iLastName = _.get(personalInfo, 'lastName', '');
+                _.set(doc, 'value.iLastName', iLastName);
+                const iFirstName = _.get(personalInfo, 'firstName', '');
+                _.set(doc, 'value.iFirstName', iFirstName);
+                const iOthName = _.get(personalInfo, 'othName', '');
+                _.set(doc, 'value.iOthName', iOthName);
+                const hanyuPinyinName = _.get(personalInfo, 'hanyuPinyinName', '');
+                _.set(doc, 'value.iHanyuPinyinName', hanyuPinyinName);
+                const iUndischargedBankrupt = _.get(insuredTemp, 'declaration.BANKRUPTCY01');
+                _.set(doc, 'value.iUndischargedBankrupt', iUndischargedBankrupt);
+              }
+            }
+            // _.get(doc, 'key', []).push(
+            //   '01',
+            // );
+            // const applicationSubmittedDate = _.get(doc, 'value.applicationSubmittedDate');
+            // if (applicationSubmittedDate) {
+            //   _.get(doc, 'key', []).push(
+            //     new Date(applicationSubmittedDate).getTime(),
+            //   );
+            // }
+            const lastUpdateDate = doc.value.applicationSubmittedDate
+            || doc.applicationSignedDate || doc.applicationStartedDate || doc.lastUpdateDate;
+            _.set(doc, 'value.lastUpdateDate', lastUpdateDate);
+            result.push(_.omit(doc,
+              [
+                'plans',
+                'paymentMode',
+                'insured',
+                'cashPortion',
+                'quotType',
+                'planDetails',
+                'applicationSignedDate',
+                'applicationStartedDate',
+                'lastUpdateDate',
               ]));
           });
         }
