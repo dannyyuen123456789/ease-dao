@@ -30,6 +30,10 @@ router.get('/main/_view/systemNotification', $main.api.systemNotification);
 router.get('/main/_view/validbundleApplicationsByAgent', $main.api.validbundleApplicationsByAgent);
 router.get('/main/_view/agentDetails', $main.api.agentDetails);
 router.get('/main/_view/agentWithDescendingOrder', $main.api.agentWithDescendingOrder);
+router.get('/main/_view/agents', $main.api.agents);
+router.get('/main/_view/allChannelApprovalCases', $main.api.allChannelApprovalCases);
+router.get('/main/_view/appByPolNum', $main.api.appByPolNum);
+router.get('/main/_view/appWithSubmitDate', $main.api.appWithSubmitDate);
 
 
 router.get('/dataSync/_view/agentDocuments', $dataSync.api.agentDocuments);

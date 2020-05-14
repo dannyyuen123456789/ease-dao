@@ -389,9 +389,7 @@ exports.api = {
                         },
                       },
                       {
-                        lstChgDate: {
-                          $ne: '',
-                        },
+                        lstChgDate: '',
                       },
                       ],
                     },
@@ -450,18 +448,22 @@ exports.api = {
                 $lte: startKeys[2],
                 $gte: endKeys[2],
               });
+              const startDateTemp = startKeys[2] > 253402271999000 ? 253402271999000 : startKeys[2];
+              const endDateTemp = endKeys[2] < 25139000 ? 25139000 : endKeys[2];
               _.set(lastUpdateDateTemp, 'lastUpdateDate', {
-                $lte: new Date(startKeys[2]).toISOString(),
-                $gte: new Date(endKeys[2]).toISOString(),
+                $lte: new Date(startDateTemp).toISOString(),
+                $gte: new Date(endDateTemp).toISOString(),
               });
             } else {
               _.set(lstChgDateTemp, 'lstChgDate', {
                 $gte: startKeys[2],
                 $lte: endKeys[2],
               });
+              const startDateTemp = startKeys[2] < 25139000 ? 25139000 : startKeys[2];
+              const endDateTemp = endKeys[2] > 253402271999000 ? 253402271999000 : endKeys[2];
               _.set(lastUpdateDateTemp, 'lastUpdateDate', {
-                $gte: new Date(startKeys[2]).toISOString(),
-                $lte: new Date(endKeys[2]).toISOString(),
+                $gte: new Date(startDateTemp).toISOString(),
+                $lte: new Date(endDateTemp).toISOString(),
               });
             }
             orInArray.push(
@@ -472,7 +474,7 @@ exports.api = {
                       $exists: true,
                     },
                   },
-                  ...lstChgDateTemp,
+                  lstChgDateTemp,
                 ],
               },
             );
@@ -495,7 +497,7 @@ exports.api = {
                       $exists: true,
                     },
                   },
-                  ...lastUpdateDateTemp,
+                  lastUpdateDateTemp,
                 ],
               },
             );
@@ -547,25 +549,20 @@ exports.api = {
           if (_.isEqual(startKeys[1], 'agentCodeFirst')) {
             caseAgent = true;
             if (descending) {
-              _.set(matchStr, '$match.agentCode.$lte', startKeys[2]);
+              _.set(matchStr, '$match.agentCode.$lte', startKeys[2] === 'ZZZ' ? 'zzz' : startKeys[2]);
               _.set(matchStr, '$match.agentCode.$gte', endKeys[2]);
             } else {
               _.set(matchStr, '$match.agentCode.$gte', startKeys[2]);
-              _.set(matchStr, '$match.agentCode.$lte', endKeys[2]);
+              _.set(matchStr, '$match.agentCode.$lte', endKeys[2] === 'ZZZ' ? 'zzz' : endKeys[2]);
             }
 
             if (startKeys.length > 3 || endKeys.length > 3) {
+              // 253402271999000 = 9999-12-31 23:59:59  25139000 = 1970-01-01 14:58:59
               const lstTemp = {};
               const lastUpTemp = {};
-              console.log('>>>>> startKeys ', startKeys);
-              console.log('>>>>> endKeys ', endKeys);
               if (startKeys.length > 3) {
                 if (descending) {
                   _.set(lstTemp, 'lstChgDate.$lte', startKeys[3]);
-                  console.log('>>>>>  lte ', startKeys[3]);
-
-                  console.log('>>>>>  startKeys ISO= ', new Date(startKeys[3]).toISOString());
-
                   const tempDate = startKeys[3] > 253402271999000 ? 253402271999000 : startKeys[3];
                   _.set(lastUpTemp, 'lastUpdateDate.$lte', new Date(tempDate).toISOString());
                 } else {
@@ -848,12 +845,22 @@ exports.api = {
       aggregateStr.push(matchStr);
     }
     if (caseTime) {
-      aggregateStr.push({ $sort: { lstChgDate: 1, lastUpdateDate: 1, agentCode: 1 } });
+      aggregateStr.push({
+        $sort: {
+          lstChgDate: (descending ? -1 : 1),
+          lastUpdateDate: (descending ? -1 : 1),
+          agentCode: (descending ? -1 : 1),
+        },
+      });
     } else if (caseAgent) {
-      aggregateStr.push({ $sort: { agentCode: 1, lstChgDate: 1, lastUpdateDate: 1 } });
+      aggregateStr.push({
+        $sort: {
+          agentCode: (descending ? -1 : 1),
+          lstChgDate: (descending ? -1 : 1),
+          lastUpdateDate: (descending ? -1 : 1),
+        },
+      });
     }
-
-    console.log(' >>>>> aggregateStr=', JSON.stringify(aggregateStr));
     aggregateStr.push(projectStr);
 
     const createRow = (item, keyType) => {
@@ -896,7 +903,7 @@ exports.api = {
       if (err) {
         res.json({ status: 400, message: err.message });
       } else {
-        console.log('>>>>>> ', docs.length);
+        // console.log('>>>>>> ', docs.length);
         const resultTemp = {};
         let result = [];
         const resultTime = [];
@@ -941,6 +948,542 @@ exports.api = {
           });
         }
         result = _.concat(resultAgent, resultTime);
+        resultTemp.total_rows = result.length;
+        resultTemp.rows = result;
+        res.json(resultTemp);
+      }
+    });
+  },
+  agents(req, res) {
+    // console.log(">>>>>",req.query);
+    const aggregateStr = [];
+    // This is the query result and alias -> projectStr
+    const projectStr = {
+      $project: {
+        _id: 0, // 0 is not selected
+        id: '$id',
+        key: ['01', '$agentCode'],
+        value: {
+          email: '$email',
+          tel: '$tel',
+          agentCode: '$agentCode',
+          agentName: '$name',
+          mobile: '$mobile',
+          manager: '$manager',
+          managerCode: '$managerCode',
+          compCode: '$compCode',
+          company: '$company',
+          profileId: '$profileId',
+          channel: '$channel',
+        },
+        faAdvisorRole: '$rawData.faAdvisorRole',
+        upline2Code: '$rawData.upline2Code',
+      },
+    };
+    const startKey = req.query.startkey || '';
+    const endKey = req.query.endkey || '';
+    const keys = req.query.keys || '';
+    // const key = req.query.key || '';
+    //  emit(['01', doc.agentId], emitObject);
+    const matchStr = {};
+    if (startKey !== '' && endKey !== '') {
+      const startKeys = JSON.parse(startKey);
+      const endKeys = JSON.parse(endKey);
+      if (startKeys.length > 1 && endKeys.length > 1) {
+        if (_.isEqual(startKeys, endKeys)) {
+          matchStr.$match = { agentCode: startKeys[1] };
+        } else {
+          matchStr.$match = { agentCode: { $gte: startKeys[1], $lte: endKeys[1] } };
+        }
+      }
+    } else if (keys !== '') {
+      const keysList = JSON.parse(keys);
+      //  console.log(" >>>>> keysList=", JSON.stringify(keysList));
+      const inArray = [];
+      if (keysList && keysList.length > 0) {
+        _.forEach(keysList, (keyItem) => {
+          if (keyItem && keyItem.length > 1) {
+            inArray.push(keyItem[1]);
+          }
+        });
+      }
+      if (!_.isEmpty(inArray)) {
+        matchStr.$match = { agentCode: { $in: inArray } };
+      }
+    }
+    // } else if (key !== '' && key !== '[null]') {
+
+    // }
+    if (!_.isEmpty(matchStr)) {
+      aggregateStr.push(matchStr);
+    }
+    aggregateStr.push({ $sort: { agentCode: 1 } });
+    //  console.log(" >>>>> aggregateStr=", JSON.stringify(aggregateStr));
+    aggregateStr.push(projectStr);
+    mongoose.connection.collection('agent').aggregate(aggregateStr).toArray((err, docs) => {
+      if (err) {
+        res.json({ status: 400, message: err.message });
+      } else {
+        const resultTemp = {};
+        const result = [];
+        if (docs && docs.length > 0) {
+          _.forEach(docs, (item) => {
+            const doc = _.cloneDeep(item);
+            if (_.get(doc, 'faAdvisorRole', '') !== '') {
+              const upline2Code = _.get(doc, 'upline2Code', '');
+              if (upline2Code !== '') {
+                _.set(doc, 'value.faAdminCode', upline2Code);
+              }
+            }
+            result.push(_.omit(doc, ['faAdvisorRole', 'upline2Code']));
+          });
+        }
+        resultTemp.total_rows = result.length;
+        resultTemp.rows = result;
+        res.json(resultTemp);
+      }
+    });
+  },
+  allChannelApprovalCases(req, res) {
+    // doc.type === 'approval') {
+    //   emit(['01', doc.approvalStatus, doc.approvalCaseId], emitObj);
+    const aggregateStr = [];
+    // This is the query result and alias -> projectStr
+    const projectStr = {
+      $project: {
+        _id: 0, // 0 is not selected
+        id: '$id',
+        key: ['01', '$approvalCaseId'],
+        value: {
+          compCode: '$compCode',
+          caseNo: '$policyId',
+          agentId: '$agentId',
+          agentName: '$agentName',
+          managerName: '$managerName',
+          managerId: '$managerId',
+          directorId: '$directorId',
+          directorName: '$directorName',
+          approveManagerId: '$approveRejectManagerId',
+          approveManagerName: '$approveRejectManagerName',
+          submittedDate: '$submittedDate',
+          approvalStatus: '$approvalStatus',
+          approvalCaseId: '$approvalCaseId',
+          applicationId: '$applicationId',
+          lastEditedBy: '$lastEditedBy',
+          supervisorApproveRejectDate: null,
+          approveRejectDate: null,
+          approveRejectManagerId: '$approveRejectManagerId',
+          approveRejectManagerName: '$approveRejectManagerName',
+          faFirmName: '$faFirmName',
+          jointFieldWorkCase: { $cond: { if: '$accept.jointFieldWorkCase', then: '$accept.jointFieldWorkCase', else: null } },
+          purposeOfJointFieldWork: { $cond: { if: '$accept.jointFieldWorkCBGroup', then: '$accept.jointFieldWorkCBGroup', else: null } },
+          dateOfCall: { $cond: { if: '$accept.callDate', then: '$accept.callDate', else: null } },
+          personContacted: { $cond: { if: '$accept.contactPerson', then: '$accept.contactPerson', else: null } },
+          mobileNo: { $cond: { if: '$accept.mobileNo', then: '$accept.mobileNo', else: null } },
+          mobileCountryCode: { $cond: { if: '$accept.mobileCountryCode', then: '$accept.mobileCountryCode', else: null } },
+          approveComment: { $cond: { if: '$accept.approveComment', then: '$accept.approveComment', else: null } },
+        },
+        supervisorApproveRejectDate: '$supervisorApproveRejectDate',
+        approveRejectDate: '$approveRejectDate',
+      },
+    };
+
+    const startKey = req.query.startkey || '';
+    const endKey = req.query.endkey || '';
+    const keys = req.query.keys || '';
+    // const key = req.query.key || '';
+
+
+    //  emit(['01', doc.agentId], emitObject);
+    const matchStr = {};
+    if (startKey !== '' && endKey !== '') {
+      const startKeys = JSON.parse(startKey);
+      const endKeys = JSON.parse(endKey);
+      if (startKeys.length > 1 && endKeys.length > 1) {
+        if (_.isEqual(startKeys, endKeys)) {
+          matchStr.$match = { approvalCaseId: startKeys[1] };
+        } else {
+          matchStr.$match = { approvalCaseId: { $gte: startKeys[1], $lte: endKeys[1] } };
+        }
+      }
+    } else if (keys !== '') {
+      const keysList = JSON.parse(keys);
+      //  console.log(" >>>>> keysList=", JSON.stringify(keysList));
+      const inArray = [];
+      if (keysList && keysList.length > 0) {
+        _.forEach(keysList, (keyItem) => {
+          if (keyItem && keyItem.length > 1) {
+            inArray.push(keyItem[1]);
+          }
+        });
+      }
+      if (!_.isEmpty(inArray)) {
+        matchStr.$match = { approvalCaseId: { $in: inArray } };
+      }
+    }
+    // else if (key !== '' && key !== '[null]') {
+
+    // }
+    if (!_.isEmpty(matchStr)) {
+      aggregateStr.push(matchStr);
+    }
+    aggregateStr.push({ $sort: { approvalCaseId: 1 } });
+    // console.log(' >>>>> matchStr=', JSON.stringify(matchStr));
+    aggregateStr.push(projectStr);
+    mongoose.connection.collection('approval').aggregate(aggregateStr).toArray((err, docs) => {
+      if (err) {
+        res.json({ status: 400, message: err.message });
+      } else {
+        const resultTemp = {};
+        const result = [];
+        if (docs && docs.length > 0) {
+          _.forEach(docs, (item) => {
+            const doc = _.cloneDeep(item);
+            const supervisorApproveRejectDate = _.get(doc, 'supervisorApproveRejectDate', '');
+            if (supervisorApproveRejectDate !== '') {
+              _.set(doc, 'value.supervisorApproveRejectDate', new Date(supervisorApproveRejectDate).getTime());
+            }
+            const approveRejectDate = _.get(doc, 'approveRejectDate', '');
+            if (approveRejectDate !== '') {
+              _.set(doc, 'value.approveRejectDate', new Date(approveRejectDate).getTime());
+            }
+            result.push(_.omit(doc, ['supervisorApproveRejectDate', 'approveRejectDate']));
+          });
+        }
+        resultTemp.total_rows = result.length;
+        resultTemp.rows = result;
+        res.json(resultTemp);
+      }
+    });
+  },
+  appByPolNum(req, res) {
+    const aggregateStr = [];
+    // This is the query result and alias -> projectStr
+    const projectStr = {
+      $project: {
+        _id: 0, // 0 is not selected
+      },
+    };
+    const startKey = req.query.startkey || '';
+    const endKey = req.query.endkey || '';
+    const keys = req.query.keys || '';
+    const key = req.query.key || '';
+    const matchStr = {
+      $match: {
+        policyNumber: { $exists: true, $ne: '' },
+      },
+    };
+    if (startKey !== '' && endKey !== '') {
+      const startKeys = JSON.parse(startKey);
+      const endKeys = JSON.parse(endKey);
+      if (startKeys.length > 1 && endKeys.length > 1) {
+        if (_.isEqual(startKeys, endKeys)) {
+          matchStr.$match = {
+            policyNumber: startKeys[1],
+          };
+        } else {
+          matchStr.$match = { policyNumber: { $gte: startKeys[1], $lte: endKeys[1] } };
+        }
+      }
+    } else if (keys !== '') {
+      const keysList = JSON.parse(keys);
+      //  console.log(" >>>>> keysList=", JSON.stringify(keysList));
+      const inArray = [];
+      if (keysList && keysList.length > 0) {
+        _.forEach(keysList, (keyItem) => {
+          if (keyItem && keyItem.length > 1) {
+            inArray.push(keyItem[1]);
+          }
+        });
+      }
+      if (!_.isEmpty(inArray)) {
+        matchStr.$match = { policyNumber: { $in: inArray } };
+      }
+    } else if (key !== '' && key !== '[null]') {
+      const keyJson = JSON.parse(key);
+      if (keyJson && keyJson.length > 1) {
+        matchStr.$match = {
+          policyNumber: keyJson[1],
+        };
+      }
+    }
+    if (!_.isEmpty(matchStr)) {
+      aggregateStr.push(matchStr);
+    }
+    // aggregateStr.push({ $sort: { policyNumber: 1 } });
+    // console.log(' >>>>> aggregateStr=', JSON.stringify(aggregateStr));
+    aggregateStr.push(projectStr);
+    //  aggregate(aggregateStr, { allowDiskUse: true }).toArray((err, docs) => {
+    // { allowDiskUse: true } 排序内存不够
+    mongoose.connection.collection('application').aggregate(aggregateStr).toArray((err, docs) => {
+      if (err) {
+        res.json({ status: 400, message: err.message });
+      } else {
+        const resultTemp = {};
+        const result = [];
+        if (docs && docs.length > 0) {
+          _.forEach(docs, (item) => {
+            const doc = _.cloneDeep(item);
+            result.push({
+              id: doc.id,
+              key: ['01', doc.policyNumber],
+              value: doc,
+            });
+          });
+        }
+        resultTemp.total_rows = result.length;
+        resultTemp.rows = result;
+        res.json(resultTemp);
+      }
+    });
+  },
+  appWithSubmitDate(req, res) {
+    const aggregateStr = [];
+    // This is the query result and alias -> projectStr
+    const projectStr = {
+      $project: {
+        _id: 0, // 0 is not selected
+        id: '$id',
+        key: [],
+        value: {
+          id: '$id',
+          parentId: '$parentId',
+          appStatus: '$appStatus',
+          policyNumber: '$policyNumber',
+          type: '$type',
+          isCrossAge: '$isCrossAge',
+          isBackDate: null,
+          applicationSubmittedDate: '$applicationSubmittedDate',
+          lastUpdateDate: '$applicationSubmittedDate',
+          agentCode: '$quotation.agent.agentCode',
+          agentName: '$quotation.agent.name',
+          channel: '$quotation.agent.dealerGroup',
+          premium: '$quotation.premium',
+          ccy: '$quotation.ccy',
+          sameAs: '$quotation.sameAs',
+          paymentMode: null,
+          pTrustedIndividuals: '$applicationForm.values.proposer.personalInfo.trustedIndividuals',
+          pFullName: '$applicationForm.values.proposer.personalInfo.fullName',
+          pLastName: '$applicationForm.values.proposer.personalInfo.lastName',
+          pFirstName: '$applicationForm.values.proposer.personalInfo.firstName',
+          pOthName: '$applicationForm.values.proposer.personalInfo.othName',
+          pHanyuPinyinName: '$applicationForm.values.proposer.personalInfo.hanyuPinyinName',
+          iFullName: null,
+          iLastName: null,
+          iFirstName: null,
+          iOthName: null,
+          iHanyuPinyinName: null,
+          iUndischargedBankrupt: null,
+          pUndischargedBankrupt: '$applicationForm.values.proposer.declaration.BANKRUPTCY01',
+          payorSurname: '$applicationForm.values.proposer.declaration.FUND_SRC03',
+          payorGivenName: '$applicationForm.values.proposer.declaration.FUND_SRC04',
+          payorOtherName: '$applicationForm.values.proposer.declaration.FUND_SRC05',
+          payorPinYinName: '$applicationForm.values.proposer.declaration.FUND_SRC06',
+          initPayMethod: '$payment.initPayMethod',
+          trxStatus: '$payment.trxStatus',
+          trxNo: '$payment.trxNo',
+          plans: null,
+        },
+        plans: '$quotation.plans',
+        paymentMode: '$quotation.paymentMode',
+        insured: '$applicationForm.values.insured',
+        cashPortion: '$payment.cashPortion',
+        quotType: '$quotation.quotType',
+        planDetails: '$applicationForm.values.planDetails',
+      },
+    };
+    const startKey = req.query.startkey || '';
+    const endKey = req.query.endkey || '';
+    const keys = req.query.keys || '';
+    const key = req.query.key || '';
+    const matchStr = {
+      $match: {
+        $and: [
+          {
+            applicationSubmittedDate: { $exists: true, $ne: 0 },
+          },
+          {
+            policyNumber: { $exists: true, $ne: '' },
+          },
+        ],
+
+      },
+    };
+    if (startKey !== '' && endKey !== '') {
+      const startKeys = JSON.parse(startKey);
+      const endKeys = JSON.parse(endKey);
+      if (startKeys.length > 1 && endKeys.length > 1) {
+        if (_.isEqual(startKeys, endKeys)) {
+          _.get(matchStr, '$match.$and', []).push({
+            $or: [
+              { applicationSubmittedDate: new Date(startKeys[1]).toISOString() },
+              { applicationSubmittedDate: startKeys[1] },
+            ],
+          });
+        } else {
+          _.get(matchStr, '$match.$and', []).push({
+            $or: [
+              {
+                applicationSubmittedDate: {
+                  $gte: new Date(startKeys[1]).toISOString(),
+                  $lte: new Date(endKeys[1]).toISOString(),
+                },
+              },
+              {
+                applicationSubmittedDate: {
+                  $gte: startKeys[1],
+                  $lte: endKeys[1],
+                },
+              },
+            ],
+          });
+          // matchStr.$match = { policyNumber: { $gte: startKeys[1], $lte: endKeys[1] } };
+        }
+      }
+    } else if (keys !== '') {
+      const keysList = JSON.parse(keys);
+      const inArray = [];
+      if (keysList && keysList.length > 0) {
+        _.forEach(keysList, (keyItem) => {
+          if (keyItem && keyItem.length > 1) {
+            inArray.push({
+              $or: [
+                { applicationSubmittedDate: new Date(keyItem[1]).toISOString() },
+                { applicationSubmittedDate: keyItem[1] },
+              ],
+            });
+          }
+        });
+      }
+      if (!_.isEmpty(inArray)) {
+        _.get(matchStr, '$match.$and', []).push({
+          $or: inArray,
+        });
+        // matchStr.$match = { policyNumber: { $in: inArray } };
+      }
+    } else if (key !== '' && key !== '[null]') {
+      const keyJson = JSON.parse(key);
+      if (keyJson && keyJson.length > 1) {
+        _.get(matchStr, '$match.$and', []).push({
+          $or: [
+            { applicationSubmittedDate: new Date(keyJson[1]).toISOString() },
+            { applicationSubmittedDate: keyJson[1] },
+          ],
+        });
+      }
+    }
+    if (!_.isEmpty(matchStr)) {
+      aggregateStr.push(matchStr);
+    }
+    aggregateStr.push({ $sort: { applicationSubmittedDate: 1 } });
+    // console.log(' >>>>> aggregateStr=', JSON.stringify(aggregateStr));
+    aggregateStr.push(projectStr);
+    mongoose.connection.collection('application').aggregate(aggregateStr).toArray((err, docs) => {
+      if (err) {
+        res.json({ status: 400, message: err.message });
+      } else {
+        const resultTemp = {};
+        const result = [];
+        if (docs && docs.length > 0) {
+          _.forEach(docs, (item) => {
+            const doc = _.cloneDeep(item);
+            const quotType = _.get(doc, 'quotType', '');
+            let paymentMode = _.get(doc, 'paymentMode', '');
+            if (quotType === 'SHIELD') {
+              if (_.get(doc, 'cashPortion', '') === 0) {
+                // initPayMethod = '-';
+                _.set(doc, 'value.initPayMethod', '-');
+              }
+              const planDetails = _.get(doc, 'planDetails.planList', {});
+              if (!_.isEmpty(planDetails)) {
+                _.set(doc, 'value.ccy', _.get(planDetails, 'ccy'));
+                let premium = 0;
+                const planList = _.get(planDetails, 'planList', []);
+                if (!_.isEmpty(planList)) {
+                  const plans = [];
+                  _.forEach(planList, (plan, index) => {
+                    plans.push({
+                      covName: _.get(plan, 'covName'),
+                      sumInsured: _.get(plan, 'sumInsured'),
+                    });
+                    premium += _.get(plan, 'premium', 0);
+                    if (index === 0) {
+                      paymentMode = _.get(plan, 'payFreq');
+                    }
+                  });
+                  _.set(doc, 'value.plans', plans);
+                }
+                _.set(doc, 'value.premium', premium);
+              }
+            } else {
+              const plans = _.get(doc, 'plans', []);
+              if (!_.isEmpty(plans)) {
+                const plansTemp = [];
+                _.forEach(plans, (plan) => {
+                  plansTemp.push({
+                    covName: _.get(plan, 'covName'),
+                    sumInsured: _.get(plan, 'sumInsured'),
+                  });
+                });
+                _.set(doc, 'value.plans', plansTemp);
+              }
+            }
+            const isBackDate = _.get(doc, 'planDetails.isBackDate', '');
+            if (isBackDate !== '') {
+              _.set(doc, 'value.isBackDate', isBackDate);
+            }
+            if (paymentMode !== '') {
+              _.set(doc, 'value.paymentMode', paymentMode);
+            }
+            const insured = _.get(doc, 'insured', []);
+            if (!_.isEmpty(insured)) {
+              const insuredTemp = insured[0];
+              if (insuredTemp) {
+                const personalInfo = _.get(insuredTemp, 'personalInfo', {});
+                const iFullName = _.get(personalInfo, 'fullName', '');
+                if (iFullName !== '') {
+                  _.set(doc, 'value.iFullName', iFullName);
+                }
+                const iLastName = _.get(personalInfo, 'lastName', '');
+                if (iLastName !== '') {
+                  _.set(doc, 'value.iLastName', iLastName);
+                }
+                const iFirstName = _.get(personalInfo, 'firstName', '');
+                if (iFirstName !== '') {
+                  _.set(doc, 'value.iFirstName', iFirstName);
+                }
+                const iOthName = _.get(personalInfo, 'othName', '');
+                if (iOthName !== '') {
+                  _.set(doc, 'value.iOthName', iOthName);
+                }
+                const hanyuPinyinName = _.get(personalInfo, 'hanyuPinyinName', '');
+                if (hanyuPinyinName !== '') {
+                  _.set(doc, 'value.iHanyuPinyinName', hanyuPinyinName);
+                }
+                const iUndischargedBankrupt = _.get(insuredTemp, 'insured.declaration.BANKRUPTCY01', '');
+                if (iUndischargedBankrupt !== '') {
+                  _.set(doc, 'value.iUndischargedBankrupt', iUndischargedBankrupt);
+                }
+              }
+            }
+            _.get(doc, 'key', []).push(
+              '01',
+            );
+            const applicationSubmittedDate = _.get(doc, 'value.applicationSubmittedDate');
+            if (applicationSubmittedDate) {
+              _.get(doc, 'key', []).push(
+                new Date(applicationSubmittedDate).getTime(),
+              );
+            }
+            result.push(_.omit(doc,
+              [
+                'plans', 'paymentMode',
+                'insured',
+                'cashPortion',
+                'quotType', 'planDetails',
+              ]));
+          });
+        }
         resultTemp.total_rows = result.length;
         resultTemp.rows = result;
         res.json(resultTemp);
@@ -1146,7 +1689,7 @@ exports.api = {
   },
   async approvalDetails(req, res) {
     // doc.type === 'approval') {
-    //   emit(['01', doc.approvalStatus, doc.approvalCaseId], emitObj);
+    //   emit(['01', doc.approvalStatus, doc.], emitObj);
     const aggregateStr = [];
     // This is the query result and alias -> projectStr
     const projectStr = {
