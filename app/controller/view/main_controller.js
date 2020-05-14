@@ -1224,11 +1224,14 @@ exports.api = {
         if (docs && docs.length > 0) {
           _.forEach(docs, (item) => {
             const doc = _.cloneDeep(item);
-            result.push({
-              id: doc.id,
-              key: ['01', doc.policyNumber],
-              value: doc,
-            });
+            const policyNumber = _.get(doc, 'policyNumber', '');
+            if (policyNumber !== null && policyNumber !== '') {
+              result.push({
+                id: doc.id,
+                key: ['01', doc.policyNumber],
+                value: doc,
+              });
+            }
           });
         }
         resultTemp.total_rows = result.length;
