@@ -1,0 +1,31 @@
+{
+    "easeApiConfig_requesttype": "http",
+    "easeApiConfig_path": "api.ease-sit3.intraeab",
+    "easeApiConfig_port": "",
+    "easeApiConfig_name": "ease-api",
+    "sourcedb_requesttype": "http",
+    "sourcedb_path": "192.168.225.97",
+    "sourcedb_port": "4984",
+    "sourcedb_name": "axasgsit",
+    "sourcedb_user": "easeWeb",
+    "sourcedb_pw": "ABC1234",
+    "AWS_HTTPS_PROXY": "http://your-username:123456@192.168.225.160:3128",
+    "kmsregion": "ap-southeast-1",
+    "kmsid": "cc348deb-3474-4c2e-909d-ff76a1311507",
+    "targetJsonPath" : "/tmp",
+    "S3folderFormat": "YYYY-MM-DD",
+    "dateFormat": "YYYY-M-D",
+    "idDateFormat": "YYYYMMDD",
+    "awsConfig": {
+      "savetoAWSs3": "N",
+      "isTestAws": "Y",
+      "bucketBaseName": "axasgease",
+      "proxy":false
+    },
+    "emailConfig": {
+      "needSendEmail": "Y",
+      "host": "192.168.225.99",
+      "port": "25"
+    }
+  }
+  

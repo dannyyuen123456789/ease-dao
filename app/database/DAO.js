@@ -18,17 +18,24 @@ class DAO {
       if (docId.substring(0, 2) === '10' || docId.substring(0, 2) === '30') {
         type = 'policy';
       } else if (docId.substring(0, 2) === 'CP') {
-        type = 'client';
+        type = 'customer';
       } else if (docId.substring(0, 2) === 'FN') {
-        type = 'FN';
+        if(_.endsWith(docId,"-FE"))
+          type = 'fnaFe';
+        else if(_.endsWith(docId,"-NA"))
+          type = 'fnaNa';
+        else if(_.endsWith(docId,"-PDA"))
+          type = 'fnaPda';
+        else
+          type = 'fna';
       } else if (docId.substring(0, 2) === 'NB') {
         type = 'application';
       } else if (docId.substring(0, 2) === 'QU') {
         type = 'quotation';
       } else if (docId.substring(0, 2) === 'SA') {
-        type = 'masterApplication';
+        type = 'shieldApplication';
       } else if (docId.substring(0, 2) === 'SP') {
-        type = 'masterApproval';
+        type = 'shieldApproval';
       } else if (docId.substring(0, 2) === 'U_') {
         type = 'agent';
       } else if (docId.substring(0, 3) === 'UX_') {
@@ -39,7 +46,10 @@ class DAO {
         type = 'aud';
       } else if (docId.length === 52 || docId.length === 50) {
         type = 'dataSyncTransactionLog';
-      } else {
+      }else if (_.endsWith(docId,"-seq")) {
+        type = 'seqMaster';
+      }
+      else {
         type = 'masterData';
       }
       return type;

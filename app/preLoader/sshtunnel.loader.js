@@ -10,7 +10,7 @@ const initSshTunnel = async () => {
   const sshConnection = _.get(systemConfig, 'sshConnection');
   const dbInUse = _.get(systemConfig, 'dbInUse');
   const dbSetting = _.get(systemConfig, 'dbSetting');
-
+  const caFile = _.get(systemConfig,"sslConfig.caFile");
   var userName = _.get(dbSetting, _.join([dbInUse, 'databaseUsername'], '.'));
   userName = escape(userName);
   var pwd = _.get(dbSetting, _.join([dbInUse, 'databasePassword'], '.'));
@@ -51,7 +51,7 @@ const initSshTunnel = async () => {
             ssl: true,
             sslValidate: false,
             useNewUrlParser: true,
-            sslCA: fs.readFileSync('D:\\amazon\\rds-combined-ca-bundle.pem'),
+            sslCA: fs.readFileSync(caFile),
             useUnifiedTopology: true,
           }).then((result) => {
             if (result) { console.log('Mongo Db init success ----', DB_URL); }

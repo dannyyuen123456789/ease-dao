@@ -25,7 +25,6 @@ class awsDAO extends DAO{
         status = false;
       }
     }
-    // log4jUtil.log("result = ",result)
     return {success:status,result:result};
     };
     async insertDoc(docId,data){
@@ -57,10 +56,11 @@ class awsDAO extends DAO{
       var status = true;
       var docType = this.getColNameById(docId);
       if(docType && !_.isEmpty(docType)){
-        // log4jUtil.log("111111",mongoose.connection.readyState)
         if(mongoose.connection.readyState===1){
+          // data = JSON.parse(data);
           // _.set(data,docId);
-          await mongoose.connection.collection(docType).updateOne({"_id":docId},{"$push":{"role" : "BBB",}},{ "upsert":true}).then(r=>{
+          // _.set(data,docId);
+          await mongoose.connection.collection(docType).updateOne({"id":docId},{"$set":data},{ "upsert":true}).then(r=>{
             result = r.result;
           }).catch(error=>
           {
@@ -74,7 +74,7 @@ class awsDAO extends DAO{
           status = false;
         }
       }
-      // log4jUtil.log("result = ",result)
+      log4jUtil.log("result = ",result)
       return {success:status,result:result};
     };
     async deleteDoc(docId){
@@ -82,9 +82,8 @@ class awsDAO extends DAO{
       var status = true;
       var docType = this.getColNameById(docId);
       if(docType && !_.isEmpty(docType)){
-        // log4jUtil.log("111111",mongoose.connection.readyState)
         if(mongoose.connection.readyState===1){
-          await mongoose.connection.collection(docType).deleteOne({"_id":docId}).then(r=>{
+          await mongoose.connection.collection(docType).deleteOne({"id":docId}).then(r=>{
             result = r.result;
           }).catch(error=>
           {
@@ -106,7 +105,7 @@ class awsDAO extends DAO{
       const docId = _.get(req.params,"docId",_.get(req.query,"docId"));
       log4jUtil.log("docType = ",docType)
       log4jUtil.log("docId = ",docId)
-      let result = await mongoose.connection.collection(docType).findOne({"_id":mongoose.Types.ObjectId(docId)});
+      let result = await mongoose.connection.collection(docType).findOne({"id":mongoose.Types.ObjectId(docId)});
       console.log("result = ",result);
       res.json({"success":true,result:result});
     };
@@ -115,7 +114,7 @@ class awsDAO extends DAO{
       const docId = _.get(req.params,"docId",_.get(req.query,"docId"));
       log4jUtil.log("docType = ",docType)
       log4jUtil.log("docId = ",docId)
-      let result = await mongoose.connection.collection(docType).findOne({"_id":mongoose.Types.ObjectId(docId)});
+      let result = await mongoose.connection.collection(docType).findOne({"id":mongoose.Types.ObjectId(docId)});
       console.log("result = ",result);
       res.json({"success":true,result:result});
     };
@@ -124,7 +123,7 @@ class awsDAO extends DAO{
       const docId = _.get(req.params,"docId",_.get(req.query,"docId"));
       log4jUtil.log("docType = ",docType)
       log4jUtil.log("docId = ",docId)
-      let result = await mongoose.connection.collection(docType).findOne({"_id":mongoose.Types.ObjectId(docId)});
+      let result = await mongoose.connection.collection(docType).findOne({"id":mongoose.Types.ObjectId(docId)});
       console.log("result = ",result);
       res.json({"success":true,result:result});
     };
@@ -133,7 +132,7 @@ class awsDAO extends DAO{
       const docId = _.get(req.params,"docId",_.get(req.query,"docId"));
       log4jUtil.log("docType = ",docType)
       log4jUtil.log("docId = ",docId)
-      let result = await mongoose.connection.collection(docType).findOne({"_id":mongoose.Types.ObjectId(docId)});
+      let result = await mongoose.connection.collection(docType).findOne({"id":mongoose.Types.ObjectId(docId)});
       console.log("result = ",result);
       res.json({"success":true,result:result});
     }
