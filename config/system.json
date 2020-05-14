@@ -15,13 +15,6 @@
     },
         "dbInUse":"AWSDocumentDB",
         "dbSetting":{
-            "?AWS-SSH":{
-                "dbType":"mongo",
-                "databaseURL": "localhost:27016",
-                "databaseName":"AXASG_DEV",
-                "databaseUsername":"axasgdev",
-                "databasePassword":"D?o3F]Cp{~"
-            },
             "AWSDocumentDB":{
                 "dbType":"mongo",
                 "databaseURL": "192.168.225.180:47017",
