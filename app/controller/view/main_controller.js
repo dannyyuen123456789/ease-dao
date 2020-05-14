@@ -866,7 +866,7 @@ exports.api = {
     const createRow = (item, keyType) => {
       const doc = _.cloneDeep(item);
       let faadminCode;
-      if (doc.rawData && _.get(doc, 'faAdvisorRole', '') !== '') {
+      if (_.get(doc, 'faAdvisorRole', '') !== '') {
         faadminCode = doc.upline2Code;
       }
       let lastChangedTime = _.get(doc, 'lstChgDate', '');
@@ -1075,13 +1075,13 @@ exports.api = {
           approveRejectManagerId: '$approveRejectManagerId',
           approveRejectManagerName: '$approveRejectManagerName',
           faFirmName: '$faFirmName',
-          jointFieldWorkCase: { $cond: { if: '$accept.jointFieldWorkCase', then: '$accept.jointFieldWorkCase', else: null } },
-          purposeOfJointFieldWork: { $cond: { if: '$accept.jointFieldWorkCBGroup', then: '$accept.jointFieldWorkCBGroup', else: null } },
-          dateOfCall: { $cond: { if: '$accept.callDate', then: '$accept.callDate', else: null } },
-          personContacted: { $cond: { if: '$accept.contactPerson', then: '$accept.contactPerson', else: null } },
-          mobileNo: { $cond: { if: '$accept.mobileNo', then: '$accept.mobileNo', else: null } },
-          mobileCountryCode: { $cond: { if: '$accept.mobileCountryCode', then: '$accept.mobileCountryCode', else: null } },
-          approveComment: { $cond: { if: '$accept.approveComment', then: '$accept.approveComment', else: null } },
+          jointFieldWorkCase: { $cond: { if: '$accept', then: '$accept.jointFieldWorkCase', else: null } },
+          purposeOfJointFieldWork: { $cond: { if: '$accept', then: '$accept.jointFieldWorkCBGroup', else: null } },
+          dateOfCall: { $cond: { if: '$accept', then: '$accept.callDate', else: null } },
+          personContacted: { $cond: { if: '$accept', then: '$accept.contactPerson', else: null } },
+          mobileNo: { $cond: { if: '$accept', then: '$accept.mobileNo', else: null } },
+          mobileCountryCode: { $cond: { if: '$accept', then: '$accept.mobileCountryCode', else: null } },
+          approveComment: { $cond: { if: '$accept', then: '$accept.approveComment', else: null } },
         },
         supervisorApproveRejectDate: '$supervisorApproveRejectDate',
         approveRejectDate: '$approveRejectDate',
@@ -1279,9 +1279,9 @@ exports.api = {
           payorGivenName: '$applicationForm.values.proposer.declaration.FUND_SRC04',
           payorOtherName: '$applicationForm.values.proposer.declaration.FUND_SRC05',
           payorPinYinName: '$applicationForm.values.proposer.declaration.FUND_SRC06',
-          initPayMethod: '$payment.initPayMethod',
-          trxStatus: '$payment.trxStatus',
-          trxNo: '$payment.trxNo',
+          initPayMethod: { $cond: { if: '$payment', then: '$payment.initPayMethod', else: null } },
+          trxStatus: { $cond: { if: '$payment', then: '$payment.trxStatus', else: null } },
+          trxNo: { $cond: { if: '$payment', then: '$payment.trxNo', else: null } },
           plans: null,
         },
         plans: '$quotation.plans',
@@ -1520,15 +1520,16 @@ exports.api = {
           payorGivenName: '$applicationForm.values.proposer.declaration.FUND_SRC04',
           payorOtherName: '$applicationForm.values.proposer.declaration.FUND_SRC05',
           payorPinYinName: '$applicationForm.values.proposer.declaration.FUND_SRC06',
-          initPayMethod: '$payment.initPayMethod',
-          trxStatus: '$payment.trxStatus',
-          trxNo: '$payment.trxNo',
+          initPayMethod: { $cond: { if: '$payment', then: '$payment.initPayMethod', else: null } },
+          trxStatus: { $cond: { if: '$payment', then: '$payment.trxStatus', else: null } },
+          trxNo: { $cond: { if: '$payment', then: '$payment.trxNo', else: null } },
           plans: null,
         },
         plans: '$quotation.plans',
         paymentMode: '$quotation.paymentMode',
         insured: '$applicationForm.values.insured',
         cashPortion: '$payment.cashPortion',
+        // payment: { $type: '$payment' },
         quotType: '$quotation.quotType',
         planDetails: '$applicationForm.values.planDetails',
         applicationSignedDate: '$applicationSignedDate',
@@ -1536,90 +1537,38 @@ exports.api = {
         lastUpdateDate: '$lastUpdateDate',
       },
     };
-    const startKey = req.query.startkey || '';
-    const endKey = req.query.endkey || '';
-    const keys = req.query.keys || '';
-    const key = req.query.key || '';
     const matchStr = {
       $match: {
         $and: [
           {
-            applicationSubmittedDate: { $exists: true, $ne: 0 },
+            $or: [
+              { applicationSubmittedDate: { $exists: false } },
+              { applicationSubmittedDate: 0 },
+            ],
+
           },
           {
-            policyNumber: { $exists: true, $ne: '' },
+            $and: [
+              {
+                policyNumber: { $exists: true },
+              },
+              {
+                policyNumber: { $ne: '' },
+              },
+              {
+                policyNumber: { $ne: null },
+              },
+            ],
           },
         ],
 
       },
     };
-    if (startKey !== '' && endKey !== '') {
-      const startKeys = JSON.parse(startKey);
-      const endKeys = JSON.parse(endKey);
-      if (startKeys.length > 1 && endKeys.length > 1) {
-        if (_.isEqual(startKeys, endKeys)) {
-          _.get(matchStr, '$match.$and', []).push({
-            $or: [
-              { applicationSubmittedDate: new Date(startKeys[1]).toISOString() },
-              { applicationSubmittedDate: startKeys[1] },
-            ],
-          });
-        } else {
-          _.get(matchStr, '$match.$and', []).push({
-            $or: [
-              {
-                applicationSubmittedDate: {
-                  $gte: new Date(startKeys[1]).toISOString(),
-                  $lte: new Date(endKeys[1]).toISOString(),
-                },
-              },
-              {
-                applicationSubmittedDate: {
-                  $gte: startKeys[1],
-                  $lte: endKeys[1],
-                },
-              },
-            ],
-          });
-          // matchStr.$match = { policyNumber: { $gte: startKeys[1], $lte: endKeys[1] } };
-        }
-      }
-    } else if (keys !== '') {
-      const keysList = JSON.parse(keys);
-      const inArray = [];
-      if (keysList && keysList.length > 0) {
-        _.forEach(keysList, (keyItem) => {
-          if (keyItem && keyItem.length > 1) {
-            inArray.push({
-              $or: [
-                { applicationSubmittedDate: new Date(keyItem[1]).toISOString() },
-                { applicationSubmittedDate: keyItem[1] },
-              ],
-            });
-          }
-        });
-      }
-      if (!_.isEmpty(inArray)) {
-        _.get(matchStr, '$match.$and', []).push({
-          $or: inArray,
-        });
-        // matchStr.$match = { policyNumber: { $in: inArray } };
-      }
-    } else if (key !== '' && key !== '[null]') {
-      const keyJson = JSON.parse(key);
-      if (keyJson && keyJson.length > 1) {
-        _.get(matchStr, '$match.$and', []).push({
-          $or: [
-            { applicationSubmittedDate: new Date(keyJson[1]).toISOString() },
-            { applicationSubmittedDate: keyJson[1] },
-          ],
-        });
-      }
-    }
+
     if (!_.isEmpty(matchStr)) {
       aggregateStr.push(matchStr);
     }
-    aggregateStr.push({ $sort: { applicationSubmittedDate: 1 } });
+    aggregateStr.push({ $sort: { id: 1 } });
     // console.log(' >>>>> aggregateStr=', JSON.stringify(aggregateStr));
     aggregateStr.push(projectStr);
     mongoose.connection.collection('application').aggregate(aggregateStr).toArray((err, docs) => {
@@ -1633,6 +1582,12 @@ exports.api = {
             const doc = _.cloneDeep(item);
             const quotType = _.get(doc, 'quotType', '');
             let paymentMode = _.get(doc, 'paymentMode', '');
+            // const payment = _.get(doc, 'payment');
+            // if (_.isEmpty(payment)) {
+            //   console.log('>>>>>  id ', doc.id);
+            //   console.log('>>>>>  payment ', payment);
+            //   console.log('>>>>>  payment type ', typeof payment);
+            // }
             if (quotType === 'SHIELD') {
               if (_.get(doc, 'cashPortion', '') === 0) {
                 // initPayMethod = '-';
@@ -1722,6 +1677,333 @@ exports.api = {
                 'applicationStartedDate',
                 'lastUpdateDate',
               ]));
+          });
+        }
+        resultTemp.total_rows = result.length;
+        resultTemp.rows = result;
+        res.json(resultTemp);
+      }
+    });
+  },
+  approvalApp(req, res) {
+    // doc.type === 'approval') {
+    //   emit(['01', doc.approvalStatus, doc.approvalCaseId], emitObj);
+    const aggregateStr = [];
+    // This is the query result and alias -> projectStr
+    const projectStr = {
+      $project: {
+        _id: 0, // 0 is not selected
+        id: '$id',
+        key: ['01', '$approvalCaseId'],
+        value: {
+          compCode: '$compCode',
+          caseNo: '$policyId',
+          agentId: '$agentId',
+          agentName: '$agentName',
+          managerName: '$managerName',
+          managerId: '$managerId',
+          directorId: '$directorId',
+          directorName: '$directorName',
+          approveManagerId: '$approveRejectManagerId',
+          approveManagerName: '$approveRejectManagerName',
+          submittedDate: '$submittedDate',
+          approvalStatus: '$approvalStatus',
+          approvalCaseId: '$approvalCaseId',
+          applicationId: '$applicationId',
+          lastEditedBy: '$lastEditedB',
+        },
+      },
+    };
+
+    const startKey = req.query.startkey || '';
+    const endKey = req.query.endkey || '';
+    const keys = req.query.keys || '';
+    const key = req.query.key || '';
+
+
+    // emit(['01', doc.approvalCaseId], emitObj);
+    const matchStr = {};
+    if (startKey !== '' && endKey !== '') {
+      const startKeys = JSON.parse(startKey);
+      const endKeys = JSON.parse(endKey);
+      if (startKeys.length > 1 && endKeys.length > 1) {
+        if (_.isEqual(startKeys, endKeys)) {
+          matchStr.$match = { approvalCaseId: startKeys[1] };
+        } else {
+          matchStr.$match = { approvalCaseId: { $gte: startKeys[1], $lte: endKeys[1] } };
+        }
+      }
+    } else if (keys !== '') {
+      const keysList = JSON.parse(keys);
+      //  console.log(" >>>>> keysList=", JSON.stringify(keysList));
+      const inArray = [];
+      if (keysList && keysList.length > 0) {
+        _.forEach(keysList, (keyItem) => {
+          if (keyItem && keyItem.length > 1) {
+            inArray.push(keyItem[1]);
+          }
+        });
+      }
+      if (!_.isEmpty(inArray)) {
+        matchStr.$match = { approvalCaseId: { $in: inArray } };
+      }
+    } else if (key !== '' && key !== '[null]') {
+      const keyJson = JSON.parse(key);
+      if (keyJson && keyJson.length > 1) {
+        matchStr.$match = {
+          approvalCaseId: keyJson[1],
+        };
+      }
+    }
+    if (!_.isEmpty(matchStr)) {
+      aggregateStr.push(matchStr);
+    }
+    aggregateStr.push({ $sort: { approvalCaseId: 1 } });
+    // console.log(' >>>>> matchStr=', JSON.stringify(matchStr));
+    aggregateStr.push(projectStr);
+    mongoose.connection.collection('approval').aggregate(aggregateStr).toArray((err, docs) => {
+      if (err) {
+        res.json({ status: 400, message: err.message });
+      } else {
+        const resultTemp = {};
+        resultTemp.total_rows = docs.length;
+        resultTemp.rows = docs;
+        res.json(resultTemp);
+      }
+    });
+  },
+  approvalCases(req, res) {
+    // doc.type === 'approval') {
+    //   emit(['01', doc.approvalStatus, doc.approvalCaseId], emitObj);
+    const aggregateStr = [];
+    // This is the query result and alias -> projectStr
+    const projectStr = {
+      $project: {
+        _id: 0, // 0 is not selected
+        id: '$id',
+        key: ['01', '$approvalCaseId'],
+        value: {
+          compCode: '$compCode',
+          displayCaseNo: '$policyId',
+          caseNo: '$policyId',
+          agentId: '$agentId',
+          agentName: '$agentName',
+          managerName: '$managerName',
+          managerId: '$managerId',
+          directorId: '$directorId',
+          directorName: '$directorName',
+          approveManagerId: '$approveRejectManagerId',
+          approveManagerName: '$approveRejectManagerName',
+          submittedDate: '$submittedDate',
+          approvalStatus: '$approvalStatus',
+          approvalCaseId: '$approvalCaseId',
+          applicationId: '$applicationId',
+          lastEditedBy: '$lastEditedBy',
+          supervisorApproveRejectDate: null,
+          approveRejectDate: null,
+          approveRejectManagerId: '$approveRejectManagerId',
+          approveRejectManagerName: '$approveRejectManagerName',
+          faFirmName: '$faFirmName',
+          jointFieldWorkCase: { $cond: { if: '$accept', then: '$accept.jointFieldWorkCase', else: null } },
+          purposeOfJointFieldWork: { $cond: { if: '$accept', then: '$accept.jointFieldWorkCBGroup', else: null } },
+          dateOfCall: { $cond: { if: '$accept', then: '$accept.callDate', else: null } },
+          personContacted: { $cond: { if: '$accept', then: '$accept.contactPerson', else: null } },
+          mobileNo: { $cond: { if: '$accept', then: '$accept.mobileNo', else: null } },
+          mobileCountryCode: { $cond: { if: '$accept', then: '$accept.mobileCountryCode', else: null } },
+          approveComment: { $cond: { if: '$accept', then: '$accept.approveComment', else: null } },
+        },
+        supervisorApproveRejectDate: '$supervisorApproveRejectDate',
+        approveRejectDate: '$approveRejectDate',
+      },
+    };
+
+    const startKey = req.query.startkey || '';
+    const endKey = req.query.endkey || '';
+    const keys = req.query.keys || '';
+    const key = req.query.key || '';
+
+
+    // emit(['01', doc.approvalCaseId], emitObj);
+    const matchStr = {};
+    if (startKey !== '' && endKey !== '') {
+      const startKeys = JSON.parse(startKey);
+      const endKeys = JSON.parse(endKey);
+      if (startKeys.length > 1 && endKeys.length > 1) {
+        if (_.isEqual(startKeys, endKeys)) {
+          matchStr.$match = { approvalCaseId: startKeys[1] };
+        } else {
+          matchStr.$match = { approvalCaseId: { $gte: startKeys[1], $lte: endKeys[1] } };
+        }
+      }
+    } else if (keys !== '') {
+      const keysList = JSON.parse(keys);
+      //  console.log(" >>>>> keysList=", JSON.stringify(keysList));
+      const inArray = [];
+      if (keysList && keysList.length > 0) {
+        _.forEach(keysList, (keyItem) => {
+          if (keyItem && keyItem.length > 1) {
+            inArray.push(keyItem[1]);
+          }
+        });
+      }
+      if (!_.isEmpty(inArray)) {
+        matchStr.$match = { approvalCaseId: { $in: inArray } };
+      }
+    } else if (key !== '' && key !== '[null]') {
+      const keyJson = JSON.parse(key);
+      if (keyJson && keyJson.length > 1) {
+        matchStr.$match = {
+          approvalCaseId: keyJson[1],
+        };
+      }
+    }
+    if (!_.isEmpty(matchStr)) {
+      aggregateStr.push(matchStr);
+    }
+    aggregateStr.push({ $sort: { approvalCaseId: 1 } });
+    // console.log(' >>>>> matchStr=', JSON.stringify(matchStr));
+    aggregateStr.push(projectStr);
+    mongoose.connection.collection('approval').aggregate(aggregateStr).toArray((err, docs) => {
+      if (err) {
+        res.json({ status: 400, message: err.message });
+      } else {
+        const resultTemp = {};
+        const result = [];
+        if (docs && docs.length > 0) {
+          _.forEach(docs, (item) => {
+            const doc = _.cloneDeep(item);
+            const supervisorApproveRejectDate = _.get(doc, 'supervisorApproveRejectDate', '');
+            if (supervisorApproveRejectDate !== '') {
+              _.set(doc, 'value.supervisorApproveRejectDate', new Date(supervisorApproveRejectDate).getTime());
+            }
+            const approveRejectDate = _.get(doc, 'approveRejectDate', '');
+            if (approveRejectDate !== '') {
+              _.set(doc, 'value.approveRejectDate', new Date(approveRejectDate).getTime());
+            }
+            result.push(_.omit(doc, ['supervisorApproveRejectDate', 'approveRejectDate']));
+          });
+        }
+        resultTemp.total_rows = result.length;
+        resultTemp.rows = result;
+        res.json(resultTemp);
+      }
+    });
+  },
+  approvalDateCases(req, res) {
+    // doc.type === 'approval') {
+    //   emit(['01', doc.approvalStatus, doc.approvalCaseId], emitObj);
+    const aggregateStr = [];
+    // This is the query result and alias -> projectStr
+    const projectStr = {
+      $project: {
+        _id: 0, // 0 is not selected
+        id: '$id',
+        key: [],
+        value: {
+          compCode: '$compCode',
+          caseNo: '$policyId',
+          product: '$productName',
+          agentId: '$agentId',
+          agentName: '$agentName',
+          managerName: '$managerName',
+          managerId: '$managerId',
+          directorId: '$directorId',
+          directorName: '$directorName',
+          approveManagerId: '$approveRejectManagerId',
+          approveManagerName: '$approveRejectManagerName',
+          submittedDate: '$submittedDate',
+          approvalStatus: '$approvalStatus',
+          onHoldReason: '$onHoldReason',
+          approvalCaseId: '$approvalCaseId',
+          applicationId: '$applicationId',
+          quotationId: '$quotationId',
+          customerId: '$customerId',
+          customerName: '$customerName',
+          approveRejectDate: '$approveRejectDate',
+          lastEditedBy: '$lastEditedBy',
+        },
+      },
+    };
+
+    const startKey = req.query.startkey || '';
+    const endKey = req.query.endkey || '';
+    const keys = req.query.keys || '';
+    const key = req.query.key || '';
+
+
+    // emit(['01', doc.approvalCaseId], emitObj);
+    const matchStr = {
+      $match: {
+        $and: [
+          { approveRejectDate: { $exists: true } },
+        ],
+
+      },
+    };
+    if (startKey !== '' && endKey !== '') {
+      const startKeys = JSON.parse(startKey);
+      const endKeys = JSON.parse(endKey);
+      if (startKeys.length > 1 && endKeys.length > 1) {
+        if (_.isEqual(startKeys, endKeys)) {
+          _.get(matchStr, '$match.$and', []).push({
+            approveRejectDate: new Date(startKeys[1]).toISOString(),
+          });
+          // matchStr.$match = { approvalCaseId: startKeys[1] };
+        } else {
+          _.get(matchStr, '$match.$and', []).push({
+            approveRejectDate: {
+              $gte: new Date(startKeys[1]).toISOString(),
+              $lte: new Date(endKeys[1]).toISOString(),
+            },
+          });
+        }
+      }
+    } else if (keys !== '') {
+      const keysList = JSON.parse(keys);
+      //  console.log(" >>>>> keysList=", JSON.stringify(keysList));
+      const inArray = [];
+      if (keysList && keysList.length > 0) {
+        _.forEach(keysList, (keyItem) => {
+          if (keyItem && keyItem.length > 1) {
+            inArray.push(
+              { approveRejectDate: new Date(keyItem[1]).toISOString() },
+            );
+          }
+        });
+      }
+      if (!_.isEmpty(inArray)) {
+        _.get(matchStr, '$match.$and', []).push({
+          $or: inArray,
+        });
+      }
+    } else if (key !== '' && key !== '[null]') {
+      const keyJson = JSON.parse(key);
+      if (keyJson && keyJson.length > 1) {
+        _.get(matchStr, '$match.$and', []).push({
+          approveRejectDate: new Date(keyJson[1]).toISOString(),
+        });
+      }
+    }
+    if (!_.isEmpty(matchStr)) {
+      aggregateStr.push(matchStr);
+    }
+    aggregateStr.push({ $sort: { approveRejectDate: 1 } });
+    // console.log(' >>>>> matchStr=', JSON.stringify(matchStr));
+    aggregateStr.push(projectStr);
+    mongoose.connection.collection('approval').aggregate(aggregateStr).toArray((err, docs) => {
+      if (err) {
+        res.json({ status: 400, message: err.message });
+      } else {
+        const resultTemp = {};
+        const result = [];
+        if (docs && docs.length > 0) {
+          _.forEach(docs, (item) => {
+            const doc = _.cloneDeep(item);
+            const approveRejectDate = _.get(doc, 'value.approveRejectDate', '');
+            if (approveRejectDate !== '') {
+              _.set(doc, 'key', ['01', new Date(approveRejectDate).getTime()]);
+              result.push(doc);
+            }
           });
         }
         resultTemp.total_rows = result.length;

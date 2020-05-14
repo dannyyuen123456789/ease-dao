@@ -34,6 +34,10 @@ router.get('/main/_view/agents', $main.api.agents);
 router.get('/main/_view/allChannelApprovalCases', $main.api.allChannelApprovalCases);
 router.get('/main/_view/appByPolNum', $main.api.appByPolNum);
 router.get('/main/_view/appWithSubmitDate', $main.api.appWithSubmitDate);
+router.get('/main/_view/appWithoutSubmitDate', $main.api.appWithoutSubmitDate);
+router.get('/main/_view/approvalApp', $main.api.approvalApp);
+router.get('/main/_view/approvalCases', $main.api.approvalCases);
+router.get('/main/_view/approvalDateCases', $main.api.approvalDateCases);
 
 
 router.get('/dataSync/_view/agentDocuments', $dataSync.api.agentDocuments);
