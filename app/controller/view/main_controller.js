@@ -1394,7 +1394,7 @@ exports.api = {
                 // initPayMethod = '-';
                 _.set(doc, 'value.initPayMethod', '-');
               }
-              const planDetails = _.get(doc, 'planDetails.planList', {});
+              const planDetails = _.get(doc, 'planDetails', {});
               if (!_.isEmpty(planDetails)) {
                 _.set(doc, 'value.ccy', _.get(planDetails, 'ccy'));
                 let premium = 0;
@@ -1441,29 +1441,17 @@ exports.api = {
               if (insuredTemp) {
                 const personalInfo = _.get(insuredTemp, 'personalInfo', {});
                 const iFullName = _.get(personalInfo, 'fullName', '');
-                if (iFullName !== '') {
-                  _.set(doc, 'value.iFullName', iFullName);
-                }
+                _.set(doc, 'value.iFullName', iFullName);
                 const iLastName = _.get(personalInfo, 'lastName', '');
-                if (iLastName !== '') {
-                  _.set(doc, 'value.iLastName', iLastName);
-                }
+                _.set(doc, 'value.iLastName', iLastName);
                 const iFirstName = _.get(personalInfo, 'firstName', '');
-                if (iFirstName !== '') {
-                  _.set(doc, 'value.iFirstName', iFirstName);
-                }
+                _.set(doc, 'value.iFirstName', iFirstName);
                 const iOthName = _.get(personalInfo, 'othName', '');
-                if (iOthName !== '') {
-                  _.set(doc, 'value.iOthName', iOthName);
-                }
+                _.set(doc, 'value.iOthName', iOthName);
                 const hanyuPinyinName = _.get(personalInfo, 'hanyuPinyinName', '');
-                if (hanyuPinyinName !== '') {
-                  _.set(doc, 'value.iHanyuPinyinName', hanyuPinyinName);
-                }
-                const iUndischargedBankrupt = _.get(insuredTemp, 'insured.declaration.BANKRUPTCY01', '');
-                if (iUndischargedBankrupt !== '') {
-                  _.set(doc, 'value.iUndischargedBankrupt', iUndischargedBankrupt);
-                }
+                _.set(doc, 'value.iHanyuPinyinName', hanyuPinyinName);
+                const iUndischargedBankrupt = _.get(insuredTemp, 'declaration.BANKRUPTCY01');
+                _.set(doc, 'value.iUndischargedBankrupt', iUndischargedBankrupt);
               }
             }
             _.get(doc, 'key', []).push(
