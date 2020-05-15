@@ -1713,7 +1713,7 @@ exports.api = {
           approvalStatus: '$approvalStatus',
           approvalCaseId: '$approvalCaseId',
           applicationId: '$applicationId',
-          lastEditedBy: '$lastEditedB',
+          lastEditedBy: '$lastEditedBy',
         },
       },
     };
@@ -2015,6 +2015,313 @@ exports.api = {
       }
     });
   },
+  async approvalDetails(req, res) {
+    // doc.type === 'approval') {
+    //   emit(['01', doc.approvalStatus, doc.], emitObj);
+    const aggregateStr = [];
+    // This is the query result and alias -> projectStr
+    const projectStr = {
+      $project: {
+        _id: 0, // 0 is not selected
+        id: '$id',
+        key: ['01', '$approvalStatus', '$approvalCaseId'],
+        value: {
+          compCode: '$compCode',
+          displayCaseNo: '$policyId',
+          caseNo: '$policyId',
+          product: '$productName',
+          agentId: '$agentId',
+          agentName: '$agentName',
+          managerName: '$managerName',
+          managerId: '$managerId',
+          directorId: '$directorId',
+          directorName: '$directorName',
+          approveManagerId: '$approveRejectManagerId',
+          approveManagerName: '$approveRejectManagerName',
+          approveRejectManagerId: '$approveRejectManagerId',
+          approveRejectManagerName: '$approveRejectManagerName',
+          submittedDate: '$submittedDate',
+          approvalStatus: '$approvalStatus',
+          onHoldReason: '$onHoldReason',
+          approvalCaseId: '$approvalCaseId',
+          applicationId: '$applicationId',
+          quotationId: '$quotationId',
+          customerId: '$customerId',
+          customerName: '$customerName',
+          lastEditedBy: '$lastEditedBy',
+          lastEditedDate: '$lastEditedDate',
+          approveRejectDate: '$approveRejectDate',
+          caseLockedManagerCodebyStatus: '$caseLockedManagerCodebyStatus',
+          customerICNo: '$customerICNo',
+          agentProfileId: '$agentProfileId',
+          expiredDate: '$expiredDate',
+          masterApprovalId: { $cond: { if: '$masterApprovalId', then: '$masterApprovalId', else: '' } },
+          isShield: '$isShield',
+          proposalNumber: { $cond: { if: '$proposalNumber', then: '$proposalNumber', else: '$policyId' } },
+        },
+      },
+    };
+
+    const startKey = req.query.startkey || '';
+    const endKey = req.query.endkey || '';
+    const keys = req.query.keys || '';
+    // const key = req.query.key || '';
+
+
+    //  emit(['01', doc.agentId], emitObject);
+    const matchStr = {};
+    const matchStrAgent = {};
+    let addCase1 = false;
+    let addCaseAgent = false;
+    let fullCase = false;
+    if (startKey !== '' && endKey !== '') {
+      const startKeys = JSON.parse(startKey);
+      const endKeys = JSON.parse(endKey);
+      if (startKeys || endKeys) {
+        const where = {};
+        const whereAgent = {};
+        if (_.isEqual(startKeys, endKeys)) {
+          if (startKeys.length === 2) {
+            _.set(whereAgent, 'agentId', startKeys[1]);
+            addCaseAgent = true;
+          }
+          if (startKeys.length === 3) {
+            addCase1 = true;
+            _.set(where, 'approvalStatus', startKeys[1]);
+            _.set(where, 'approvalCaseId', startKeys[2]);
+          }
+        } else {
+          if (startKeys && startKeys.length === 2) {
+            _.set(whereAgent, 'agentId.$gte', startKeys[1]);
+            addCaseAgent = true;
+          }
+          if (startKeys && startKeys.length === 3) {
+            _.set(where, 'approvalStatus.$gte', startKeys[1]);
+            _.set(where, 'approvalCaseId.$gte', startKeys[2]);
+            addCase1 = true;
+          }
+          if (endKeys && endKeys.length === 2) {
+            _.set(whereAgent, 'agentId.$lte', endKeys[1]);
+            addCaseAgent = true;
+          }
+          if (endKeys && endKeys.length === 3) {
+            _.set(where, 'approvalStatus.$lte', endKeys[1]);
+            _.set(where, 'approvalCaseId.$lte', endKeys[2]);
+            addCase1 = true;
+          }
+        }
+        if (!_.isEmpty(where)) {
+          matchStr.$match = where;
+        }
+      }
+    } else if (keys !== '') {
+      const keysList = JSON.parse(keys);
+      const inArray = [];
+      const inAgentArray = [];
+      if (keysList && keysList.length > 0) {
+        _.forEach(keysList, (keyItem) => {
+          const temp = {};
+          if (keyItem && keyItem.length === 2) {
+            addCaseAgent = true;
+            _.set(temp, 'agentId', keyItem[1]);
+            inAgentArray.push(temp);
+          }
+          if (keyItem && keyItem.length === 3) {
+            addCase1 = true;
+            _.set(temp, 'approvalStatus', keyItem[1]);
+            _.set(temp, 'approvalCaseId', keyItem[2]);
+            inArray.push(temp);
+          }
+        });
+      }
+      if (!_.isEmpty(inArray)) {
+        matchStr.$match = { $or: inArray };
+      }
+      if (!_.isEmpty(inAgentArray)) {
+        matchStrAgent.$match = { $or: inAgentArray };
+      }
+    } else {
+      addCase1 = true;
+      fullCase = true;
+      addCaseAgent = false;
+    }
+    // else if (key !== '' && key !== '[null]') {
+
+    // }
+    if (!_.isEmpty(matchStr)) {
+      aggregateStr.push(matchStr);
+    }
+    let result = [];
+    const projectStrAgent = _.cloneDeep(projectStr);
+    aggregateStr.push({ $sort: { approvalStatus: 1, approvalCaseId: 1 } });
+    aggregateStr.push(projectStr);
+    if (addCase1) {
+      const emitResult = await mongoose.connection.collection('approval').aggregate(aggregateStr).toArray();
+      if (!_.isEmpty(emitResult)) {
+        result = _.concat(result, emitResult);
+        if (fullCase) {
+          const emitAgentResult = [];
+          _.forEach(emitResult, (rs) => {
+            const agentResult = _.cloneDeep(rs);
+            _.set(agentResult, 'key', ['01', _.get(agentResult, 'value.agentId', null)]);
+            emitAgentResult.push(agentResult);
+          });
+          result = _.concat(result, emitAgentResult);
+        }
+      }
+    }
+    if (addCaseAgent) {
+      const aggregateStrAgent = [];
+      if (!_.isEmpty(matchStrAgent)) {
+        aggregateStrAgent.push(matchStrAgent);
+      }
+      _.set(projectStrAgent, '$project.key', ['01', '$agentId']);
+      aggregateStrAgent.push({ $sort: { agentId: 1 } });
+      aggregateStrAgent.push(projectStrAgent);
+      // console.log(' >>>>> aggregateStrAgent=', JSON.stringify(aggregateStrAgent));
+      const emitAgentResult = await mongoose.connection.collection('approval').aggregate(aggregateStrAgent).toArray();
+      if (!_.isEmpty(emitAgentResult)) {
+        result = _.concat(result, emitAgentResult);
+      }
+    }
+    const resultTemp = {};
+    resultTemp.total_rows = result.length;
+    resultTemp.rows = result;
+    res.json(resultTemp);
+  },
+  bundleApp(req, res) {
+    // doc.type === 'bundle') {
+    //   emit(['01', 'application',  app.applicationDocId]
+    const aggregateStr = [];
+    // This is the query result and alias -> projectStr
+    const projectStr = {
+      $project: {
+        _id: 0, // 0 is not selected
+        id: '$id',
+        // key: ['01', '$quotationDocId', null],
+        applications: '$applications',
+        isValid: '$isValid',
+      },
+    };
+
+    const startKey = req.query.startkey || '';
+    const endKey = req.query.endkey || '';
+    const keys = req.query.keys || '';
+    const key = req.query.key || '';
+    const matchStrBundle = {
+      $match: {
+        $and: [
+          { applications: { $exists: true } },
+        ],
+      },
+    };
+    const applicationDocIds = [];
+    if (startKey !== '' && endKey !== '') {
+      const startKeys = JSON.parse(startKey);
+      const endKeys = JSON.parse(endKey);
+      if (startKeys || endKeys) {
+        let whereBundle = {};
+        if (_.isEqual(startKeys, endKeys)) {
+          if (startKeys.length > 2) {
+            whereBundle = {
+              applications: { $elemMatch: { applicationDocId: startKeys[2] } },
+            };
+            applicationDocIds.push(startKeys[1]);
+          }
+        } else {
+          const elemStr = {};
+          if (startKeys && startKeys.length > 2) {
+            _.set(elemStr, '$elemMatch.applicationDocId.$gte', startKeys[2]);
+          }
+
+          if (endKeys && endKeys.length > 2) {
+            _.set(elemStr, '$elemMatch.applicationDocId.$lte', endKeys[2]);
+          }
+
+          if (!_.isEmpty(elemStr)) {
+            whereBundle = {
+              applications: elemStr,
+            };
+          }
+        }
+        if (!_.isEmpty(whereBundle)) {
+          _.get(matchStrBundle, '$match.$and', []).push(
+            whereBundle,
+          );
+        }
+      }
+    } else if (keys !== '') {
+      const keysList = JSON.parse(keys);
+      const inBundleArray = [];
+      if (keysList && keysList.length > 0) {
+        _.forEach(keysList, (keyItem) => {
+          if (keyItem && keyItem.length > 2) {
+            applicationDocIds.push(keyItem[2]);
+            inBundleArray.push({
+              applications: { $elemMatch: { applicationDocId: keyItem[2] } },
+            });
+          }
+        });
+      }
+      if (!_.isEmpty(inBundleArray)) {
+        _.get(matchStrBundle, '$match.$and', []).push(
+          {
+            $or: inBundleArray,
+          },
+        );
+      }
+    } else if (key !== '' && key !== '[null]') {
+      const keyJson = JSON.parse(key);
+      if (keyJson && keyJson.length > 2) {
+        _.get(matchStrBundle, '$match.$and', []).push({
+          applicationDocId: keyJson[2],
+        });
+        applicationDocIds.push(keyJson[2]);
+      }
+    }
+    if (!_.isEmpty(matchStrBundle)) {
+      aggregateStr.push(matchStrBundle);
+    }
+    aggregateStr.push({ $sort: { id: 1, 'applications.applicationDocId': 1 } });
+    aggregateStr.push(projectStr);
+    mongoose.connection.collection('fna').aggregate(aggregateStr).toArray((err, docs) => {
+      if (err) {
+        res.json({ status: 400, message: err.message });
+      } else {
+        const resultTemp = {};
+        const result = [];
+        if (docs && docs.length > 0) {
+          // console.log('>>>>>>  docs length=', docs.length);
+          _.forEach(docs, (doc) => {
+            if (doc && doc.applications && doc.applications.length > 0) {
+              _.forEach(doc.applications, (app) => {
+                if (
+                  _.isEmpty(applicationDocIds)
+                  || (!_.isEmpty(applicationDocIds)
+                  && _.indexOf(applicationDocIds, app.applicationDocId) > -1)
+                ) {
+                  result.push({
+                    id: doc.id,
+                    key: ['01', 'application', app.applicationDocId],
+                    value: {
+                      bundleId: doc.id,
+                      applicationDocId: app.applicationDocId,
+                      appStatus: app.appStatus,
+                      isValid: doc.isValid,
+                    },
+                  });
+                }
+              });
+            }
+          });
+        }
+        // const result = _.concat(endTimeResult, docs);
+        resultTemp.total_rows = result.length;
+        resultTemp.rows = result;
+        res.json(resultTemp);
+      }
+    });
+  },
   contacts(req, res) {
     // console.log(">>>>>",req.query);
     const aggregateStr = [];
@@ -2206,180 +2513,6 @@ exports.api = {
       _.forEach(masterApplicationResult, (_masterApplication) => {
         result.push(createResult(_masterApplication));
       });
-    }
-    const resultTemp = {};
-    resultTemp.total_rows = result.length;
-    resultTemp.rows = result;
-    res.json(resultTemp);
-  },
-  async approvalDetails(req, res) {
-    // doc.type === 'approval') {
-    //   emit(['01', doc.approvalStatus, doc.], emitObj);
-    const aggregateStr = [];
-    // This is the query result and alias -> projectStr
-    const projectStr = {
-      $project: {
-        _id: 0, // 0 is not selected
-        id: '$id',
-        key: ['01', '$approvalStatus', '$approvalCaseId'],
-        value: {
-          compCode: '$compCode',
-          displayCaseNo: '$policyId',
-          caseNo: '$policyId',
-          product: '$productName',
-          agentId: '$agentId',
-          agentName: '$agentName',
-          managerName: '$managerName',
-          managerId: '$managerId',
-          directorId: '$directorId',
-          directorName: '$directorName',
-          approveManagerId: '$approveRejectManagerId',
-          approveManagerName: '$approveRejectManagerName',
-          approveRejectManagerId: '$approveRejectManagerId',
-          approveRejectManagerName: '$approveRejectManagerName',
-          submittedDate: '$submittedDate',
-          approvalStatus: '$approvalStatus',
-          onHoldReason: '$onHoldReason',
-          approvalCaseId: '$approvalCaseId',
-          applicationId: '$applicationId',
-          quotationId: '$quotationId',
-          customerId: '$customerId',
-          customerName: '$customerName',
-          lastEditedBy: '$lastEditedBy',
-          lastEditedDate: '$lastEditedDate',
-          approveRejectDate: '$approveRejectDate',
-          caseLockedManagerCodebyStatus: '$caseLockedManagerCodebyStatus',
-          customerICNo: '$customerICNo',
-          agentProfileId: '$agentProfileId',
-          expiredDate: '$expiredDate',
-          masterApprovalId: { $cond: { if: '$masterApprovalId', then: '$masterApprovalId', else: '' } },
-          isShield: '$isShield',
-          proposalNumber: { $cond: { if: '$proposalNumber', then: '$proposalNumber', else: '$policyId' } },
-        },
-      },
-    };
-
-    const startKey = req.query.startkey || '';
-    const endKey = req.query.endkey || '';
-    const keys = req.query.keys || '';
-    // const key = req.query.key || '';
-
-
-    //  emit(['01', doc.agentId], emitObject);
-    const matchStr = {};
-    const matchStrAgent = {};
-    let addCase1 = false;
-    let addCaseAgent = false;
-    let fullCase = false;
-    if (startKey !== '' && endKey !== '') {
-      const startKeys = JSON.parse(startKey);
-      const endKeys = JSON.parse(endKey);
-      if (startKeys || endKeys) {
-        const where = {};
-        const whereAgent = {};
-        if (_.isEqual(startKeys, endKeys)) {
-          if (startKeys.length === 2) {
-            _.set(whereAgent, 'agentId', startKeys[1]);
-            addCaseAgent = true;
-          }
-          if (startKeys.length === 3) {
-            addCase1 = true;
-            _.set(where, 'approvalStatus', startKeys[1]);
-            _.set(where, 'approvalCaseId', startKeys[2]);
-          }
-        } else {
-          if (startKeys && startKeys.length === 2) {
-            _.set(whereAgent, 'agentId.$gte', startKeys[1]);
-            addCaseAgent = true;
-          }
-          if (startKeys && startKeys.length === 3) {
-            _.set(where, 'approvalStatus.$gte', startKeys[1]);
-            _.set(where, 'approvalCaseId.$gte', startKeys[2]);
-            addCase1 = true;
-          }
-          if (endKeys && endKeys.length === 2) {
-            _.set(whereAgent, 'agentId.$lte', endKeys[1]);
-            addCaseAgent = true;
-          }
-          if (endKeys && endKeys.length === 3) {
-            _.set(where, 'approvalStatus.$lte', endKeys[1]);
-            _.set(where, 'approvalCaseId.$lte', endKeys[2]);
-            addCase1 = true;
-          }
-        }
-        if (!_.isEmpty(where)) {
-          matchStr.$match = where;
-        }
-      }
-    } else if (keys !== '') {
-      const keysList = JSON.parse(keys);
-      const inArray = [];
-      const inAgentArray = [];
-      if (keysList && keysList.length > 0) {
-        _.forEach(keysList, (keyItem) => {
-          const temp = {};
-          if (keyItem && keyItem.length === 2) {
-            addCaseAgent = true;
-            _.set(temp, 'agentId', keyItem[1]);
-            inAgentArray.push(temp);
-          }
-          if (keyItem && keyItem.length === 3) {
-            addCase1 = true;
-            _.set(temp, 'approvalStatus', keyItem[1]);
-            _.set(temp, 'approvalCaseId', keyItem[2]);
-            inArray.push(temp);
-          }
-        });
-      }
-      if (!_.isEmpty(inArray)) {
-        matchStr.$match = { $or: inArray };
-      }
-      if (!_.isEmpty(inAgentArray)) {
-        matchStrAgent.$match = { $or: inAgentArray };
-      }
-    } else {
-      addCase1 = true;
-      fullCase = true;
-      addCaseAgent = false;
-    }
-    // else if (key !== '' && key !== '[null]') {
-
-    // }
-    if (!_.isEmpty(matchStr)) {
-      aggregateStr.push(matchStr);
-    }
-    let result = [];
-    const projectStrAgent = _.cloneDeep(projectStr);
-    aggregateStr.push({ $sort: { approvalStatus: 1, approvalCaseId: 1 } });
-    aggregateStr.push(projectStr);
-    if (addCase1) {
-      const emitResult = await mongoose.connection.collection('approval').aggregate(aggregateStr).toArray();
-      if (!_.isEmpty(emitResult)) {
-        result = _.concat(result, emitResult);
-        if (fullCase) {
-          const emitAgentResult = [];
-          _.forEach(emitResult, (rs) => {
-            const agentResult = _.cloneDeep(rs);
-            _.set(agentResult, 'key', ['01', _.get(agentResult, 'value.agentId', null)]);
-            emitAgentResult.push(agentResult);
-          });
-          result = _.concat(result, emitAgentResult);
-        }
-      }
-    }
-    if (addCaseAgent) {
-      const aggregateStrAgent = [];
-      if (!_.isEmpty(matchStrAgent)) {
-        aggregateStrAgent.push(matchStrAgent);
-      }
-      _.set(projectStrAgent, '$project.key', ['01', '$agentId']);
-      aggregateStrAgent.push({ $sort: { agentId: 1 } });
-      aggregateStrAgent.push(projectStrAgent);
-      // console.log(' >>>>> aggregateStrAgent=', JSON.stringify(aggregateStrAgent));
-      const emitAgentResult = await mongoose.connection.collection('approval').aggregate(aggregateStrAgent).toArray();
-      if (!_.isEmpty(emitAgentResult)) {
-        result = _.concat(result, emitAgentResult);
-      }
     }
     const resultTemp = {};
     resultTemp.total_rows = result.length;
