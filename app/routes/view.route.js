@@ -38,6 +38,9 @@ router.get('/main/_view/appWithoutSubmitDate', $main.api.appWithoutSubmitDate);
 router.get('/main/_view/approvalApp', $main.api.approvalApp);
 router.get('/main/_view/approvalCases', $main.api.approvalCases);
 router.get('/main/_view/approvalDateCases', $main.api.approvalDateCases);
+router.get('/main/_view/bundleApp', $main.api.bundleApp);
+router.get('/main/_view/bundleApplications', $main.api.bundleApplications);
+router.get('/main/_view/cpfApps', $main.api.cpfApps);
 
 
 router.get('/dataSync/_view/agentDocuments', $dataSync.api.agentDocuments);

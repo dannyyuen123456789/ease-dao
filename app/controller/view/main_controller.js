@@ -2216,6 +2216,8 @@ exports.api = {
       },
     };
     const applicationDocIds = [];
+    let rangeCase = false;
+    const startEnd = {};
     if (startKey !== '' && endKey !== '') {
       const startKeys = JSON.parse(startKey);
       const endKeys = JSON.parse(endKey);
@@ -2223,18 +2225,24 @@ exports.api = {
         let whereBundle = {};
         if (_.isEqual(startKeys, endKeys)) {
           if (startKeys.length > 2) {
-            whereBundle = {
-              applications: { $elemMatch: { applicationDocId: startKeys[2] } },
-            };
-            applicationDocIds.push(startKeys[1]);
+            _.get(matchStrBundle, '$match.$and', []).push(
+              {
+                applications: { $elemMatch: { applicationDocId: startKeys[2] } },
+              },
+            );
+            applicationDocIds.push(startKeys[2]);
           }
         } else {
           const elemStr = {};
           if (startKeys && startKeys.length > 2) {
+            rangeCase = true;
+            _.set(startEnd, 'start', startKeys[2]);
             _.set(elemStr, '$elemMatch.applicationDocId.$gte', startKeys[2]);
           }
 
           if (endKeys && endKeys.length > 2) {
+            rangeCase = true;
+            _.set(startEnd, 'end', endKeys[2]);
             _.set(elemStr, '$elemMatch.applicationDocId.$lte', endKeys[2]);
           }
 
@@ -2273,9 +2281,11 @@ exports.api = {
     } else if (key !== '' && key !== '[null]') {
       const keyJson = JSON.parse(key);
       if (keyJson && keyJson.length > 2) {
-        _.get(matchStrBundle, '$match.$and', []).push({
-          applicationDocId: keyJson[2],
-        });
+        _.get(matchStrBundle, '$match.$and', []).push(
+          {
+            applications: { $elemMatch: { applicationDocId: keyJson[2] } },
+          },
+        );
         applicationDocIds.push(keyJson[2]);
       }
     }
@@ -2292,6 +2302,8 @@ exports.api = {
         const result = [];
         if (docs && docs.length > 0) {
           // console.log('>>>>>>  docs length=', docs.length);
+          const start = _.get(startEnd, 'start', '');
+          const end = _.get(startEnd, 'end', '');
           _.forEach(docs, (doc) => {
             if (doc && doc.applications && doc.applications.length > 0) {
               _.forEach(doc.applications, (app) => {
@@ -2300,22 +2312,305 @@ exports.api = {
                   || (!_.isEmpty(applicationDocIds)
                   && _.indexOf(applicationDocIds, app.applicationDocId) > -1)
                 ) {
-                  result.push({
-                    id: doc.id,
-                    key: ['01', 'application', app.applicationDocId],
-                    value: {
-                      bundleId: doc.id,
-                      applicationDocId: app.applicationDocId,
-                      appStatus: app.appStatus,
-                      isValid: doc.isValid,
-                    },
-                  });
+                  if (!rangeCase || (rangeCase && !_.isEmpty(startEnd) && (
+                    (start !== '' && app.applicationDocId >= start) || start === ''
+                  ) && (end === '' || (end !== '' && app.applicationDocId <= end)))) {
+                    result.push({
+                      id: doc.id,
+                      key: ['01', 'application', app.applicationDocId],
+                      value: {
+                        bundleId: doc.id,
+                        applicationDocId: app.applicationDocId,
+                        appStatus: app.appStatus,
+                        isValid: doc.isValid,
+                      },
+                    });
+                  }
                 }
               });
             }
           });
         }
         // const result = _.concat(endTimeResult, docs);
+        resultTemp.total_rows = result.length;
+        resultTemp.rows = result;
+        res.json(resultTemp);
+      }
+    });
+  },
+  bundleApplications(req, res) {
+    // doc.type === 'bundle') {
+    //   emit(['01', 'application',  app.applicationDocId]
+    const aggregateStr = [];
+    // This is the query result and alias -> projectStr
+    const projectStr = {
+      $project: {
+        _id: 0, // 0 is not selected
+        id: '$id',
+        // key: ['01', '$quotationDocId', null],
+        applications: '$applications',
+        status: '$status',
+        pCid: '$pCid',
+        isValid: '$isValid',
+      },
+    };
+
+    const startKey = req.query.startkey || '';
+    const endKey = req.query.endkey || '';
+    const keys = req.query.keys || '';
+    const key = req.query.key || '';
+    const matchStrBundle = {
+      $match: {
+        $and: [
+          { applications: { $exists: true } },
+        ],
+      },
+    };
+    const applications = [];
+    const quotations = [];
+    let caseApp = false;
+    let caseQuot = false;
+    let rangeCase = false;
+    const startEnd = {};
+    if (startKey !== '' && endKey !== '') {
+      const startKeys = JSON.parse(startKey);
+      const endKeys = JSON.parse(endKey);
+      if (startKeys || endKeys) {
+        if (startKeys.length > 2 && endKeys.length > 2) {
+          if (_.isEqual(startKeys, endKeys)) {
+            if (_.isEqual('application', startKeys[1])) {
+              const temp = {};
+              caseApp = true;
+              _.set(temp, 'appStatus', startKeys[2]);
+              if (startKeys.length > 3) {
+                _.set(temp, 'applicationDocId', startKeys[3]);
+              }
+              if (!_.isEmpty(temp)) {
+                _.get(matchStrBundle, '$match.$and', []).push(
+                  {
+                    applications: { $elemMatch: temp },
+                  },
+                );
+                applications.push(_.cloneDeep(temp));
+              }
+            } else if (_.isEqual('quotation', startKeys[1])) {
+              if (startKeys.length > 3) {
+                caseQuot = true;
+                _.get(matchStrBundle, '$match.$and', []).push(
+                  {
+                    applications: { $elemMatch: { quotationDocId: startKeys[3] } },
+                  },
+                );
+                quotations.push(startKeys[3]);
+              }
+            }
+          } else {
+            const temp = {};
+            if (_.isEqual('application', startKeys[1])) {
+              caseApp = true;
+              _.set(startEnd, 'start.appStatus', startKeys[2]);
+              _.set(temp, 'appStatus.$gte', startKeys[2]);
+              if (startKeys && startKeys.length > 3) {
+                _.set(startEnd, 'start.applicationDocId', startKeys[3]);
+                _.set(temp, 'applicationDocId.$gte', startKeys[3]);
+              }
+            } else if (_.isEqual('quotation', startKeys[1])) {
+              if (startKeys && startKeys.length > 3) {
+                caseQuot = true;
+                _.set(startEnd, 'start.quotationDocId', startKeys[3]);
+                _.set(temp, 'quotationDocId.$gte', startKeys[3]);
+              }
+            }
+            if (_.isEqual('application', endKeys[1])) {
+              caseApp = true;
+              _.set(temp, 'appStatus.$lte', endKeys[2]);
+              _.set(startEnd, 'end.appStatus', endKeys[2]);
+              if (endKeys && endKeys.length > 3) {
+                _.set(startEnd, 'end.applicationDocId', endKeys[3]);
+                _.set(temp, 'applicationDocId.$lte', endKeys[3]);
+              }
+            } else if (_.isEqual('quotation', endKeys[1])) {
+              if (endKeys && endKeys.length > 3) {
+                caseQuot = true;
+                _.set(startEnd, 'end.quotationDocId', endKeys[3]);
+                _.set(temp, 'quotationDocId.$lte', endKeys[3]);
+              }
+            }
+            if (!_.isEmpty(temp)) {
+              rangeCase = true;
+              _.get(matchStrBundle, '$match.$and', []).push(
+                {
+                  applications: { $elemMatch: temp },
+                },
+              );
+            }
+          }
+        }
+      }
+    } else if (keys !== '') {
+      const keysList = JSON.parse(keys);
+      const inBundleArray = [];
+      if (keysList && keysList.length > 0) {
+        _.forEach(keysList, (keyItem) => {
+          if (keyItem && keyItem.length > 2) {
+            if (_.isEqual('application', keyItem[1])) {
+              caseApp = true;
+              const temp = {};
+              _.set(temp, 'appStatus', keyItem[2]);
+              if (keyItem.length > 3) {
+                _.set(temp, 'applicationDocId', keyItem[3]);
+              }
+              if (!_.isEmpty(temp)) {
+                applications.push(_.cloneDeep(temp));
+                inBundleArray.push({
+                  applications: { $elemMatch: temp },
+                });
+              }
+            } else if (_.isEqual('quotation', keyItem[1])) {
+              if (keyItem.length > 3) {
+                caseQuot = true;
+                inBundleArray.push({
+                  applications: { $elemMatch: { quotationDocId: keyItem[3] } },
+                });
+                quotations.push(keyItem[3]);
+              }
+            }
+          }
+        });
+      }
+      if (!_.isEmpty(inBundleArray)) {
+        _.get(matchStrBundle, '$match.$and', []).push(
+          {
+            $or: inBundleArray,
+          },
+        );
+      }
+    } else if (key !== '' && key !== '[null]') {
+      const keyJson = JSON.parse(key);
+      if (keyJson && keyJson.length > 2) {
+        if (_.isEqual('application', keyJson[1])) {
+          const temp = {};
+          caseApp = true;
+          _.set(temp, 'appStatus', keyJson[2]);
+          if (keyJson.length > 3) {
+            _.set(temp, 'applicationDocId', keyJson[3]);
+          }
+          if (!_.isEmpty(temp)) {
+            _.get(matchStrBundle, '$match.$and', []).push(
+              {
+                applications: { $elemMatch: temp },
+              },
+            );
+            applications.push(_.cloneDeep(temp));
+          }
+        } else if (_.isEqual('quotation', keyJson[1])) {
+          if (keyJson.length > 3) {
+            caseQuot = true;
+            _.get(matchStrBundle, '$match.$and', []).push(
+              {
+                applications: { $elemMatch: { quotationDocId: keyJson[3] } },
+              },
+            );
+            quotations.push(keyJson[3]);
+          }
+        }
+      }
+    } else {
+      caseApp = true;
+      caseQuot = true;
+    }
+    if (!_.isEmpty(matchStrBundle)) {
+      aggregateStr.push(matchStrBundle);
+    }
+    if (caseApp) {
+      aggregateStr.push({ $sort: { 'applications.appStatus': 1, 'applications.applicationDocId': 1 } });
+    } else if (caseQuot) {
+      aggregateStr.push({ $sort: { 'applications.quotationDocId': 1 } });
+    }
+
+    aggregateStr.push(projectStr);
+    mongoose.connection.collection('fna').aggregate(aggregateStr).toArray((err, docs) => {
+      if (err) {
+        res.json({ status: 400, message: err.message });
+      } else {
+        const resultTemp = {};
+        const appResult = [];
+        const quotResult = [];
+        if (docs && docs.length > 0) {
+          // console.log('>>>>>>  docs length=', docs.length);
+          const startAppStatus = _.get(startEnd, 'start.appStatus', '');
+          const endAppStatus = _.get(startEnd, 'end.appStatus', '');
+          const startApplicationDocId = _.get(startEnd, 'start.applicationDocId', '');
+          const endApplicationDocId = _.get(startEnd, 'end.applicationDocId', '');
+          const startQuotationDocId = _.get(startEnd, 'start.quotationDocId', '');
+          const endQuotationDocId = _.get(startEnd, 'end.quotationDocId', '');
+
+          _.forEach(docs, (doc) => {
+            if (doc && doc.applications && doc.applications.length > 0) {
+              _.forEach(doc.applications, (app) => {
+                if (app.applicationDocId) {
+                  if (caseApp) {
+                    if (
+                      _.isEmpty(applications)
+                  || (!_.isEmpty(applications)
+                  && _.findIndex(applications, (o) => {
+                    const tempStatus = _.get(o, 'appStatus', '');
+                    const applicationDocId = _.get(o, 'applicationDocId', '');
+                    return (tempStatus === '' || tempStatus === app.appStatus)
+                    && (applicationDocId === '' || applicationDocId === app.applicationDocId);
+                  }) !== -1)
+                    ) {
+                      if (!rangeCase || (rangeCase && !_.isEmpty(startEnd) && (
+                        (startAppStatus !== '' && app.appStatus >= startAppStatus) || startAppStatus === ''
+                      ) && ((startApplicationDocId !== '' && app.applicationDocId >= startApplicationDocId) || startApplicationDocId === ''
+                      ) && (endAppStatus === '' || (endAppStatus !== '' && app.appStatus <= endAppStatus))
+                      && (endApplicationDocId === '' || (endApplicationDocId !== '' && app.applicationDocId <= endApplicationDocId)))) {
+                        appResult.push({
+                          id: doc.id,
+                          key: ['01', 'application', app.appStatus, app.applicationDocId],
+                          value: {
+                            bundleId: doc.id,
+                            bundleStatus: doc.status,
+                            pCid: doc.pCid,
+                            bundleIsValid: doc.isValid,
+                            quotationDocId: app.quotationDocId,
+                            applicationDocId: app.applicationDocId,
+                            appStatus: app.appStatus,
+                          },
+                        });
+                      }
+                    }
+                  }
+                } else if (caseQuot) {
+                  if (_.isEmpty(quotations)
+                  || (!_.isEmpty(quotations)
+                  && _.indexOf(quotations, app.quotationDocId) > -1)) {
+                    console.log('>>>>> app.quotationDocId=', app.quotationDocId);
+                    console.log('>>>>> ', JSON.stringify(quotations));
+                    if (!rangeCase || (rangeCase && !_.isEmpty(startEnd) && (
+                      (startQuotationDocId !== '' && app.quotationDocId >= startQuotationDocId) || startQuotationDocId === ''
+                    ) && (endQuotationDocId === '' || (endQuotationDocId !== '' && app.quotationDocId <= endQuotationDocId)))) {
+                      quotResult.push({
+                        id: doc.id,
+                        key: ['01', 'quotation', null, app.quotationDocId],
+                        value: {
+                          bundleId: doc.id,
+                          bundleStatus: doc.status,
+                          pCid: doc.pCid,
+                          bundleIsValid: doc.isValid,
+                          quotationDocId: app.quotationDocId,
+                          applicationDocId: null,
+                          appStatus: null,
+                        },
+                      });
+                    }
+                  }
+                }
+              });
+            }
+          });
+        }
+        const result = _.concat(appResult, quotResult);
         resultTemp.total_rows = result.length;
         resultTemp.rows = result;
         res.json(resultTemp);
@@ -2395,6 +2690,139 @@ exports.api = {
         const resultTemp = {};
         resultTemp.total_rows = docs.length;
         resultTemp.rows = docs;
+        res.json(resultTemp);
+      }
+    });
+  },
+  cpfApps(req, res) {
+    // doc.type === 'application') {
+    //  emit(['01',  payment.initPayMethod],
+    const aggregateStr = [];
+    const projectStr = {
+      $project: {
+        _id: 0, // 0 is not selected
+        id: '$id',
+        key: ['01', '$payment.initPayMethod'],
+        value: {
+          id: '$id',
+          policyNumber: '$policyNumber',
+          type: '$type',
+          covName: null,
+          payment: '$payment',
+          lastUpdateDate:
+          {
+            $cond: {
+              if: '$applicationSubmittedDate',
+              then: '$applicationSubmittedDate',
+              else: {
+                $cond: {
+                  if: '$applicationSignedDate',
+                  then: '$applicationSignedDate',
+                  else: { $cond: { if: '$applicationStartedDate', then: '$applicationStartedDate', else: '$lastUpdateDate' } },
+                },
+              },
+            },
+          },
+        },
+        plans: '$quotation.plans',
+      },
+    };
+
+    const startKey = req.query.startkey || '';
+    const endKey = req.query.endkey || '';
+    const keys = req.query.keys || '';
+    const key = req.query.key || '';
+    const matchStr = {
+      $match: {
+        $and: [
+          { payment: { $exists: true } },
+          { quotation: { $exists: true } },
+          { 'quotation.agent': { $exists: true } },
+        ],
+      },
+    };
+    if (startKey !== '' && endKey !== '') {
+      const startKeys = JSON.parse(startKey);
+      const endKeys = JSON.parse(endKey);
+      if (startKeys || endKeys) {
+        if (startKeys.length > 1 && endKeys.length > 1) {
+          if (_.isEqual(startKeys, endKeys)) {
+            _.get(matchStr, '$match.$and', []).push(
+              {
+                'payment.initPayMethod': startKeys[1],
+              },
+            );
+          } else {
+            const temp = {};
+            if (startKeys && startKeys.length > 1) {
+              _.set(temp, '$gte', startKeys[1]);
+            }
+            if (endKeys && endKeys.length > 1) {
+              _.set(temp, '$lte', endKeys[1]);
+            }
+            if (!_.isEmpty(temp)) {
+              _.get(matchStr, '$match.$and', []).push(
+                { 'payment.initPayMethod': temp },
+              );
+            }
+          }
+        }
+      }
+    } else if (keys !== '') {
+      const keysList = JSON.parse(keys);
+      const inArray = [];
+      if (keysList && keysList.length > 0) {
+        _.forEach(keysList, (keyItem) => {
+          if (keyItem && keyItem.length > 1) {
+            inArray.push(keyItem[1]);
+          }
+        });
+      }
+      if (!_.isEmpty(inArray)) {
+        _.get(matchStr, '$match.$and', []).push(
+          { 'payment.initPayMethod': { $in: inArray } },
+        );
+      }
+    } else if (key !== '' && key !== '[null]') {
+      const keyJson = JSON.parse(key);
+      if (keyJson && keyJson.length > 1) {
+        _.get(matchStr, '$match.$and', []).push(
+          {
+            'payment.initPayMethod': keyJson[1],
+          },
+        );
+      }
+    }
+    if (!_.isEmpty(matchStr)) {
+      aggregateStr.push(matchStr);
+    }
+
+    aggregateStr.push({ $sort: { 'payment.initPayMethod': 1 } });
+
+    aggregateStr.push(projectStr);
+    mongoose.connection.collection('application').aggregate(aggregateStr).toArray((err, docs) => {
+      if (err) {
+        res.json({ status: 400, message: err.message });
+      } else {
+        const result = [];
+        if (docs && docs.length > 0) {
+          _.forEach(docs, (item) => {
+            const doc = _.cloneDeep(item);
+            const plans = _.get(doc, 'plans');
+            if (plans) {
+              if (plans && plans.length > 0 && plans[0].covName) {
+                const covName = _.get(plans[0], 'covName');
+                if (covName) {
+                  _.set(doc, 'value.covName', covName);
+                }
+              }
+            }
+            result.push(_.omit(doc, ['plans']));
+          });
+        }
+        const resultTemp = {};
+        resultTemp.total_rows = result.length;
+        resultTemp.rows = result;
         res.json(resultTemp);
       }
     });
