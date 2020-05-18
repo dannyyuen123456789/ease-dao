@@ -13,26 +13,26 @@
     "sslConfig" :{
         "caFile":"D:\\amazon\\rds-combined-ca-bundle.pem"
     },
-        "dbInUse":"AWSDocumentDB",
-        "dbSetting":{
-            "AWSDocumentDB":{
-                "dbType":"mongo",
-                "databaseURL": "192.168.225.180:47017",
-                "databaseName":"AXASG_DEV",
-                "databaseUsername":"admin",
-                "databasePassword":"x9NaTtr9"
-            }
-        },
-        "awsS3":{
-            "host":"https://<bucketName>.s3-ap-southeast-1.amazonaws.com/",
-            "masterBucket":"ease-master-data",
-            "transBucket":"ease-transaction-data",
-            "KmsID":"cc348deb-3474-4c2e-909d-ff76a1311507",
-            "isProxy":false,
-            "proxyLink":"",
-            "accessKeyId":"AKIA2RZMLZROK4LC55VQ",
-            "secretAccessKey":"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"
-         }
+    "dbInUse":"AWSDocumentDB",
+    "dbSetting":{
+        "AWSDocumentDB":{
+            "dbType":"mongo",
+            "databaseURL": "192.168.225.180:47017",
+            "databaseName":"AXASG_DEV",
+            "databaseUsername":"admin",
+            "databasePassword":"x9NaTtr9"
+        }
+    },
+    "awsS3":{
+        "host":"https://<bucketName>.s3-ap-southeast-1.amazonaws.com/",
+        "masterBucket":"ease-master-data",
+        "transBucket":"ease-transaction-data",
+        "KmsID":"cc348deb-3474-4c2e-909d-ff76a1311507",
+        "isProxy":false,
+        "proxyLink":"",
+        "accessKeyId":"AKIA2RZMLZROCPKOK4XV",
+        "secretAccessKey":"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"
+        }
 
   }
   

@@ -39,7 +39,7 @@ class DAO {
       } else if (docId.substring(0, 2) === 'U_') {
         type = 'agent';
       } else if (docId.substring(0, 3) === 'UX_') {
-        type = 'agentUX';
+        type = 'agentExtraInfo';
       } else if (docId.substring(0, 6) === 'appid-') {
         type = 'appid';
       } else if (docId.substring(0, 4) === 'AUD-') {

@@ -4,7 +4,7 @@
 import mongoose from 'mongoose';
 import log4jUtil from '../utils/log4j.util';
 import DAO from '../database/DAO';
-import DAO1 from '../files/fileUtils';
+import fileUtils from '../files/fileUtils';
 
 const _ = require('lodash');
 
@@ -68,15 +68,37 @@ exports.api = {
     res.json({ success: true, result });
   },
   async uploadAttachmentByBase64(req, res, next) {
+    var errMessage = ""
     const docId = _.get(req.params, 'docId', _.get(req.query, 'docId'));
     const attachmentId = _.get(req.params, 'attachment', _.get(req.query, 'attachment'));
+    const fileName = _.join([docId,attachmentId],"-");
     const attachment = req.body.data;
+    const mime = req.body.mime;
+    const fileUtil = new fileUtils("AWS-S3");
+    const fileInstance = await fileUtil.getInstance();
+    const initSuccess = await fileInstance.init();
+    if(initSuccess){
+      log4jUtil.log('log', "uploading ...");
+      await fileInstance.uploadBase64(fileName,attachment,mime).catch(error=>
+        {
+          if(error){
+            log4jUtil.log('log', "error=",error.message);
+            errMessage = error.message}
+        });
+    }else{
+      errMessage = "initial S3 failed"
+    }
 
-
-    log4jUtil.log('attachment = ', `attachment = ${attachment}`);
-    log4jUtil.log('rsHeader = ', `docId = ${docId}`);
-    log4jUtil.log('reqHeader = ', `attachmentId = ${attachmentId}`);
-    res.json({ ok: true });
+    // log4jUtil.log('attachment = ', `attachment = ${attachment}`);
+    // log4jUtil.log('rsHeader = ', `docId = ${docId}`);
+    // log4jUtil.log('reqHeader = ', `attachmentId = ${attachmentId}`);
+    if(errMessage){
+      log4jUtil.log('log', "--------upload failed---------");
+      res.json({ ok: false,message:errMessage });
+    }else{
+      log4jUtil.log('log', "--------upload success---------");
+      res.json({ ok: true,message: "upload success!"});
+    }
   },
   async uploadAttachment(req, res, next) {
     const docId = _.get(req.params, 'docId', _.get(req.query, 'docId'));
