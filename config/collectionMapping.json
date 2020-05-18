@@ -4,6 +4,10 @@
         "idPrefix":"U_"
     },
     {
+        "colName":"agentExtraInfo",
+        "idPrefix":"UX_"
+    },
+    {
         "colName":"apiResponse",
         "idPrefix":"??"
     },
