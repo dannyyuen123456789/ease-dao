@@ -79,29 +79,32 @@ exports.api = {
     const initSuccess = await fileInstance.init();
     if(initSuccess){
       log4jUtil.log('log', "uploading ...");
-      await fileInstance.uploadBase64(fileName,attachment,mime).catch(error=>
-        {
-          if(error){
-            log4jUtil.log('log', "error=",error.message);
-            errMessage = error.message}
-        });
+      // await fileInstance.uploadBase64(fileName,attachment,mime).catch(error=>
+      //   {
+      //     if(error){
+      //       log4jUtil.log('log', "error=",error.message);
+      //       errMessage = error.message}
+      //   });
        if(!errMessage || _.isEmpty(errMessage)) {
         const dao = new DAO('AWS');
         const awsDao = dao.getInstance();
-        var pushData = {attachments:{name:attachmentId,key:fileName,contentType:mime,fileSize:22222}};
-        let pushResult = await awsDao.updateDocPushData(docId,pushData);
-        if(!_.get(pushResult,"success")){
-          errMessage = pushResult.result;
+        var fileSize = fileInstance.calBase64FileSize(attachment);
+        var pullData = {attachments:{name:attachmentId,key:fileName}};
+        // let pushResult = await awsDao.updateDocPushData(docId,{attachments:{$elemMatch:{name:attachmentId,key:fileName}}},pushData);
+        let pullResult = await awsDao.updateDocPullData(docId,{},pullData);
+        if(_.get(pullResult,"success")){
+          var pushData = {attachments:{name:attachmentId,key:fileName,contentType:mime,fileSize:fileSize}};
+          let pushResult = await awsDao.updateDocPushData(docId,{},pushData);
+          if(!_.get(pushResult,"success")){
+            errMessage = pushResult.result;
+          }
+        }else{          
+          errMessage = pullResult.result;
         }
-
        }
     }else{
       errMessage = "initial S3 failed"
     }
-
-    // log4jUtil.log('attachment = ', `attachment = ${attachment}`);
-    // log4jUtil.log('rsHeader = ', `docId = ${docId}`);
-    // log4jUtil.log('reqHeader = ', `attachmentId = ${attachmentId}`);
     if(errMessage){
       log4jUtil.log('log', "--------upload failed---------");
       res.json({ ok: false,message:errMessage });

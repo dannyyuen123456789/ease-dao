@@ -23,6 +23,13 @@ class fileUtils {
     return proxyAgent;
     // AWS.config.httpOptions = { agent: proxyAgent };
   };
+  calBase64FileSize(inBase64){
+    var base64 = _.replace(inBase64,"=","");
+    base64 = _.replace(base64,/^data:image\/\w+;base64,/, "")
+    var strLength = _.size(base64);
+    var fileSize = strLength-(strLength/8)*2;
+    return fileSize;
+  }
   
 };
 
