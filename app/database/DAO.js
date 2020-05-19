@@ -46,12 +46,13 @@ class DAO {
         type = 'aud';
       } else if (docId.length === 52 || docId.length === 50) {
         type = 'dataSyncTransactionLog';
-      }else if (_.endsWith(docId,"-seq")) {
+      }else if (_.endsWith(docId,"-seq") || _.eq(docId,"agentNumberMap")) {
         type = 'seqMaster';
       }
       else {
         type = 'masterData';
       }
+      console.log("docId = ",docId," || type = ",type);
       return type;
     };
 };

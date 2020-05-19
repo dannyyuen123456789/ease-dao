@@ -85,6 +85,16 @@ exports.api = {
             log4jUtil.log('log', "error=",error.message);
             errMessage = error.message}
         });
+       if(!errMessage || _.isEmpty(errMessage)) {
+        const dao = new DAO('AWS');
+        const awsDao = dao.getInstance();
+        var pushData = {attachments:{name:attachmentId,key:fileName,contentType:mime,fileSize:22222}};
+        let pushResult = await awsDao.updateDocPushData(docId,pushData);
+        if(!_.get(pushResult,"success")){
+          errMessage = pushResult.result;
+        }
+
+       }
     }else{
       errMessage = "initial S3 failed"
     }

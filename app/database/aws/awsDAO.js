@@ -55,12 +55,48 @@ class awsDAO extends DAO{
       var result = "";
       var status = true;
       var docType = this.getColNameById(docId);
-      if(docType && !_.isEmpty(docType)){
+      if(_.get(data,"_id")){
+        delete data["_id"];
+      }
+      if(docType && !_.isEmpty(docType) && data && !_.isEmpty(data)){
         if(mongoose.connection.readyState===1){
           // data = JSON.parse(data);
           // _.set(data,docId);
           // _.set(data,docId);
           await mongoose.connection.collection(docType).updateOne({"id":docId},{"$set":data},{ "upsert":true}).then(r=>{
+            result = r.result;
+          }).catch(error=>
+          {
+              if(error){
+                status = false;
+                result = error.message;
+              }
+          });
+        }else{
+          result = "No DB connection";
+          status = false;
+        }
+      }
+      log4jUtil.log("result = ",result)
+      return {success:status,result:result};
+    };
+    async updateDocPushData(docId,extCondition,data){
+      var result = "";
+      var status = true;
+      var docType = this.getColNameById(docId);
+      if(_.get(data,"_id")){
+        delete data["_id"];
+      }
+      if(docType && !_.isEmpty(docType) && data && !_.isEmpty(data)){
+        if(mongoose.connection.readyState===1){
+          // data = JSON.parse(data);
+          // _.set(data,docId);
+          // _.set(data,docId);
+          let condition = {"id":docId};
+          if(extCondition){
+            _.assignIn(condition,extCondition);
+          }
+          await mongoose.connection.collection(docType).updateOne(condition,{"$addToSet":data},{ "upsert":false}).then(r=>{
             result = r.result;
           }).catch(error=>
           {
