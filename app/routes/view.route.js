@@ -41,6 +41,11 @@ router.get('/main/_view/approvalDateCases', $main.api.approvalDateCases);
 router.get('/main/_view/bundleApp', $main.api.bundleApp);
 router.get('/main/_view/bundleApplications', $main.api.bundleApplications);
 router.get('/main/_view/cpfApps', $main.api.cpfApps);
+router.get('/main/_view/naById', $main.api.naById);
+router.get('/main/_view/onlinePayment', $main.api.onlinePayment);
+router.get('/main/_view/products', $main.api.products);
+router.get('/main/_view/signatureExpire', $main.api.signatureExpire);
+router.get('/main/_view/submission', $main.api.submission);
 
 
 router.get('/dataSync/_view/agentDocuments', $dataSync.api.agentDocuments);

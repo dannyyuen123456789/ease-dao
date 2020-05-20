@@ -3508,6 +3508,468 @@ exports.api = {
     resultTemp.rows = result;
     res.json(resultTemp);
   },
+  naById(req, res) {
+    const aggregateStr = [];
+    // This is the query result and alias -> projectStr
+    const projectStr = {
+      $project: {
+        _id: 0, // 0 is not selected
+        id: '$id',
+        key: ['01', '$id'],
+        value: {
+          id: '$id',
+          productType: '$productType',
+          ckaSection: '$ckaSection',
+        },
+      },
+    };
+    const startKey = req.query.startkey || '';
+    const endKey = req.query.endkey || '';
+    const keys = req.query.keys || '';
+    const key = req.query.key || '';
+    const matchStr = {};
+    if (startKey !== '' && endKey !== '') {
+      const startKeys = JSON.parse(startKey);
+      const endKeys = JSON.parse(endKey);
+      if (startKeys.length > 1 && endKeys.length > 1) {
+        if (_.isEqual(startKeys, endKeys)) {
+          matchStr.$match = { id: startKeys[1] };
+        } else {
+          matchStr.$match = { id: { $gte: startKeys[1], $lte: endKeys[1] } };
+        }
+      }
+    } else if (keys !== '') {
+      const keysList = JSON.parse(keys);
+      //  console.log(" >>>>> keysList=", JSON.stringify(keysList));
+      const inArray = [];
+      if (keysList && keysList.length > 0) {
+        _.forEach(keysList, (keyItem) => {
+          if (keyItem && keyItem.length > 1) {
+            inArray.push(keyItem[1]);
+          }
+        });
+      }
+      if (!_.isEmpty(inArray)) {
+        matchStr.$match = { id: { $in: inArray } };
+      }
+    } else if (key !== '' && key !== '[null]') {
+      const keyJson = JSON.parse(key);
+      if (keyJson && keyJson.length > 1) {
+        matchStr.$match = { id: keyJson[1] };
+      }
+    }
+    if (!_.isEmpty(matchStr)) {
+      aggregateStr.push(matchStr);
+    }
+    // console.log(' >>>>> aggregateStr=', JSON.stringify(aggregateStr));
+    // order by managerCode (注意 显示字段（projectStr）要放到最后)
+    aggregateStr.push({ $sort: { id: 1 } });
+    aggregateStr.push(projectStr);
+    mongoose.connection.collection('fnaNa').aggregate(aggregateStr).toArray((err, docs) => {
+      if (err) {
+        res.json({ status: 400, message: err.message });
+      } else {
+        const resultTemp = {};
+        resultTemp.total_rows = docs.length;
+        resultTemp.rows = docs;
+        res.json(resultTemp);
+      }
+    });
+  },
+  onlinePayment(req, res) {
+    const aggregateStr = [];
+    // This is the query result and alias -> projectStr
+    const projectStr = {
+      $project: {
+        _id: 0, // 0 is not selected
+        id: '$id',
+        key: [],
+        value: {
+          id: '$id',
+          parentId: '$parentId', // no shield is not in
+          policyNumber: '$policyNumber',
+          type: '$type',
+          trxTime: { $cond: { if: '$payment.trxTime', then: '$payment.trxTime', else: '$payment.trxStartTime' } },
+          ccy: '$payment.policyCcy',
+          initTotalPrem: '$payment.initTotalPrem', // { $cond: { if: { '$quotation.quotType': 'SHIELD' }, then: '$payment.cashPortion', else:'$payment.initTotalPrem'   } },
+          trxAmount: '$payment.initTotalPrem', // { $cond: { if: { '$quotation.quotType': 'SHIELD' }, then: '$payment.cashPortion', else: '$payment.initTotalPrem' } },
+          paymentMethod: '$payment.initPayMethod',
+          trxNo: '$payment.trxNo', // { $cond: { if: '$payment.trxNo', then: '$payment.trxNo', else: '' } },
+          proposerName: '$quotation.pFullName',
+          agentName: '$quotation.agent.name',
+          agentCompany: '$quotation.agent.company',
+          trxStatus: '$payment.trxStatus', // {
+          //   $cond: {
+          //     if: { '$quotation.quotType': 'SHIELD' },
+          //     then: { $cond: { if: '$payment.trxStatus',
+          // then: '$payment.trxStatus', else: '' } },
+          //     else: '$payment.trxStatus',
+          //   },
+          // },
+          trxEnquiryStatus: '$payment.trxEnquiryStatus',
+          applicationSubmittedDate: '$applicationSubmittedDate',
+          lastUpdateDate: {
+            $cond: {
+              if: '$applicationSubmittedDate',
+              then: '$applicationSubmittedDate',
+              else: {
+                $cond: {
+                  if: '$applicationSignedDate',
+                  then: '$applicationSignedDate',
+                  else: { $cond: { if: '$applicationStartedDate', then: '$applicationStartedDate', else: '$lastUpdateDate' } },
+                },
+              },
+            },
+          },
+        },
+        quotType: '$quotation.quotType',
+        cashPortion: '$payment.cashPortion',
+        totCashPortion: '$payment.totCashPortion',
+        shieldCcy: '$applicationForm.values.planDetails.ccy',
+        shieldAgentName: '$agent.name',
+        agentCompany: '$agent.company',
+      },
+    };
+    const startKey = req.query.startkey || '';
+    const endKey = req.query.endkey || '';
+    const keys = req.query.keys || '';
+    const key = req.query.key || '';
+    const matchStr = {
+      $match: {
+        $and: [
+          {
+            payment: { $exists: true },
+          },
+          {
+            'quotation.agent': { $exists: true },
+          },
+        ],
+
+      },
+    };
+    if (startKey !== '' && endKey !== '') {
+      const startKeys = JSON.parse(startKey);
+      const endKeys = JSON.parse(endKey);
+      if (startKeys.length > 1 && endKeys.length > 1) {
+        if (_.isEqual(startKeys, endKeys)) {
+          if (_.isEqual(startKeys[1], '-')) {
+            _.get(matchStr, '$match.$and', []).push({
+              'quotation.quotType': 'SHIELD',
+            });
+            _.get(matchStr, '$match.$and', []).push({
+              'payment.cashPortion': 0,
+            });
+          } else {
+            _.get(matchStr, '$match.$and', []).push({
+              $or: [
+                {
+                  $and: [
+                    { 'quotation.quotType': { $ne: 'SHIELD' } },
+                    { 'payment.initPayMethod': startKeys[1] },
+                  ],
+                },
+                {
+                  $and: [
+                    { 'quotation.quotType': 'SHIELD' },
+                    { 'payment.cashPortion': { $ne: 0 } },
+                    { 'payment.initPayMethod': startKeys[1] },
+                  ],
+                },
+              ],
+            });
+          }
+          if (startKey && startKey.length > 2) {
+            if (startKeys[2] === 0) {
+              _.get(matchStr, '$match.$and', []).push(
+                {
+                  'payment.trxTime': startKeys[2],
+                },
+              );
+              _.get(matchStr, '$match.$and', []).push(
+                {
+                  'payment.trxStartTime': startKeys[2],
+                },
+              );
+            } else {
+              _.get(matchStr, '$match.$and', []).push({
+                $or: [
+                  {
+                    'payment.trxTime': startKeys[2],
+                  },
+                  {
+                    'payment.trxStartTime': startKeys[2],
+                  },
+                ],
+              });
+            }
+          }
+        } else {
+          const temp = {};
+          if (_.isEqual(startKeys[1], '-')) {
+            _.get(matchStr, '$match.$and', []).push({
+              'quotation.quotType': 'SHIELD',
+            });
+            _.get(matchStr, '$match.$and', []).push({
+              'payment.cashPortion': 0,
+            });
+          } else {
+            _.get(matchStr, '$match.$and', []).push({
+              $and: [
+                {
+                  $or: [
+                    { 'quotation.quotType': { $ne: 'SHIELD' } },
+                    {
+                      $and: [
+                        { 'quotation.quotType': 'SHIELD' },
+                        { 'payment.cashPortion': { $ne: 0 } },
+                      ],
+                    },
+                  ],
+                },
+                { 'payment.initPayMethod': { $gte: startKeys[1], $lte: endKeys[1] } },
+              ],
+            });
+          }
+          if (startKeys && startKeys.length > 2) {
+            _.set(temp, '$gte', startKeys[2]);
+          }
+          if (endKeys && endKeys.length > 2) {
+            _.set(temp, '$lte', endKeys[2]);
+          }
+          if (!_.isEmpty(temp)) {
+            _.get(matchStr, '$match.$and', []).push({
+              $or: [
+                {
+                  $and: [
+                    { 'payment.trxTime': temp },
+                    { 'payment.trxTime': { $exists: true } },
+                    { 'payment.trxTime': { $ne: 0 } },
+                    { 'payment.trxStartTime': { $exists: false } },
+                  ],
+                },
+                {
+                  $and: [
+                    {
+                      $or: [
+                        { 'payment.trxTime': { $exists: false } },
+                        { 'payment.trxTime': 0 },
+                      ],
+                    },
+                    { 'payment.trxStartTime': temp },
+                    { 'payment.trxStartTime': { $exists: true } },
+                  ],
+                },
+              ],
+            });
+          }
+        }
+      }
+    } else if (keys !== '') {
+      const keysList = JSON.parse(keys);
+      const inArray = [];
+      if (keysList && keysList.length > 0) {
+        _.forEach(keysList, (keyItem) => {
+          const temp = [];
+          if (keyItem && keyItem.length > 1) {
+            if (_.isEqual(keyItem[1], '-')) {
+              temp.push(
+                {
+                  'quotation.quotType': 'SHIELD',
+                },
+              );
+              temp.push(
+                {
+                  'payment.cashPortion': 0,
+                },
+              );
+            } else {
+              temp.push({
+                $or: [
+                  {
+                    $and: [
+                      { 'quotation.quotType': { $ne: 'SHIELD' } },
+                      { 'payment.initPayMethod': keyItem[1] },
+                    ],
+                  },
+                  {
+                    $and: [
+                      { 'quotation.quotType': 'SHIELD' },
+                      { 'payment.cashPortion': { $ne: 0 } },
+                      { 'payment.initPayMethod': keyItem[1] },
+                    ],
+                  },
+                ],
+              });
+            }
+            if (keyItem && keyItem.length > 2) {
+              if (keyItem[2] === 0) {
+                temp.push(
+                  {
+                    'payment.trxTime': keyItem[2],
+                  },
+                );
+                temp.push({
+                  'payment.trxStartTime': keyItem[2],
+                });
+              } else {
+                temp.push({
+                  $or: [
+                    {
+                      'payment.trxTime': keyItem[2],
+                    },
+                    {
+                      'payment.trxStartTime': keyItem[2],
+                    },
+                  ],
+                });
+              }
+            }
+            if (!_.isEmpty(temp)) {
+              inArray.push({
+                $and: temp,
+              });
+            }
+          }
+        });
+      }
+      if (!_.isEmpty(inArray)) {
+        _.get(matchStr, '$match.$and', []).push({
+          $or: inArray,
+        });
+        // matchStr.$match = { policyNumber: { $in: inArray } };
+      }
+    } else if (key !== '' && key !== '[null]') {
+      const keyJson = JSON.parse(key);
+      if (keyJson && keyJson.length > 1) {
+        if (_.isEqual(keyJson[1], '-')) {
+          _.get(matchStr, '$match.$and', []).push({
+            'quotation.quotType': 'SHIELD',
+          });
+          _.get(matchStr, '$match.$and', []).push({
+            'payment.cashPortion': 0,
+          });
+        } else {
+          _.get(matchStr, '$match.$and', []).push({
+            $or: [
+              {
+                $and: [
+                  { 'quotation.quotType': { $ne: 'SHIELD' } },
+                  { 'payment.initPayMethod': keyJson[1] },
+                ],
+              },
+              {
+                $and: [
+                  { 'quotation.quotType': 'SHIELD' },
+                  { 'payment.cashPortion': { $ne: 0 } },
+                  { 'payment.initPayMethod': keyJson[1] },
+                ],
+              },
+            ],
+          });
+        }
+        if (keyJson && keyJson.length > 2) {
+          if (keyJson[2] === 0) {
+            _.get(matchStr, '$match.$and', []).push(
+              {
+                'payment.trxTime': keyJson[2],
+              },
+            );
+            _.get(matchStr, '$match.$and', []).push({
+              'payment.trxStartTime': keyJson[2],
+            });
+          } else {
+            _.get(matchStr, '$match.$and', []).push({
+              $or: [
+                {
+                  'payment.trxTime': keyJson[2],
+                },
+                {
+                  'payment.trxStartTime': keyJson[2],
+                },
+              ],
+            });
+          }
+        }
+      }
+    }
+    if (!_.isEmpty(matchStr)) {
+      aggregateStr.push(matchStr);
+    }
+    aggregateStr.push({ $sort: { 'payment.initPayMethod': 1 } });
+    // console.log(' >>>>> matchStr=', JSON.stringify(matchStr));
+    aggregateStr.push(projectStr);
+    mongoose.connection.collection('application').aggregate(aggregateStr).toArray((err, docs) => {
+      if (err) {
+        res.json({ status: 400, message: err.message });
+      } else {
+        const resultTemp = {};
+        const result = [];
+        if (docs && docs.length > 0) {
+          _.forEach(docs, (item) => {
+            const doc = _.cloneDeep(item);
+            const quotType = _.get(doc, 'quotType', '');
+            const cashPortion = _.get(doc, 'cashPortion', '');
+            const paymentMethod = _.get(doc, 'value.paymentMethod', null);
+            const trxTime = _.get(doc, 'value.trxTime', null);
+            _.get(doc, 'key', []).push('01');
+            if (quotType === 'SHIELD') {
+              if (cashPortion === 0) {
+                _.get(doc, 'key', []).push('-');
+              } else {
+                _.get(doc, 'key', []).push(paymentMethod);
+              }
+              const shieldCcy = _.get(doc, 'shieldCcy', '');
+              _.set(doc, 'value.ccy', shieldCcy);
+              _.set(doc, 'value.trxNo', _.get(doc, 'value.trxNo', ''));
+              const trxStatus = _.get(doc, 'value.trxStatus');
+              if (trxStatus) {
+                _.set(doc, 'value.trxStatus', trxStatus);
+              } else {
+                _.set(doc, 'value.trxStatus', '');
+              }
+              const totCashPortion = _.get(doc, 'totCashPortion');
+              if (typeof cashPortion === 'number') {
+                _.set(doc, 'value.initTotalPrem', cashPortion);
+              } else {
+                delete doc.value.initTotalPrem;
+              }
+
+              if (typeof totCashPortion === 'number') {
+                _.set(doc, 'value.trxAmount', totCashPortion);
+              } else {
+                delete doc.value.trxAmount;
+              }
+              const shieldAgentName = _.get(doc, 'shieldAgentName');
+              if (shieldAgentName) {
+                _.set(doc, 'value.agentName', shieldAgentName);
+              } else {
+                delete doc.value.agentName;
+              }
+              const agentCompany = _.get(doc, 'agentCompany');
+              if (agentCompany) {
+                _.set(doc, 'value.agentCompany', agentCompany);
+              } else {
+                delete doc.value.agentCompany;
+              }
+            } else {
+              _.get(doc, 'key', []).push(paymentMethod);
+              delete doc.value.parentId;
+            }
+            if (trxTime !== '') {
+              _.get(doc, 'key', []).push(trxTime);
+            } else {
+              _.get(doc, 'key', []).push(null);
+              delete doc.value.trxTime;
+            }
+            result.push(_.omit(doc, ['quotType', 'cashPortion', 'totCashPortion', 'shieldCcy', 'shieldAgentName', 'agentCompany']));
+          });
+        }
+        resultTemp.total_rows = result.length;
+        resultTemp.rows = result;
+        res.json(resultTemp);
+      }
+    });
+  },
   pdfTemplates(req, res) {
     const aggregateStr = [];
     // This is the query result and alias -> projectStr
@@ -3566,6 +4028,177 @@ exports.api = {
       aggregateStr.push(matchStr);
     }
     aggregateStr.push({ $sort: { pdfCode: 1 } });
+    aggregateStr.push(projectStr);
+    mongoose.connection.collection('masterData').aggregate(aggregateStr).toArray((err, docs) => {
+      if (err) {
+        res.json({ status: 400, message: err.message });
+      } else {
+        const resultTemp = {};
+        resultTemp.total_rows = docs.length;
+        resultTemp.rows = docs;
+        res.json(resultTemp);
+      }
+    });
+  },
+  products(req, res) {
+    const aggregateStr = [];
+    // This is the query result and alias -> projectStr
+    const projectStr = {
+      $project: {
+        _id: 0, // 0 is not selected
+        id: '$id',
+        key: ['01', '$planInd', '$covCode'],
+        value: {
+          compCode: '$compCode',
+          covCode: '$covCode',
+          covName: '$covName',
+          version: '$version',
+          planCode: '$planCode',
+          productLine: '$productLine',
+          productCategory: '$productCategory',
+          smokeInd: '$smokeInd',
+          genderInd: '$genderInd',
+          ctyGroup: '$ctyGroup',
+          entryAge: '$entryAge',
+          currencies: '$currencies',
+          quotForm: { $cond: { if: '$quotForm', then: '$quotForm', else: '' } },
+          effDate: { $cond: { if: { $gt: ['$effDate', ''] }, then: '$effDate', else: 100000 } },
+          expDate: { $cond: { if: { $gt: ['$expDate', ''] }, then: '$expDate', else: 9999999900000 } },
+          prodFeature: { $cond: { if: '$prodFeature', then: '$prodFeature', else: '' } },
+          keyRisk: { $cond: { if: '$keyRisk', then: '$keyRisk', else: '' } },
+          insuredAgeDesc: { $cond: { if: '$insuredAgeDesc', then: '$insuredAgeDesc', else: '' } },
+          payModeDesc: { $cond: { if: '$payModeDesc', then: '$payModeDesc', else: '' } },
+          polTermDesc: { $cond: { if: '$polTermDesc', then: '$polTermDesc', else: '' } },
+          premTermDesc: { $cond: { if: '$premTermDesc', then: '$premTermDesc', else: '' } },
+          illustrationInd: { $cond: { if: '$illustrationInd', then: '$illustrationInd', else: '' } },
+          scrOrderSeq: { $cond: { if: '$scrOrderSeq', then: '$scrOrderSeq', else: 0 } },
+          tnc: { $cond: { if: '$tnc', then: '$tnc', else: '' } },
+        },
+      },
+    };
+    const startKey = req.query.startkey || '';
+    const endKey = req.query.endkey || '';
+    const keys = req.query.keys || '';
+    const key = req.query.key || '';
+    const matchStr = {
+      $match: {
+        $and: [
+          {
+            type: 'product',
+          },
+        ],
+
+      },
+    };
+    if (startKey !== '' && endKey !== '') {
+      const startKeys = JSON.parse(startKey);
+      const endKeys = JSON.parse(endKey);
+      if (startKeys.length > 1 && endKeys.length > 1) {
+        if (_.isEqual(startKeys, endKeys)) {
+          _.get(matchStr, '$match.$and', []).push({
+            planInd: startKeys[1],
+          });
+          // _.set(matchStr, '$match.planInd', startKeys[1]);
+          if (startKeys.length > 2) {
+            _.get(matchStr, '$match.$and', []).push({
+              covCode: startKeys[1],
+            });
+            // _.set(matchStr, '$match.covCode', startKeys[2]);
+          }
+        } else if (_.isEqual(startKeys[1], endKeys[1])) {
+          _.get(matchStr, '$match.$and', []).push({
+            planInd: startKeys[1],
+          });
+          const temp = {};
+          if (startKeys.length > 2) {
+            _.set(temp, '$gte', startKeys[2]);
+          }
+          if (endKeys.length > 2) {
+            _.set(temp, '$lte', endKeys[2]);
+          }
+          if (!_.isEmpty(temp)) {
+            _.get(matchStr, '$match.$and', []).push({
+              covCode: temp,
+            });
+          }
+        } else {
+          _.get(matchStr, '$match.$and', []).push({
+            planInd: { $gte: startKeys[1], $lte: endKeys[1] },
+          });
+          const temp = [];
+          const tempCovCode = {};
+          if (startKeys.length > 2) {
+            temp.push({
+              planInd: startKeys[1],
+              covCode: { $gte: startKeys[2] },
+
+            });
+            _.set(tempCovCode, '$gte', startKeys[2]);
+          }
+          if (endKeys.length > 2) {
+            temp.push({
+              planInd: endKeys[1],
+              covCode: { $lte: endKeys[2] },
+            });
+            _.set(tempCovCode, '$lte', endKeys[2]);
+          }
+          if (startKeys.length > 2 && endKeys.length > 2) {
+            temp.push({
+              covCode: tempCovCode,
+            });
+          }
+          if (!_.isEmpty(temp)) {
+            _.get(matchStr, '$match.$and', []).push({
+              $or: temp,
+            });
+            // _.set(matchStr, '$match.$or', temp);
+          }
+        }
+      }
+    } else if (keys !== '') {
+      const keysList = JSON.parse(keys);
+      //  console.log(" >>>>> keysList=", JSON.stringify(keysList));
+      const inArray = [];
+      if (keysList && keysList.length > 0) {
+        _.forEach(keysList, (keyItem) => {
+          const temp = {};
+          if (keyItem && keyItem.length > 1) {
+            _.set(temp, 'planInd', keyItem[1]);
+          }
+          if (keyItem && keyItem.length > 2) {
+            _.set(temp, 'covCode', keyItem[2]);
+          }
+          if (!_.isEmpty(temp)) {
+            inArray.push(temp);
+          }
+        });
+      }
+      if (!_.isEmpty(inArray)) {
+        _.get(matchStr, '$match.$and', []).push({
+          $or: inArray,
+        });
+        // _.set(matchStr, '$match.$or', inArray);
+      }
+    } else if (key !== '' && key !== '[null]') {
+      const keyJson = JSON.parse(key);
+      if (keyJson && keyJson.length > 1) {
+        _.get(matchStr, '$match.$and', []).push({
+          planInd: keyJson[1],
+        });
+        // _.set(matchStr, '$match.planInd', keyJson[1]);
+      }
+      if (keyJson && keyJson.length > 2) {
+        _.get(matchStr, '$match.$and', []).push({
+          covCode: keyJson[2],
+        });
+        // _.set(matchStr, '$match.covCode', keyJson[2]);
+      }
+    }
+    if (!_.isEmpty(matchStr)) {
+      aggregateStr.push(matchStr);
+    }
+    // console.log(' >>>>> matchStr=', JSON.stringify(matchStr));
+    aggregateStr.push({ $sort: { planInd: 1, covCode: 1 } });
     aggregateStr.push(projectStr);
     mongoose.connection.collection('masterData').aggregate(aggregateStr).toArray((err, docs) => {
       if (err) {
@@ -3881,6 +4514,867 @@ exports.api = {
         res.json(resultTemp);
       }
     });
+  },
+  async signatureExpire(req, res) {
+    // doc.type === 'masterApproval') {
+    //   emit(['01', doc.approvalStatus, doc.approvalCaseId], emitObj);
+    const aggregateStr = [];
+    // This is the query result and alias -> projectStr
+    const projectStr = {
+      $project: {
+        _id: 0, // 0 is not selected
+        id: '$id',
+        key: [],
+        value: {
+          appId: '$id',
+          polNo: { $cond: { if: '$policyNumber', then: '$policyNumber', else: '' } },
+          bundleId: '$bundleId',
+          signDate: null,
+          payMethod: '$payment.trxMethod',
+          payStatus: '$payment.trxStatus',
+          isFullySigned: '$isFullySigned',
+          isInitialPaymentCompleted: { $cond: { if: '$isInitialPaymentCompleted', then: '$isInitialPaymentCompleted', else: '$isInitialPaymentComeleted' } },
+          docType: '$type',
+        },
+        biSignedDate: '$biSignedDate',
+      },
+    };
+
+    const startKey = req.query.startkey || '';
+    const endKey = req.query.endkey || '';
+    const keys = req.query.keys || '';
+    const key = req.query.key || '';
+    const matchStr = {
+      $match: {
+        $and: [
+          {
+            isSubmittedStatus: { $ne: true },
+          },
+          {
+            isInvalidated: { $ne: true },
+          },
+          {
+            biSignedDate: { $exists: true, $ne: 0 },
+          },
+        ],
+      },
+    };
+    if (startKey !== '' && endKey !== '') {
+      const startKeys = JSON.parse(startKey);
+      const endKeys = JSON.parse(endKey);
+      if (startKeys || endKeys) {
+        if (_.isEqual(startKeys, endKeys)) {
+          if (startKeys.length > 1) {
+            _.get(matchStr, '$match.$and', []).push(
+              {
+                biSignedDate: new Date(startKeys[1]).toISOString(),
+              },
+            );
+          }
+        } else {
+          const temp = {};
+          if (startKeys && startKeys.length > 1) {
+            _.set(temp, '$gte', new Date(startKeys[1]).toISOString());
+          }
+          if (endKeys && endKeys.length > 1) {
+            _.set(temp, '$lte', new Date(endKeys[1]).toISOString());
+          }
+          if (!_.isEmpty(temp)) {
+            _.get(matchStr, '$match.$and', []).push(
+              {
+                biSignedDate: temp,
+              },
+            );
+          }
+        }
+      }
+    } else if (keys !== '') {
+      const keysList = JSON.parse(keys);
+      const inArray = [];
+      if (keysList && keysList.length > 0) {
+        _.forEach(keysList, (keyItem) => {
+          if (keyItem && keyItem.length > 1) {
+            inArray.push({
+              biSignedDate: new Date(keyItem[1]).toISOString(),
+            });
+          }
+        });
+      }
+      if (!_.isEmpty(inArray)) {
+        _.get(matchStr, '$match.$and', []).push(
+          { $or: inArray },
+        );
+      }
+    } else if (key !== '' && key !== '[null]') {
+      const keyJson = JSON.parse(key);
+      if (keyJson && keyJson.length > 1) {
+        _.get(matchStr, '$match.$and', []).push({
+          biSignedDate: new Date(keyJson[1]).toISOString(),
+        });
+      }
+    }
+    if (!_.isEmpty(matchStr)) {
+      aggregateStr.push(matchStr);
+    }
+
+    aggregateStr.push({ $sort: { biSignedDate: 1 } });
+    aggregateStr.push(projectStr);
+
+    const createRow = (item) => {
+      const doc = _.cloneDeep(item);
+      const biSignedDate = new Date(_.get(doc, 'biSignedDate', ''));
+      _.set(doc, 'key', ['01', biSignedDate.getTime()]);
+      _.set(doc, 'value.signDate', biSignedDate.getTime());
+      return doc;
+      // return _.omit(doc, ['biSignedDate']);
+    };
+
+    // console.log(' >>>>> matchStr=', JSON.stringify(matchStr));
+    const result = [];
+    const aggregateStrShield = _.cloneDeep(aggregateStr);
+    const emitResult = await mongoose.connection.collection('application').aggregate(aggregateStr).toArray();
+    // console.log(' >>>>> emitResult=', emitResult.length);
+    if (!_.isEmpty(emitResult)) {
+      _.forEach(emitResult, (emitItem) => {
+        result.push(createRow(emitItem));
+      });
+    }
+
+    const emitAgentResult = await mongoose.connection.collection('shieldApplication').aggregate(aggregateStrShield).toArray();
+    if (!_.isEmpty(emitAgentResult)) {
+      _.forEach(emitAgentResult, (emitItem) => {
+        result.push(createRow(emitItem));
+      });
+    }
+    // console.log(' >>>>> length=', result.length);
+    const resultTemp = {};
+    resultTemp.total_rows = result.length;
+    resultTemp.rows = result;
+    res.json(resultTemp);
+  },
+  async submission(req, res) {
+    const aggregateStr = [];
+    const projectStr = {
+      $project: {
+        _id: 0, // 0 is not selected
+        id: '$id',
+        key: [],
+        value: {
+          approvalCaseId: '$approvalCaseId',
+          status: '$approvalStatus',
+          applicationId: '$applicationId',
+          policyId: '$policyId',
+          agentId: '$agentId',
+          directorId: '$directorId',
+          managerId: '$managerId',
+          lastEditedDate: '$lastEditedDate',
+          submittedDate: '$submittedDate',
+          quotationId: '$quotationId',
+          approveRejectDate: '$approveRejectDate',
+          submisssionFlag: { $cond: { if: '$submisssionFlag', then: '$submisssionFlag', else: false } },
+          isFACase: { $cond: { if: '$isFACase', then: '$isFACase', else: false } },
+          caseLockedManagerCodebyStatus: { $cond: { if: '$caseLockedManagerCodebyStatus', then: '$caseLockedManagerCodebyStatus', else: '' } },
+          isShield: { $cond: { if: '$isShield', then: '$isShield', else: false } },
+          subApprovalList: { $cond: { if: '$subApprovalList', then: '$subApprovalList', else: [] } },
+          approvalStatus: '$approvalStatus',
+        },
+        submittedDate: '$submittedDate',
+        supervisorApproveRejectDate: '$supervisorApproveRejectDate',
+        expiredDate: '$expiredDate',
+      },
+
+    };
+    const startKey = req.query.startkey || '';
+    const endKey = req.query.endkey || '';
+    const keys = req.query.keys || '';
+    const key = req.query.key || '';
+    const matchStr = {
+    };
+
+    let caseExpired = false;
+    let caseSubmitdoc = false;
+    let casePendingapproval = false;
+    let caseLastedit = false;
+    let casePendingForFAFirm = false;
+    let caseExpiredNotification = false;
+    let caseSecondaryProxyNotification = false;
+    const expiredKeys = [];
+    const submitdocKeys = [];
+    const pendingapprovalKeys = [];
+    const lasteditKeys = [];
+    const pendingForFAFirmKeys = [];
+    const expiredNotificationKeys = [];
+    const secondaryProxyNotificationKeys = [];
+    if (startKey !== '' && endKey !== '') {
+      const startKeys = JSON.parse(startKey);
+      const endKeys = JSON.parse(endKey);
+      const andWhere = [];
+      if (startKeys.length > 2 && endKeys.length > 2) {
+        if (_.isEqual(startKeys, endKeys)) {
+          if (_.isEqual(startKeys[1], 'expired')) {
+            caseExpired = true;
+            const expiredKey = {};
+            andWhere.push({ submittedDate: new Date(startKeys[2]).toISOString() });
+            _.set(expiredKey, 'submittedDate', new Date(startKeys[2]).toISOString());
+            if (startKeys.length > 3) {
+              andWhere.push({ approvalStatus: startKeys[3] });
+              _.set(expiredKey, 'approvalStatus', startKeys[3]);
+            }
+            expiredKeys.push(expiredKey);
+          }
+          if (_.isEqual(startKeys[1], 'submitdoc')) {
+            caseSubmitdoc = true;
+            const submitdocKey = {};
+            andWhere.push({ approvalStatus: startKeys[2] });
+            _.set(submitdocKey, 'approvalStatus', startKeys[2]);
+            if (startKeys.length > 3) {
+              _.set(submitdocKey, 'submisssionFlag', startKeys[3]);
+              if (startKeys[3]) {
+                andWhere.push({ submisssionFlag: startKeys[3] });
+              } else {
+                // andWhere.push({ submisssionFlag: { $ne: true } });
+                andWhere.push({
+                  $or: [
+                    { submisssionFlag: false },
+                    { submisssionFlag: { $exists: false } },
+                  ],
+                });
+              }
+            }
+            submitdocKey.push(submitdocKey);
+          }
+          if (_.isEqual(startKeys[1], 'pendingapproval')) {
+            casePendingapproval = true;
+            const pendingapprovalKey = {};
+            andWhere.push({ submittedDate: new Date(startKeys[2]).toISOString() });
+            _.set(pendingapprovalKey, 'submittedDate', new Date(startKeys[2]).toISOString());
+            if (startKeys.length > 3) {
+              andWhere.push({ managerId: startKeys[3] });
+              _.set(pendingapprovalKey, 'managerId', startKeys[3]);
+            }
+            if (startKeys.length > 4) {
+              andWhere.push({ approvalStatus: startKeys[4] });
+              _.set(pendingapprovalKey, 'approvalStatus', startKeys[4]);
+            }
+            pendingapprovalKeys.push(pendingapprovalKey);
+          }
+          if (_.isEqual(startKeys[1], 'lastedit')) {
+            caseLastedit = true;
+            const lasteditKey = {};
+            andWhere.push({ lastEditedDate: new Date(startKeys[2]).toISOString() });
+            _.set(lasteditKey, 'lastEditedDate', new Date(startKeys[2]).toISOString());
+            if (startKeys.length > 3) {
+              andWhere.push({ submittedDate: new Date(startKeys[3]).toISOString() });
+              _.set(lasteditKey, 'submittedDate', new Date(startKeys[3]).toISOString());
+            }
+            if (startKeys.length > 4) {
+              andWhere.push({ approvalStatus: startKeys[4] });
+              _.set(lasteditKey, 'approvalStatus', startKeys[4]);
+            }
+            lasteditKeys.push(lasteditKey);
+          }
+          if (_.isEqual(startKeys[1], 'pendingForFAFirm')) {
+            casePendingForFAFirm = true;
+            const pendingForFAFirmKey = {};
+            andWhere.push({ supervisorApproveRejectDate: new Date(startKeys[2]).toISOString() });
+            _.set(pendingForFAFirmKey, 'supervisorApproveRejectDate', new Date(startKeys[2]).toISOString());
+            if (startKeys.length > 3) {
+              andWhere.push({ agentId: startKeys[3] });
+              _.set(pendingForFAFirmKey, 'agentId', startKeys[3]);
+            }
+            if (startKeys.length > 4) {
+              andWhere.push({ approvalStatus: startKeys[4] });
+              _.set(pendingForFAFirmKey, 'approvalStatus', startKeys[4]);
+            }
+            pendingForFAFirmKeys.push(pendingForFAFirmKey);
+          }
+          if (_.isEqual(startKeys[1], 'expiredNotification')) {
+            caseExpiredNotification = true;
+            const expiredNotificationKey = {};
+            andWhere.push({ expiredDate: new Date(startKeys[2]).toISOString() });
+            _.set(expiredNotificationKey, 'expiredDate', new Date(startKeys[2]).toISOString());
+            if (startKeys.length > 3) {
+              andWhere.push({ approvalStatus: startKeys[3] });
+              _.set(expiredNotificationKey, 'approvalStatus', startKeys[3]);
+            }
+            expiredNotificationKeys.push(expiredNotificationKey);
+          }
+          if (_.isEqual(startKeys[1], 'secondaryProxyNotification')) {
+            caseSecondaryProxyNotification = true;
+            const secondaryProxyNotificationKey = {};
+            andWhere.push({ submittedDate: new Date(startKeys[2]).toISOString() });
+            _.set(secondaryProxyNotificationKey, 'submittedDate', new Date(startKeys[2]).toISOString());
+            if (startKeys.length > 3) {
+              andWhere.push({ approvalStatus: startKeys[3] });
+              _.set(secondaryProxyNotificationKey, 'approvalStatus', startKeys[3]);
+            }
+            secondaryProxyNotificationKeys.push(secondaryProxyNotificationKey);
+          }
+        } else {
+          const expiredWhere = {};
+          if (_.isEqual(startKeys[1], 'expired')) {
+            caseExpired = true;
+            _.set(expiredWhere, 'submittedDate.$gte', new Date(startKeys[2]).toISOString());
+            if (startKeys.length > 3) {
+              // if (startKeys[3] !== '0') {
+              _.set(expiredWhere, 'approvalStatus.$gte', startKeys[3]);
+              // }
+            }
+          }
+          if (_.isEqual(endKeys[1], 'expired')) {
+            caseExpired = true;
+            _.set(expiredWhere, 'submittedDate.$lte', new Date(endKeys[2]).toISOString());
+            if (endKeys.length > 3) {
+              // if (endKeys[3] !== 'ZZZ') {
+              _.set(expiredWhere, 'approvalStatus.$lte', endKeys[3]);
+              // }
+            }
+          }
+          if (!_.isEmpty(expiredWhere)) {
+            andWhere.push(expiredWhere);
+          }
+          const submitDocWhere = {};
+          if (_.isEqual(startKeys[1], 'submitdoc')) {
+            caseSubmitdoc = true;
+            _.set(submitDocWhere, 'approvalStatus.$gte', startKeys[2]);
+            if (startKeys.length > 3) {
+              if (startKeys[3]) {
+                _.set(submitDocWhere, 'submisssionFlag', startKeys[3]);
+              } else {
+                // andWhere.push({ submisssionFlag: { $ne: true } });
+                _.set(submitDocWhere, '$or', [
+                  { submisssionFlag: false },
+                  { submisssionFlag: { $exists: false } },
+                ]);
+              }
+            }
+          }
+          if (_.isEqual(endKeys[1], 'submitdoc')) {
+            caseSubmitdoc = true;
+            _.set(submitDocWhere, 'approvalStatus.$lte', endKeys[2]);
+            if (endKeys.length > 3) {
+              if (endKeys[3]) {
+                _.set(submitDocWhere, 'submisssionFlag', endKeys[3]);
+              } else {
+                // andWhere.push({ submisssionFlag: { $ne: true } });
+                _.get(submitDocWhere, '$or', []).push({ submisssionFlag: false });
+                _.get(submitDocWhere, '$or', []).push({ submisssionFlag: { $exists: false } });
+              }
+            }
+          }
+          if (!_.isEmpty(submitDocWhere)) {
+            andWhere.push(submitDocWhere);
+          }
+          const pendingapprovalWhere = {};
+          if (_.isEqual(startKeys[1], 'pendingapproval')) {
+            casePendingapproval = true;
+            _.set(pendingapprovalWhere, 'submittedDate.$gte', new Date(startKeys[2]).toISOString());
+            if (startKeys.length > 3) {
+              if (startKeys[3] !== '0') {
+                _.set(pendingapprovalWhere, 'managerId.$gte', startKeys[3]);
+              }
+            }
+            if (startKeys.length > 4) {
+              // if (startKeys[4] !== '0') {
+              _.set(pendingapprovalWhere, 'approvalStatus.$gte', startKeys[4]);
+              // }
+            }
+          }
+          if (_.isEqual(endKeys[1], 'pendingapproval')) {
+            casePendingapproval = true;
+            _.set(pendingapprovalWhere, 'submittedDate.$lte', new Date(endKeys[2]).toISOString());
+            if (endKeys.length > 3) {
+              if (endKeys[3] !== 'ZZZ') {
+                _.set(pendingapprovalWhere, 'managerId.$lte', endKeys[3]);
+              }
+            }
+            if (endKeys.length > 4) {
+              _.set(pendingapprovalWhere, 'approvalStatus.$lte', endKeys[4]);
+            }
+          }
+          if (!_.isEmpty(pendingapprovalWhere)) {
+            andWhere.push(pendingapprovalWhere);
+          }
+          const lasteditWhere = {};
+          if (_.isEqual(startKeys[1], 'lastedit')) {
+            caseLastedit = true;
+            _.set(lasteditWhere, 'lastEditedDate.$gte', new Date(startKeys[2]).toISOString());
+            if (startKeys.length > 3) {
+              _.set(lasteditWhere, 'submittedDate.$gte', new Date(startKeys[3]).toISOString());
+            }
+            if (startKeys.length > 4) {
+              // if (startKeys[4] !== '0') {
+              _.set(lasteditWhere, 'approvalStatus.$gte', startKeys[4]);
+              // }
+            }
+          }
+          if (_.isEqual(endKeys[1], 'lastedit')) {
+            caseLastedit = true;
+            _.set(lasteditWhere, 'lastEditedDate.$lte', new Date(endKeys[2]).toISOString());
+            if (endKeys.length > 3) {
+              _.set(lasteditWhere, 'submittedDate.$lte', new Date(endKeys[3]).toISOString());
+            }
+            if (endKeys.length > 4) {
+              _.set(lasteditWhere, 'approvalStatus.$lte', endKeys[4]);
+            }
+          }
+          if (!_.isEmpty(lasteditWhere)) {
+            andWhere.push(lasteditWhere);
+          }
+          const pendingForFAFirmWhere = {};
+          if (_.isEqual(startKeys[1], 'pendingForFAFirm')) {
+            casePendingForFAFirm = true;
+            _.set(pendingForFAFirmWhere, 'supervisorApproveRejectDate.$gte', new Date(startKeys[2]).toISOString());
+            if (startKeys.length > 3) {
+              if (startKeys[3] !== '0') {
+                _.set(pendingForFAFirmWhere, 'agentId.$gte', startKeys[3]);
+              }
+            }
+            if (startKeys.length > 4) {
+              _.set(pendingForFAFirmWhere, 'approvalStatus.$gte', startKeys[4]);
+            }
+          }
+          if (_.isEqual(endKeys[1], 'pendingForFAFirm')) {
+            casePendingForFAFirm = true;
+            _.set(pendingForFAFirmWhere, 'supervisorApproveRejectDate.$lte', new Date(endKeys[2]).toISOString());
+            if (endKeys.length > 3) {
+              if (endKeys[3] !== 'ZZZ') {
+                _.set(pendingForFAFirmWhere, 'agentId.$lte', endKeys[3]);
+              }
+            }
+            if (endKeys.length > 4) {
+              _.set(pendingForFAFirmWhere, 'approvalStatus.$lte', endKeys[4]);
+            }
+          }
+          if (!_.isEmpty(pendingForFAFirmWhere)) {
+            andWhere.push(pendingForFAFirmWhere);
+          }
+          const expiredNotificationWhere = {};
+          if (_.isEqual(startKeys[1], 'expiredNotification')) {
+            caseExpiredNotification = true;
+            _.set(expiredNotificationWhere, 'expiredDate.$gte', new Date(startKeys[2]).toISOString());
+            if (startKeys.length > 3) {
+              // if (startKeys[3] !== '0') {
+              _.set(expiredNotificationWhere, 'approvalStatus.$gte', startKeys[3]);
+              // }
+            }
+          }
+          if (_.isEqual(endKeys[1], 'expiredNotification')) {
+            caseExpiredNotification = true;
+            _.set(expiredNotificationWhere, 'expiredDate.$lte', new Date(endKeys[2]).toISOString());
+            if (endKeys.length > 3) {
+              // if (endKeys[3] !== 'ZZZ') {
+              _.set(expiredNotificationWhere, 'approvalStatus.$lte', endKeys[3]);
+              // }
+            }
+          }
+          if (!_.isEmpty(expiredNotificationWhere)) {
+            andWhere.push(expiredNotificationWhere);
+          }
+          const secondaryProxyNotificationWhere = {};
+          if (_.isEqual(startKeys[1], 'secondaryProxyNotification')) {
+            caseSecondaryProxyNotification = true;
+            _.set(secondaryProxyNotificationWhere, 'submittedDate.$gte', new Date(startKeys[2]).toISOString());
+            if (startKeys.length > 3) {
+              _.set(secondaryProxyNotificationWhere, 'approvalStatus.$gte', startKeys[3]);
+            }
+          }
+          if (_.isEqual(endKeys[1], 'secondaryProxyNotification')) {
+            caseSecondaryProxyNotification = true;
+            _.set(secondaryProxyNotificationWhere, 'submittedDate.$lte', new Date(endKeys[2]).toISOString());
+            if (endKeys.length > 3) {
+              _.set(secondaryProxyNotificationWhere, 'approvalStatus.$lte', endKeys[3]);
+            }
+          }
+          if (!_.isEmpty(secondaryProxyNotificationWhere)) {
+            andWhere.push(secondaryProxyNotificationWhere);
+          }
+        }
+        if (!_.isEmpty(andWhere)) {
+          _.set(matchStr, '$match.$and', andWhere);
+        }
+      }
+    } else if (keys !== '') {
+      const keysList = JSON.parse(keys);
+      const inArray = [];
+      if (keysList && keysList.length > 0) {
+        _.forEach(keysList, (keyItem) => {
+          if (keyItem && keyItem.length > 2) {
+            if (_.isEqual(keyItem[1], 'expired')) {
+              caseExpired = true;
+              const expiredKey = {};
+              _.set(expiredKey, 'submittedDate', new Date(keyItem[2]).toISOString());
+              if (keyItem.length > 3) {
+                _.set(expiredKey, 'approvalStatus', keyItem[3]);
+              }
+              expiredKeys.push(_.cloneDeep(expiredKey));
+              inArray.push(expiredKey);
+            }
+            if (_.isEqual(keyItem[1], 'submitdoc')) {
+              caseSubmitdoc = true;
+              const submitdocKey = {};
+              _.set(submitdocKey, 'approvalStatus', keyItem[2]);
+              if (keyItem.length > 3) {
+                if (keyItem[3]) {
+                  _.set(submitdocKey, 'submisssionFlag', keyItem[3]);
+                } else {
+                  _.set(submitdocKey, '$or', [
+                    { submisssionFlag: false },
+                    { submisssionFlag: { $exists: false } },
+                  ]);
+                }
+              }
+              if (keyItem.length > 3) {
+                submitdocKeys.push({
+                  approvalStatus: keyItem[2],
+                  submisssionFlag: keyItem[3],
+                });
+              } else {
+                submitdocKeys.push({
+                  approvalStatus: keyItem[2],
+                });
+              }
+              inArray.push(submitdocKey);
+            }
+            if (_.isEqual(keyItem[1], 'pendingapproval')) {
+              casePendingapproval = true;
+              const pendingapprovalKey = {};
+              _.set(pendingapprovalKey, 'submittedDate', new Date(keyItem[2]).toISOString());
+              if (keyItem.length > 3) {
+                _.set(pendingapprovalKey, 'managerId', keyItem[3]);
+              }
+              if (keyItem.length > 4) {
+                _.set(pendingapprovalKey, 'approvalStatus', keyItem[4]);
+              }
+              pendingapprovalKeys.push(_.cloneDeep(pendingapprovalKey));
+              inArray.push(pendingapprovalKey);
+            }
+            if (_.isEqual(keyItem[1], 'lastedit')) {
+              caseLastedit = true;
+              const lasteditKey = {};
+              _.set(lasteditKey, 'lastEditedDate', new Date(keyItem[2]).toISOString());
+              if (keyItem.length > 3) {
+                _.set(lasteditKey, 'submittedDate', new Date(keyItem[3]).toISOString());
+              }
+              if (keyItem.length > 4) {
+                _.set(lasteditKey, 'approvalStatus', keyItem[4]);
+              }
+              lasteditKeys.push(_.cloneDeep(lasteditKey));
+              inArray.push(lasteditKey);
+            }
+            if (_.isEqual(keyItem[1], 'pendingForFAFirm')) {
+              casePendingForFAFirm = true;
+              const pendingForFAFirmKey = {};
+              _.set(pendingForFAFirmKey, 'supervisorApproveRejectDate', new Date(keyItem[2]).toISOString());
+              if (keyItem.length > 3) {
+                _.set(pendingForFAFirmKey, 'agentId', keyItem[3]);
+              }
+              if (keyItem.length > 4) {
+                _.set(pendingForFAFirmKey, 'approvalStatus', keyItem[4]);
+              }
+              pendingForFAFirmKeys.push(_.cloneDeep(pendingForFAFirmKey));
+              inArray.push(pendingForFAFirmKey);
+            }
+            if (_.isEqual(keyItem[1], 'expiredNotification')) {
+              caseExpiredNotification = true;
+              const expiredNotificationKey = {};
+              _.set(expiredNotificationKey, 'expiredDate', new Date(keyItem[2]).toISOString());
+
+              if (keyItem.length > 3) {
+                _.set(expiredNotificationKey, 'approvalStatus', keyItem[3]);
+              }
+              expiredNotificationKeys.push(_.cloneDeep(expiredNotificationKey));
+              inArray.push(expiredNotificationKey);
+            }
+            if (_.isEqual(keyItem[1], 'secondaryProxyNotification')) {
+              caseSecondaryProxyNotification = true;
+              const secondaryProxyNotificationKey = {};
+              _.set(secondaryProxyNotificationKey, 'submittedDate', new Date(keyItem[2]).toISOString());
+              if (keyItem.length > 3) {
+                _.set(secondaryProxyNotificationKey, 'approvalStatus', keyItem[3]);
+              }
+              secondaryProxyNotificationKeys.push(_.cloneDeep(secondaryProxyNotificationKey));
+              inArray.push(secondaryProxyNotificationKey);
+            }
+          }
+        });
+      }
+      if (!_.isEmpty(inArray)) {
+        _.set(matchStr, '$match.$or', inArray);
+        // matchStr.$match = { $or: inArray };
+      }
+    } else if (key !== '' && key !== '[null]') {
+      const keyJson = JSON.parse(key);
+      if (keyJson && keyJson.length > 2) {
+        if (_.isEqual(keyJson[1], 'expired')) {
+          caseExpired = true;
+          const expiredKey = {};
+          _.set(expiredKey, 'submittedDate', new Date(keyJson[2]).toISOString());
+          if (keyJson.length > 3) {
+            _.set(expiredKey, 'approvalStatus', keyJson[3]);
+          }
+          expiredKeys.push(_.cloneDeep(expiredKey));
+          _.set(matchStr, '$match', expiredKey);
+        }
+        if (_.isEqual(keyJson[1], 'submitdoc')) {
+          caseSubmitdoc = true;
+          const submitdocKey = {};
+          _.set(submitdocKey, 'approvalStatus', keyJson[2]);
+          if (keyJson.length > 3) {
+            if (keyJson[3]) {
+              _.set(submitdocKey, 'submisssionFlag', keyJson[3]);
+            } else {
+              _.set(submitdocKey, '$or', [
+                { submisssionFlag: false },
+                { submisssionFlag: { $exists: false } },
+              ]);
+            }
+          }
+          if (keyJson.length > 3) {
+            submitdocKeys.push({
+              approvalStatus: keyJson[2],
+              submisssionFlag: keyJson[3],
+            });
+          } else {
+            submitdocKeys.push({
+              approvalStatus: keyJson[2],
+            });
+          }
+          _.set(matchStr, '$match', submitdocKeys);
+        }
+        if (_.isEqual(keyJson[1], 'pendingapproval')) {
+          casePendingapproval = true;
+          const pendingapprovalKey = {};
+          _.set(pendingapprovalKey, 'submittedDate', new Date(keyJson[2]).toISOString());
+          if (keyJson.length > 3) {
+            _.set(pendingapprovalKey, 'managerId', keyJson[3]);
+          }
+          if (keyJson.length > 4) {
+            _.set(pendingapprovalKey, 'approvalStatus', keyJson[4]);
+          }
+          pendingapprovalKeys.push(_.cloneDeep(pendingapprovalKey));
+          _.set(matchStr, '$match', pendingapprovalKeys);
+        }
+        if (_.isEqual(keyJson[1], 'lastedit')) {
+          caseLastedit = true;
+          const lasteditKey = {};
+          _.set(lasteditKey, 'lastEditedDate', new Date(keyJson[2]).toISOString());
+          if (keyJson.length > 3) {
+            _.set(lasteditKey, 'submittedDate', new Date(keyJson[3]).toISOString());
+          }
+          if (keyJson.length > 4) {
+            _.set(lasteditKey, 'approvalStatus', keyJson[4]);
+          }
+          lasteditKeys.push(_.cloneDeep(lasteditKey));
+          _.set(matchStr, '$match', lasteditKey);
+        }
+        if (_.isEqual(keyJson[1], 'pendingForFAFirm')) {
+          casePendingForFAFirm = true;
+          const pendingForFAFirmKey = {};
+          _.set(pendingForFAFirmKey, 'supervisorApproveRejectDate', new Date(keyJson[2]).toISOString());
+          if (keyJson.length > 3) {
+            _.set(pendingForFAFirmKey, 'agentId', keyJson[3]);
+          }
+          if (keyJson.length > 4) {
+            _.set(pendingForFAFirmKey, 'approvalStatus', keyJson[4]);
+          }
+          pendingForFAFirmKeys.push(_.cloneDeep(pendingForFAFirmKey));
+          _.set(matchStr, '$match', pendingForFAFirmKey);
+        }
+        if (_.isEqual(keyJson[1], 'expiredNotification')) {
+          caseExpiredNotification = true;
+          const expiredNotificationKey = {};
+          _.set(expiredNotificationKey, 'expiredDate', new Date(keyJson[2]).toISOString());
+
+          if (keyJson.length > 3) {
+            _.set(expiredNotificationKey, 'approvalStatus', keyJson[3]);
+          }
+          expiredNotificationKeys.push(_.cloneDeep(expiredNotificationKey));
+          _.set(matchStr, '$match', expiredNotificationKey);
+        }
+        if (_.isEqual(keyJson[1], 'secondaryProxyNotification')) {
+          caseSecondaryProxyNotification = true;
+          const secondaryProxyNotificationKey = {};
+          _.set(secondaryProxyNotificationKey, 'submittedDate', new Date(keyJson[2]).toISOString());
+          if (keyJson.length > 3) {
+            _.set(secondaryProxyNotificationKey, 'approvalStatus', keyJson[3]);
+          }
+          secondaryProxyNotificationKeys.push(_.cloneDeep(secondaryProxyNotificationKey));
+          _.set(matchStr, '$match', secondaryProxyNotificationKey);
+        }
+      }
+    } else {
+      caseExpired = true;
+      caseSubmitdoc = true;
+      casePendingapproval = true;
+      caseLastedit = true;
+      casePendingForFAFirm = true;
+      caseExpiredNotification = true;
+      caseSecondaryProxyNotification = true;
+    }
+    if (!_.isEmpty(matchStr)) {
+      aggregateStr.push(matchStr);
+    }
+    aggregateStr.push(projectStr);
+    const expiredResult = [];
+    const submitdocResult = [];
+    const pendingapprovalResult = [];
+    const lasteditResult = [];
+    const pendingForFAFirmResult = [];
+    const expiredNotificationResult = [];
+    const secondaryProxyNotificationResult = [];
+    // console.log(' >>>>> matchStr=', JSON.stringify(aggregateStr));
+
+    const escapeStatusForExpiryView = ['E', 'A', 'R'];
+    const pendingForFAFirmStatus = ['PFAFA', 'PDocFAF', 'PDisFAF'];
+    const omitColumn = ['submittedDate', 'supervisorApproveRejectDate', 'expiredDate'];
+
+    const createRow = (doc, type) => {
+      const approvalStatus = _.get(doc, 'value.approvalStatus', '');
+      const submisssionFlag = _.get(doc, 'value.submisssionFlag', false);
+      const isShield = _.get(doc, 'value.isShield', false);
+      const managerId = _.get(doc, 'value.managerId', null);
+      const longUTCSubmitDate = Date.parse(_.get(doc, 'submittedDate'));
+      const longUTCLastEditDate = Date.parse(_.get(doc, 'value.lastEditedDate'));
+      const longUTCSupervisorApproveRejectDate = Date.parse(_.get(doc, 'supervisorApproveRejectDate'));
+      const expiredDate = _.get(doc, 'expiredDate');
+      const agentId = _.get(doc, 'value.agentId', null);
+      if (escapeStatusForExpiryView.indexOf(approvalStatus) === -1 && caseExpired
+      && (_.isEmpty(expiredKeys)
+      || (!_.isEmpty(expiredKeys) && _.some(expiredKeys, (it) => {
+        const approvalStatusT = _.get(it, 'approvalStatus', '');
+        const submittedDateT = _.get(it, 'submittedDate', '');
+        return (
+          ((approvalStatusT !== '' && approvalStatusT === approvalStatus) || approvalStatusT === '')
+        && (
+          (submittedDateT !== '' && submittedDateT === doc.submittedDate) || submittedDateT === ''));
+      })
+      ))) {
+        const temp = _.omit(doc, omitColumn);
+        _.set(temp, 'key', ['01', 'expired', longUTCSubmitDate, approvalStatus]);
+        expiredResult.push(temp);
+      }
+      if (type === 'approval' && caseSubmitdoc && (_.isEmpty(expiredKeys)
+      || (!_.isEmpty(submitdocKeys) && _.some(submitdocKeys, (it) => {
+        const approvalStatusT = _.get(it, 'approvalStatus', '');
+        const submisssionFlagT = _.get(it, 'submisssionFlag', false);
+        return (
+          ((approvalStatusT !== '' && approvalStatusT === approvalStatus) || approvalStatusT === '')
+        && submisssionFlag === submisssionFlagT);
+      })
+      ))) {
+        const temp = _.omit(doc, omitColumn);
+        _.set(temp, 'key', ['01', 'submitdoc', approvalStatus, submisssionFlag]);
+        submitdocResult.push(temp);
+      }
+      if (type === 'masterApproval' || !isShield) {
+        if (casePendingapproval && (_.isEmpty(pendingapprovalKeys)
+        || (!_.isEmpty(pendingapprovalKeys) && _.some(pendingapprovalKeys, (it) => {
+          const managerIdT = _.get(it, 'managerId', '');
+          const approvalStatusT = _.get(it, 'approvalStatus', '');
+          const submittedDateT = _.get(it, 'submittedDate', '');
+          return (
+            ((approvalStatusT !== '' && approvalStatusT === approvalStatus) || approvalStatusT === '')
+          && ((managerIdT !== '' && managerIdT === managerId) || managerIdT === '')
+          && (
+            (submittedDateT !== '' && submittedDateT === doc.submittedDate) || submittedDateT === ''));
+        })
+        ))) {
+          const temp = _.omit(doc, omitColumn);
+          _.set(temp, 'key', ['01', 'pendingapproval', longUTCSubmitDate, managerId, approvalStatus]);
+          pendingapprovalResult.push(temp);
+        }
+        if (caseLastedit && (_.isEmpty(lasteditKeys)
+        || (!_.isEmpty(lasteditKeys) && _.some(lasteditKeys, (it) => {
+          const lastEditedDateT = _.get(it, 'lastEditedDate', '');
+          const approvalStatusT = _.get(it, 'approvalStatus', '');
+          const submittedDateT = _.get(it, 'submittedDate', '');
+          return (
+            ((approvalStatusT !== '' && approvalStatusT === approvalStatus) || approvalStatusT === '')
+          && ((lastEditedDateT !== '' && lastEditedDateT === _.get(doc, 'value.lastEditedDate')) || lastEditedDateT === '')
+          && (
+            (submittedDateT !== '' && submittedDateT === doc.submittedDate) || submittedDateT === ''));
+        })
+        ))) {
+          const temp = _.omit(doc, omitColumn);
+          _.set(temp, 'key', ['01', 'lastedit', longUTCLastEditDate, longUTCSubmitDate, approvalStatus]);
+          lasteditResult.push(temp);
+        }
+
+
+        if (pendingForFAFirmStatus.indexOf(approvalStatus) > -1 && casePendingForFAFirm
+         && (_.isEmpty(pendingForFAFirmKeys)
+        || (!_.isEmpty(pendingForFAFirmKeys) && _.some(pendingForFAFirmKeys, (it) => {
+          const agentIdT = _.get(it, 'agentId', '');
+          const approvalStatusT = _.get(it, 'approvalStatus', '');
+          const supervisorApproveRejectDateT = _.get(it, 'supervisorApproveRejectDate', '');
+          return (
+            ((approvalStatusT !== '' && approvalStatusT === approvalStatus) || approvalStatusT === '')
+          && ((agentIdT !== '' && agentIdT === agentId) || agentIdT === '')
+          && (
+            (supervisorApproveRejectDateT !== ''
+             && supervisorApproveRejectDateT === doc.supervisorApproveRejectDate)
+             || supervisorApproveRejectDateT === ''));
+        })
+        ))) {
+          const temp = _.omit(doc, omitColumn);
+          _.set(temp, 'key', ['01', 'pendingForFAFirm', longUTCSupervisorApproveRejectDate, agentId, approvalStatus]);
+          pendingForFAFirmResult.push(temp);
+        }
+        if (approvalStatus === 'E' && expiredDate && caseExpiredNotification
+        && (_.isEmpty(expiredNotificationKeys)
+      || (!_.isEmpty(expiredNotificationKeys) && _.some(expiredNotificationKeys, (it) => {
+        const approvalStatusT = _.get(it, 'approvalStatus', '');
+        const expiredDateT = _.get(it, 'expiredDate', '');
+        return (
+          ((approvalStatusT !== '' && approvalStatusT === approvalStatus) || approvalStatusT === '')
+        && (
+          (expiredDateT !== '' && expiredDateT === expiredDate) || expiredDateT === ''));
+      })
+      ))) {
+          const longUTCExpiredDate = Date.parse(expiredDate);
+          const temp = _.omit(doc, omitColumn);
+          _.set(temp, 'key', ['01', 'expiredNotification', longUTCExpiredDate, approvalStatus]);
+          expiredNotificationResult.push(temp);
+        }
+        if (caseSecondaryProxyNotification
+          && (_.isEmpty(expiredNotificationKeys)
+      || (!_.isEmpty(expiredNotificationKeys) && _.some(expiredNotificationKeys, (it) => {
+        const approvalStatusT = _.get(it, 'approvalStatus', '');
+        const submittedDateT = _.get(it, 'submittedDate', '');
+        return (
+          ((approvalStatusT !== '' && approvalStatusT === approvalStatus) || approvalStatusT === '')
+        && (
+          (submittedDateT !== '' && submittedDateT === doc.submittedDate) || submittedDateT === ''));
+      })
+      ))) {
+          const temp = _.omit(doc, omitColumn);
+          _.set(temp, 'key', ['01', 'secondaryProxyNotification', longUTCSubmitDate, approvalStatus]);
+          secondaryProxyNotificationResult.push(temp);
+        }
+      }
+    };
+    const emitResult = await mongoose.connection.collection('approval').aggregate(aggregateStr).toArray();
+    // console.log(' >>>>> emitResult=', emitResult.length);
+    if (!_.isEmpty(emitResult)) {
+      _.forEach(emitResult, (emitItem) => {
+        createRow(emitItem, 'approval');
+      });
+    }
+    const emitShieldResult = await mongoose.connection.collection('shieldApproval').aggregate(aggregateStr).toArray();
+    // console.log(' >>>>> emitResult=', emitResult.length);
+    if (!_.isEmpty(emitShieldResult)) {
+      _.forEach(emitShieldResult, (emitItem) => {
+        createRow(emitItem, 'masterApproval');
+      });
+    }
+    const resultTemp = {};
+    const result = _.concat(expiredResult, submitdocResult,
+      pendingapprovalResult, lasteditResult, pendingForFAFirmResult,
+      expiredNotificationResult, secondaryProxyNotificationResult);
+    resultTemp.total_rows = result.length;
+    resultTemp.rows = result;
+    res.json(resultTemp);
   },
   async summaryApps(req, res) {
     // doc.type === 'masterApproval') {
