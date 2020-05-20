@@ -9,7 +9,7 @@ class awsDAO extends DAO{
   async getDoc(docId){
     var result = "";
     var status = true;
-    var docType = this.getColNameById(docId);
+    var docType = this.getCollectionNameById(docId);
     if(docType && !_.isEmpty(docType)){
       // log4jUtil.log("111111",mongoose.connection.readyState)
       if(mongoose.connection.readyState===1){
@@ -30,7 +30,7 @@ class awsDAO extends DAO{
     async insertDoc(docId,data){
       var result = "";
       var status = true;
-      var docType = this.getColNameById(docId);
+      var docType = this.getCollectionNameById(docId);
       if(docType && !_.isEmpty(docType)){
         if(mongoose.connection.readyState===1){
           _.set(data,docId);
@@ -54,7 +54,7 @@ class awsDAO extends DAO{
     async updateDoc(docId,data){
       var result = "";
       var status = true;
-      var docType = this.getColNameById(docId);
+      var docType = this.getCollectionNameById(docId);
       if(_.get(data,"_id")){
         delete data["_id"];
       }
@@ -83,7 +83,7 @@ class awsDAO extends DAO{
     async updateDocPushData(docId,extCondition,data){
       var result = "";
       var status = true;
-      var docType = this.getColNameById(docId);
+      var docType = this.getCollectionNameById(docId);
       if(_.get(data,"_id")){
         delete data["_id"];
       }
@@ -117,7 +117,7 @@ class awsDAO extends DAO{
     async updateDocPullData(docId,extCondition,data){
       var result = "";
       var status = true;
-      var docType = this.getColNameById(docId);
+      var docType = this.getCollectionNameById(docId);
       if(_.get(data,"_id")){
         delete data["_id"];
       }
@@ -150,7 +150,7 @@ class awsDAO extends DAO{
     async deleteDoc(docId){
       var result = "";
       var status = true;
-      var docType = this.getColNameById(docId);
+      var docType = this.getCollectionNameById(docId);
       if(docType && !_.isEmpty(docType)){
         if(mongoose.connection.readyState===1){
           await mongoose.connection.collection(docType).deleteOne({"id":docId}).then(r=>{

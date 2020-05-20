@@ -13,7 +13,7 @@ class DAO {
         }
         return dao;
     }
-    getColNameById(docId) {
+    getCollectionNameById(docId) {
         let type = '';
       if (docId.substring(0, 2) === '10' || docId.substring(0, 2) === '30') {
         type = 'policy';
@@ -52,7 +52,7 @@ class DAO {
       else {
         type = 'masterData';
       }
-      console.log("docId = ",docId," || type = ",type);
+      console.log("docId = ",docId," || collection = ",type);
       return type;
     };
 };

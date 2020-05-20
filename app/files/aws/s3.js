@@ -12,18 +12,22 @@ const transBucket = awsConf.transBucket ? awsConf.transBucket : 'bucket-base';
 // Add KMS, need region
 // AWS.config.loadFromPath('app/files/aws/credentials');
 
-const s3Object = new AWS.S3({signatureVersion:'v4',region:'ap-southeast-1'});
-AWS.config.update({
-  accessKeyId: awsConf.accessKeyId,
-  secretAccessKey: awsConf.secretAccessKey,
-  // host:"https://ease-master-data.s3-ap-southeast-1.amazonaws.com",
+const s3Object = new AWS.S3({
+signatureVersion:awsConf.signatureVersion,
+region:awsConf.region,
+accessKeyId: awsConf.accessKeyId,
+secretAccessKey: awsConf.secretAccessKey,
 });
+// AWS.config.update({
+//   accessKeyId: awsConf.accessKeyId,
+//   secretAccessKey: awsConf.secretAccessKey,
+// });
 
-logger.log('awsConf.accessKeyId = ',awsConf.accessKeyId);
-logger.log('awsConf.secretAccessKey = ',awsConf.secretAccessKey);
-logger.log('awsConf.KmsID = ',awsConf.KmsID);
+// logger.log('awsConf.accessKeyId = ',awsConf.accessKeyId);
+// logger.log('awsConf.secretAccessKey = ',awsConf.secretAccessKey);
+// logger.log('awsConf.KmsID = ',awsConf.KmsID);
 // Create a bucket and upload something into it
-const bucketName = `${masterBucket}`;
+
 
 class s3 extends fileUtils{
 constructor(){
@@ -31,11 +35,20 @@ constructor(){
     };
 async init(){
   this.setProxyEnv();
-  await this.getCredentials().catch(error=>{logger.log("error",error);return false});
+  // await this.getCredentials().catch(error=>{logger.log("error",error);return false});
   return true;
 }
+// gothrough proxy
+  setProxyEnv(){
+    const isProxy = _.get(s3Config,"awsS3.isProxy");
+    console.log("isProxy =",isProxy);
+    if(isProxy){
+      const HttpProxyAgent = require('https-proxy-agent');
+      const proxyAgent = new HttpProxyAgent(process.env.aws_https_proxy || process.env.AWS_HTTPS_PROXY);
+      AWS.config.httpOptions = { agent: proxyAgent };
+    }
+  };
 getCredentials(){
-  logger.log('awsUtil getCredentials');
   return new Promise((resolve, reject) => {
 
     AWS.config.getCredentials((err) => {
@@ -51,64 +64,85 @@ getCredentials(){
   });
 };
 
-uploadBase64(fileName,data,fileType){
-  logger.log('awsUtil uploadDoc bucketName', bucketName);
-  logger.log('awsUtil uploadDoc fileName', fileName);
-  // dt_folder = "dt=" + moment().subtract(1, 'days');
-  // logger.log('dt folder',  dt_folder);
-  const buf = new Buffer(data.replace(/^data:image\/\w+;base64,/, ""),'base64');
+uploadBase64(docId,attachmentType,data,fileType){
 
   return new Promise((resolve, reject) => {
+    const buf = new Buffer(data.replace(/^data:image\/\w+;base64,/, ""),'base64');
+    const fileKey = this.getFileKeyById(docId,attachmentType);
+    const bucketName = this.getBucketNameById(docId);  
     const params = {
       Bucket: bucketName,
-      Key: fileName,
+      Key: fileKey,
       Body: buf,
       ServerSideEncryption: 'aws:kms',
       SSEKMSKeyId: awsConf.KmsID,
-      // ACL: "public-read-write", 
       ContentType: fileType //"image/jpeg"
     };
-    // s3.putObject(params, (error, dat) => {
       s3Object.upload(params, function (error, dat) {
       if (error) {
         logger.log('awsUtil uploadDoc error', error);
         reject(error);
       } else {
         resolve();
-        logger.log(`Successfully uploaded data to ${bucketName}/${fileName}`);
-        // logger.log('dat', dat);
+        logger.log(`Successfully uploaded data to ${bucketName}/${fileKey}`);
       }
     });
   });
 };
-  // gothrough proxy
-  setProxyEnv(){
-    console.log("s3 setProxyEnv");
-    const isProxy = _.get(s3Config,"awsS3.isProxy");
-    console.log("isProxy =",isProxy);
-    if(isProxy){
-      const HttpProxyAgent = require('https-proxy-agent');
-      const proxyAgent = new HttpProxyAgent(process.env.aws_https_proxy || process.env.AWS_HTTPS_PROXY);
-      AWS.config.httpOptions = { agent: proxyAgent };
-    }
-  };
-
- downloadDoc(param){
-  const executeParams = _.clone(param);
-  executeParams.Bucket = bucketName;
-  logger.log('downloadDoc');
+async getAttachment(docId,attachmentType,cb){  
   return new Promise((resolve, reject) => {
-    s3Object.getObject(executeParams, (err, data) => {
+  const bucketName = this.getBucketNameById(docId);
+  const signedUrlExpireSeconds = 60 * 5
+  const fileKey = this.getFileKeyById(docId,attachmentType);
+  const executeParams = {
+    Bucket:bucketName,
+    Key:fileKey,
+  };
+  // const s3 = new AWS.S3({
+  //   signatureVersion:'v4',
+  //   region:'ap-southeast-1',
+  //   accessKeyId: awsConf.accessKeyId,
+  //   secretAccessKey: awsConf.secretAccessKey,
+  //   });
+  logger.log('getAttachment executeParams= ',executeParams);
+  s3Object.getObject(executeParams, (err, data) => {
       if (err) {
         if (reject) {
           reject();
         }
       } else if (resolve) {
-        resolve(data);
+        if (typeof cb === 'function') {
+          cb(data.Body);
+        }
       }
     });
   });
 };
+async getAttachmentUrl(docId,attachmentType,cb){  
+  return new Promise((resolve, reject) => {
+  const bucketName = this.getBucketNameById(docId);
+  const signedUrlExpireSeconds = 60 * 5
+  const fileKey = this.getFileKeyById(docId,attachmentType);
+  // fileKey = fileKey + ".jpg";
+  const executeParams = {
+    Bucket:bucketName,
+    Key:fileKey,    
+    Expires: signedUrlExpireSeconds,    
+  };
+  // const s3 = new AWS.S3({
+  //   signatureVersion:awsConf.signatureVersion,
+  //   region:awsConf.region,
+  //   accessKeyId: awsConf.accessKeyId,
+  //   secretAccessKey: awsConf.secretAccessKey,
+  //   });
+  logger.log('getAttachmentUrl executeParams= ',executeParams);
+  const url = s3Object.getSignedUrl('getObject', executeParams);
+  if(url){
+    cb(url);
+  }
+  });
 };
+};
+
 
 module.exports = s3;

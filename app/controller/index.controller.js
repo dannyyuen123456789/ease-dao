@@ -59,32 +59,83 @@ exports.api = {
     }
   },
   async getAttachtment(req, res, next) {
-    const docType = _.get(req.params, 'docType', _.get(req.query, 'docType'));
+    var errMessage = ""
     const docId = _.get(req.params, 'docId', _.get(req.query, 'docId'));
-    log4jUtil.log('docType = ', docType);
-    log4jUtil.log('docId = ', docId);
-    const result = await mongoose.connection.collection(docType).findOne({ _id: mongoose.Types.ObjectId(docId) });
-    console.log('result = ', result);
-    res.json({ success: true, result });
+    const attachmentId = _.get(req.params, 'attachment', _.get(req.query, 'attachment'));
+    
+    
+    const fileUtil = new fileUtils("AWS-S3");
+    const fileInstance = await fileUtil.getInstance();
+    const initSuccess = await fileInstance.init();
+    if(initSuccess){
+      await fileInstance.getAttachment(docId,attachmentId,(attachment)=>{
+        // console.log("attachment|||",attachment);
+        res.send(attachment);
+      }).catch(error=>
+        {
+          if(error){
+            log4jUtil.log('log', "error=",error.message);
+            errMessage = error.message}
+        });
+       if(!errMessage || _.isEmpty(errMessage)) {
+          
+       }
+    }else{
+      errMessage = "initial S3 failed"
+    }
+    if(errMessage){
+      log4jUtil.log('log', "--------getAttachtment failed---------");
+      res.json({ ok: false,message:errMessage });
+    }
+  },
+  async getAttachtmentUrl(req, res, next) {
+    var errMessage = ""
+    const docId = _.get(req.params, 'docId', _.get(req.query, 'docId'));
+    const attachmentId = _.get(req.params, 'attachment', _.get(req.query, 'attachment'));
+    
+    
+    const fileUtil = new fileUtils("AWS-S3");
+    const fileInstance = await fileUtil.getInstance();
+    const initSuccess = await fileInstance.init();
+    if(initSuccess){
+      await fileInstance.getAttachmentUrl(docId,attachmentId,(attachment)=>{
+        res.json(attachment);
+      }).catch(error=>
+        {
+          if(error){
+            log4jUtil.log('log', "error=",error.message);
+            errMessage = error.message}
+        });
+       if(!errMessage || _.isEmpty(errMessage)) {
+          
+       }
+    }else{
+      errMessage = "initial S3 failed"
+    }
+    if(errMessage){
+      log4jUtil.log('log', "--------getAttachtment failed---------");
+      res.json({ ok: false,message:errMessage });
+    }
   },
   async uploadAttachmentByBase64(req, res, next) {
     var errMessage = ""
     const docId = _.get(req.params, 'docId', _.get(req.query, 'docId'));
     const attachmentId = _.get(req.params, 'attachment', _.get(req.query, 'attachment'));
-    const fileName = _.join([docId,attachmentId],"-");
+    
     const attachment = req.body.data;
     const mime = req.body.mime;
     const fileUtil = new fileUtils("AWS-S3");
     const fileInstance = await fileUtil.getInstance();
     const initSuccess = await fileInstance.init();
+    const fileName = fileInstance.getFileKeyById(docId,attachmentId);
     if(initSuccess){
       log4jUtil.log('log', "uploading ...");
-      // await fileInstance.uploadBase64(fileName,attachment,mime).catch(error=>
-      //   {
-      //     if(error){
-      //       log4jUtil.log('log', "error=",error.message);
-      //       errMessage = error.message}
-      //   });
+      await fileInstance.uploadBase64(docId,attachmentId,attachment,mime).catch(error=>
+        {
+          if(error){
+            log4jUtil.log('log', "error=",error.message);
+            errMessage = error.message}
+        });
        if(!errMessage || _.isEmpty(errMessage)) {
         const dao = new DAO('AWS');
         const awsDao = dao.getInstance();
@@ -110,7 +161,7 @@ exports.api = {
       res.json({ ok: false,message:errMessage });
     }else{
       log4jUtil.log('log', "--------upload success---------");
-      res.json({ ok: true,message: "upload success!"});
+      res.json({id:docId, ok: true});
     }
   },
   async uploadAttachment(req, res, next) {

@@ -31,7 +31,9 @@
         "isProxy":false,
         "proxyLink":"",
         "accessKeyId":"AKIA2RZMLZROCPKOK4XV",
-        "secretAccessKey":"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"
+        "secretAccessKey":"EC3fLX5fqNgqQqbdlOzvaFhDPwgmRZoAfr9hdv0O",
+        "region":"ap-southeast-1",
+        "signatureVersion":"v4"
         }
 
   }
