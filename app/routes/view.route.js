@@ -46,6 +46,7 @@ router.get('/main/_view/onlinePayment', $main.api.onlinePayment);
 router.get('/main/_view/products', $main.api.products);
 router.get('/main/_view/signatureExpire', $main.api.signatureExpire);
 router.get('/main/_view/submission', $main.api.submission);
+router.get('/main/_view/submissionRptApps', $main.api.submissionRptApps);
 
 
 router.get('/dataSync/_view/agentDocuments', $dataSync.api.agentDocuments);

@@ -4625,8 +4625,8 @@ exports.api = {
       const biSignedDate = new Date(_.get(doc, 'biSignedDate', ''));
       _.set(doc, 'key', ['01', biSignedDate.getTime()]);
       _.set(doc, 'value.signDate', biSignedDate.getTime());
-      return doc;
-      // return _.omit(doc, ['biSignedDate']);
+      // return doc;
+      return _.omit(doc, ['biSignedDate']);
     };
 
     // console.log(' >>>>> matchStr=', JSON.stringify(matchStr));
@@ -5514,6 +5514,254 @@ exports.api = {
     resultTemp.total_rows = result.length;
     resultTemp.rows = result;
     res.json(resultTemp);
+  },
+  submissionRptApps(req, res) {
+    // doc.type === 'application') {
+    //  emit(['01',  payment.initPayMethod],
+    const aggregateStr = [];
+    const projectStr = {
+      $project: {
+        _id: 0, // 0 is not selected
+        id: '$id',
+        key: [],
+        value: {
+          id: '$id',
+          policyNumber: '$policyNumber',
+          pId: '$applicationForm.values.proposer.personalInfo.idCardNo',
+          pName: '$applicationForm.values.proposer.personalInfo.fullName',
+          aName: '$quotation.agent.name',
+          aCode: '$quotation.agent.agentCode',
+          bankRefId: '$applicationForm.values.proposer.personalInfo.branchInfo.bankRefId',
+          lastUpdateDate: {
+            $cond: {
+              if: '$applicationSubmittedDate',
+              then: '$applicationSubmittedDate',
+              else: {
+                $cond: {
+                  if: '$applicationSignedDate',
+                  then: '$applicationSignedDate',
+                  else: { $cond: { if: '$applicationStartedDate', then: '$applicationStartedDate', else: '$lastUpdateDate' } },
+                },
+              },
+            },
+          },
+          quotation: '$quotation',
+          planDetails: { $cond: { if: '$applicationForm.values.planDetails', then: '$applicationForm.values.planDetails', else: null } },
+          productCode: '$quotation.baseProductCode',
+        },
+        branchInfo: '$applicationForm.values.proposer.personalInfo.branchInfo',
+        dealerGroup: '$quotation.agent.dealerGroup',
+      },
+    };
+    let caseSingPost = false;
+    let caseDirect = false;
+    const singPostKeys = [];
+    const directKeys = [];
+    const startKey = req.query.startkey || '';
+    const endKey = req.query.endkey || '';
+    const keys = req.query.keys || '';
+    const key = req.query.key || '';
+    const matchStr = {
+      $match: {
+        $and: [
+          { 'quotation.agent': { $exists: true } },
+          { 'applicationForm.values': { $exists: true } },
+          { 'applicationForm.values.proposer': { $exists: true } },
+          { 'applicationForm.values.proposer.personalInfo': { $exists: true } },
+        ],
+      },
+    };
+    if (startKey !== '' && endKey !== '') {
+      const startKeys = JSON.parse(startKey);
+      const endKeys = JSON.parse(endKey);
+      if (startKeys || endKeys) {
+        if (startKeys.length > 1 && endKeys.length > 1) {
+          if (_.isEqual(startKeys, endKeys)) {
+            if (_.isEqual(startKeys[1], 'SINGPOST')) {
+              caseSingPost = true;
+              if (startKeys && startKeys.length > 2) {
+                singPostKeys.push(startKeys[2]);
+                _.get(matchStr, '$match.$and', []).push({
+                  'applicationForm.values.proposer.personalInfo.branchInfo': { $exists: true },
+                  'quotation.agent.dealerGroup': startKeys[1],
+                  id: startKeys[2],
+                });
+              } else {
+                _.get(matchStr, '$match.$and', []).push({
+                  'applicationForm.values.proposer.personalInfo.branchInfo': { $exists: true },
+                  'quotation.agent.dealerGroup': startKeys[1],
+                });
+              }
+            } else if (_.isEqual(startKeys[1], 'DIRECT')) {
+              caseDirect = true;
+              if (startKeys && startKeys.length > 2) {
+                directKeys.push(startKeys[2]);
+                _.get(matchStr, '$match.$and', []).push({
+                  'quotation.agent.dealerGroup': startKeys[1],
+                  id: startKeys[2],
+                });
+              } else {
+                _.get(matchStr, '$match.$and', []).push({
+                  'quotation.agent.dealerGroup': startKeys[1],
+                });
+              }
+            }
+          } else {
+            const temp = {};
+            const agentIn = [];
+            if (_.isEqual(startKeys[1], 'SINGPOST') || _.isEqual(endKeys[1], 'SINGPOST')) {
+              caseSingPost = true;
+              agentIn.push('SINGPOST');
+            }
+            if (_.isEqual(startKeys[1], 'DIRECT') || _.isEqual(endKeys[1], 'DIRECT')) {
+              caseDirect = true;
+              agentIn.push('DIRECT');
+            }
+            if (startKeys && startKeys.length > 2) {
+              _.set(temp, '$gte', startKeys[2]);
+            }
+            if (endKeys && endKeys.length > 2) {
+              _.set(temp, '$lte', endKeys[2]);
+            }
+            if (!_.isEmpty(agentIn)) {
+              _.get(matchStr, '$match.$and', []).push(
+                { 'quotation.agent.dealerGroup': { $in: agentIn } },
+              );
+            }
+            if (!_.isEmpty(temp)) {
+              _.get(matchStr, '$match.$and', []).push(
+                { id: temp },
+              );
+            }
+          }
+        }
+      }
+    } else if (keys !== '') {
+      const keysList = JSON.parse(keys);
+      const inArray = [];
+      if (keysList && keysList.length > 0) {
+        _.forEach(keysList, (keyItem) => {
+          if (keyItem && keyItem.length > 1) {
+            if (_.isEqual(keyItem[1], 'SINGPOST')) {
+              caseSingPost = true;
+              if (keyItem && keyItem.length > 2) {
+                singPostKeys.push(keyItem[2]);
+                inArray.push({
+                  'applicationForm.values.proposer.personalInfo.branchInfo': { $exists: true },
+                  'quotation.agent.dealerGroup': keyItem[1],
+                  id: keyItem[2],
+                });
+              } else {
+                inArray.push({
+                  'applicationForm.values.proposer.personalInfo.branchInfo': { $exists: true },
+                  'quotation.agent.dealerGroup': keyItem[1],
+                });
+              }
+            } else if (_.isEqual(keyItem[1], 'DIRECT')) {
+              caseDirect = true;
+              if (keyItem && keyItem.length > 2) {
+                directKeys.push(keyItem[2]);
+                inArray.push({
+                  'quotation.agent.dealerGroup': keyItem[1],
+                  id: keyItem[2],
+                });
+              } else {
+                inArray.push({
+                  'quotation.agent.dealerGroup': keyItem[1],
+                });
+              }
+            }
+          }
+        });
+      }
+      if (!_.isEmpty(inArray)) {
+        _.get(matchStr, '$match.$and', []).push(
+          { $or: inArray },
+        );
+      }
+    } else if (key !== '' && key !== '[null]') {
+      const keyJson = JSON.parse(key);
+      if (keyJson && keyJson.length > 1) {
+        if (_.isEqual(keyJson[1], 'SINGPOST')) {
+          caseSingPost = true;
+          if (keyJson && keyJson.length > 2) {
+            singPostKeys.push(keyJson[2]);
+            _.get(matchStr, '$match.$and', []).push({
+              'applicationForm.values.proposer.personalInfo.branchInfo': { $exists: true },
+              'quotation.agent.dealerGroup': keyJson[1],
+              id: keyJson[2],
+            });
+          } else {
+            _.get(matchStr, '$match.$and', []).push({
+              'applicationForm.values.proposer.personalInfo.branchInfo': { $exists: true },
+              'quotation.agent.dealerGroup': keyJson[1],
+            });
+          }
+        } else if (_.isEqual(keyJson[1], 'DIRECT')) {
+          caseDirect = true;
+          if (keyJson && keyJson.length > 2) {
+            directKeys.push(keyJson[2]);
+            _.get(matchStr, '$match.$and', []).push({
+              'quotation.agent.dealerGroup': keyJson[1],
+              id: keyJson[2],
+            });
+          } else {
+            _.get(matchStr, '$match.$and', []).push({
+              'quotation.agent.dealerGroup': keyJson[1],
+            });
+          }
+        }
+      }
+    } else {
+      _.get(matchStr, '$match.$and', []).push(
+        { 'quotation.agent.dealerGroup': { $in: ['SINGPOST', 'DIRECT'] } },
+      );
+      caseSingPost = true;
+      caseDirect = true;
+    }
+    if (!_.isEmpty(matchStr)) {
+      aggregateStr.push(matchStr);
+    }
+    // console.log('>>>>>>matchStr= ', JSON.stringify(matchStr));
+    aggregateStr.push({ $sort: { 'quotation.agent.dealerGroup': 1, id: 1 } });
+
+    aggregateStr.push(projectStr);
+    mongoose.connection.collection('application').aggregate(aggregateStr).toArray((err, docs) => {
+      if (err) {
+        res.json({ status: 400, message: err.message });
+      } else {
+        const resultSingPost = [];
+        const resultDirect = [];
+        // console.log('>>>>>>docs.length= ', docs.length);
+        if (docs && docs.length > 0) {
+          _.forEach(docs, (item) => {
+            const branchInfo = _.get(item, 'branchInfo');
+            if (caseSingPost && branchInfo && item.dealerGroup === 'SINGPOST' && (
+              _.isEmpty(singPostKeys) || (!_.isEmpty(singPostKeys)
+            && _.some(singPostKeys, it => (it === item.id)))
+            )) {
+              const doc = _.cloneDeep(item);
+              _.set(doc, 'key', ['01', 'SINGPOST', doc.id]);
+              resultSingPost.push(_.omit(doc, ['branchInfo', 'dealerGroup']));
+            }
+            if (caseDirect && item.dealerGroup === 'DIRECT' && (
+              _.isEmpty(directKeys) || (!_.isEmpty(directKeys)
+            && _.some(directKeys, it => (it === item.id)))
+            )) {
+              const doc = _.cloneDeep(item);
+              _.set(doc, 'key', ['01', 'DIRECT', doc.id]);
+              delete doc.value.bankRefId;
+              resultDirect.push(_.omit(doc, ['branchInfo', 'dealerGroup']));
+            }
+          });
+        }
+        const result = _.concat(resultSingPost, resultDirect);
+        const resultTemp = {};
+        resultTemp.total_rows = result.length;
+        resultTemp.rows = result;
+        res.json(resultTemp);
+      }
+    });
   },
   summaryQuots(req, res) {
     // doc.type === 'masterApproval') {
