@@ -17,6 +17,8 @@ router.get('/main/_view/contacts', $main.api.contacts);
 router.get('/main/_view/applicationsByAgent', $main.api.applicationsByAgent);
 router.get('/main/_view/approvalDetails', $main.api.approvalDetails);
 router.get('/main/_view/directorDownline', $main.api.directorDownline);
+router.get('/main/_view/downloadMaterial', $main.api.downloadMaterial);
+router.get('/main/_view/funds', $main.api.funds);
 router.get('/main/_view/inProgressQuotFunds', $main.api.inProgressQuotFunds);
 router.get('/main/_view/managerDownline', $main.api.managerDownline);
 router.get('/main/_view/masterApprovalDetails', $main.api.masterApprovalDetails);
@@ -47,6 +49,8 @@ router.get('/main/_view/products', $main.api.products);
 router.get('/main/_view/signatureExpire', $main.api.signatureExpire);
 router.get('/main/_view/submission', $main.api.submission);
 router.get('/main/_view/submissionRptApps', $main.api.submissionRptApps);
+router.get('/main/_view/submissionRptPendingDetails', $main.api.submissionRptPendingDetails);
+router.get('/main/_view/validBundleById', $main.api.validBundleById);
 
 
 router.get('/dataSync/_view/agentDocuments', $dataSync.api.agentDocuments);

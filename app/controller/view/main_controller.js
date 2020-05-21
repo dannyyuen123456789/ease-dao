@@ -3016,6 +3016,177 @@ exports.api = {
       }
     });
   },
+  downloadMaterial(req, res) {
+    const aggregateStr = [];
+    // This is the query result and alias -> projectStr
+    const projectStr = {
+      $project: {
+        _id: 0, // 0 is not selected
+        id: '$id',
+        key: ['01', '$id'],
+        value: {
+          section: '$section',
+          sectionId: '$sectionId',
+          name: '$name',
+          id: '$id',
+          effDate: '$effDate',
+          expDate: '$expDate',
+        },
+      },
+    };
+
+    const startKey = req.query.startkey || '';
+    const endKey = req.query.endkey || '';
+    const keys = req.query.keys || '';
+    const key = req.query.key || '';
+    const matchStr = {
+      $match: {
+        type: 'material',
+      },
+    };
+
+    if (startKey !== '' && endKey !== '') {
+      const startKeys = JSON.parse(startKey);
+      const endKeys = JSON.parse(endKey);
+      if (startKeys || endKeys) {
+        if (_.isEqual(startKeys, endKeys)) {
+          if (startKeys.length > 1) {
+            _.set(matchStr, '$match.id', startKeys[1]);
+          }
+        } else {
+          if (startKeys && startKeys.length > 1) {
+            _.set(matchStr, '$match.id.$gte', startKeys[1]);
+          }
+
+          if (endKeys && endKeys.length > 1) {
+            _.set(matchStr, '$match.id.$lte', endKeys[1]);
+          }
+        }
+      }
+    } else if (keys !== '') {
+      const keysList = JSON.parse(keys);
+      const inArray = [];
+      if (keysList && keysList.length > 0) {
+        _.forEach(keysList, (keyItem) => {
+          if (keyItem && keyItem.length > 1) {
+            inArray.push(keyItem[1]);
+          }
+        });
+      }
+      if (!_.isEmpty(inArray)) {
+        _.set(matchStr, '$match.id', { $in: inArray });
+      }
+    } else if (key !== '' && key !== '[null]') {
+      const keyJson = JSON.parse(key);
+      if (keyJson && keyJson.length > 1) {
+        _.set(matchStr, '$match.id', keyJson[1]);
+      }
+    }
+    if (!_.isEmpty(matchStr)) {
+      aggregateStr.push(matchStr);
+    }
+    // console.log('>>>>>>  matchStr', JSON.stringify(matchStr));
+    aggregateStr.push({ $sort: { id: 1 } });
+    aggregateStr.push(projectStr);
+
+    mongoose.connection.collection('masterData').aggregate(aggregateStr).toArray((err, docs) => {
+      if (err) {
+        res.json({ status: 400, message: err.message });
+      } else {
+        const resultTemp = {};
+        resultTemp.total_rows = docs.length;
+        resultTemp.rows = docs;
+        res.json(resultTemp);
+      }
+    });
+  },
+  funds(req, res) {
+    const aggregateStr = [];
+    // This is the query result and alias -> projectStr
+    const projectStr = {
+      $project: {
+        _id: 0, // 0 is not selected
+        id: '$id',
+        key: ['01', '$fundCode'],
+        value: {
+          compCode: '$compCode',
+          fundCode: '$fundCode',
+          fundName: '$fundName',
+          ccy: '$ccy',
+          isMixedAsset: '$isMixedAsset',
+          assetClass: '$assetClass',
+          riskRating: '$riskRating',
+          paymentMethod: '$paymentMethod',
+          version: '$version',
+        },
+      },
+    };
+
+    const startKey = req.query.startkey || '';
+    const endKey = req.query.endkey || '';
+    const keys = req.query.keys || '';
+    const key = req.query.key || '';
+    const matchStr = {
+      $match: {
+        type: 'fund',
+      },
+    };
+
+    if (startKey !== '' && endKey !== '') {
+      const startKeys = JSON.parse(startKey);
+      const endKeys = JSON.parse(endKey);
+      if (startKeys || endKeys) {
+        if (_.isEqual(startKeys, endKeys)) {
+          if (startKeys.length > 1) {
+            _.set(matchStr, '$match.fundCode', startKeys[1]);
+          }
+        } else {
+          if (startKeys && startKeys.length > 1) {
+            _.set(matchStr, '$match.fundCode.$gte', startKeys[1]);
+          }
+
+          if (endKeys && endKeys.length > 1) {
+            _.set(matchStr, '$match.fundCode.$lte', endKeys[1]);
+          }
+        }
+      }
+    } else if (keys !== '') {
+      const keysList = JSON.parse(keys);
+      const inArray = [];
+      if (keysList && keysList.length > 0) {
+        _.forEach(keysList, (keyItem) => {
+          if (keyItem && keyItem.length > 1) {
+            inArray.push(keyItem[1]);
+          }
+        });
+      }
+      if (!_.isEmpty(inArray)) {
+        _.set(matchStr, '$match.fundCode', { $in: inArray });
+      }
+    } else if (key !== '' && key !== '[null]') {
+      const keyJson = JSON.parse(key);
+      if (keyJson && keyJson.length > 1) {
+        _.set(matchStr, '$match.fundCode', keyJson[1]);
+      }
+    }
+    if (!_.isEmpty(matchStr)) {
+      aggregateStr.push(matchStr);
+    }
+    // console.log('>>>>>>  matchStr', JSON.stringify(matchStr));
+    aggregateStr.push({ $sort: { fundCode: 1 } });
+    aggregateStr.push(projectStr);
+
+    mongoose.connection.collection('masterData').aggregate(aggregateStr).toArray((err, docs) => {
+      if (err) {
+        res.json({ status: 400, message: err.message });
+      } else {
+        const resultTemp = {};
+        resultTemp.total_rows = docs.length;
+        resultTemp.rows = docs;
+        res.json(resultTemp);
+      }
+    });
+  },
   async inProgressQuotFunds(req, res) { // 这个视图如果START-KEY和 END-KEY如果不同，将拿全部（查询代码这个视图是没有条件全部拿出来的）
     // doc.type === 'approval') {
     //   emit(['01', doc.approvalStatus, doc.approvalCaseId], emitObj);
@@ -4101,7 +4272,7 @@ exports.api = {
           // _.set(matchStr, '$match.planInd', startKeys[1]);
           if (startKeys.length > 2) {
             _.get(matchStr, '$match.$and', []).push({
-              covCode: startKeys[1],
+              covCode: startKeys[2],
             });
             // _.set(matchStr, '$match.covCode', startKeys[2]);
           }
@@ -5606,32 +5777,64 @@ exports.api = {
                 });
               }
             }
-          } else {
+          } else if (_.isEqual(startKeys[1], endKeys[1])) {
+            _.get(matchStr, '$match.$and', []).push({
+              'quotation.agent.dealerGroup': startKeys[1],
+            });
+            if (_.isEqual(startKeys[1], 'SINGPOST')) {
+              caseSingPost = true;
+            }
+            if (_.isEqual(startKeys[1], 'DIRECT')) {
+              caseDirect = true;
+            }
             const temp = {};
-            const agentIn = [];
+            if (startKeys.length > 2) {
+              _.set(temp, '$gte', startKeys[2]);
+            }
+            if (endKeys.length > 2) {
+              _.set(temp, '$lte', endKeys[2]);
+            }
+            if (!_.isEmpty(temp)) {
+              _.get(matchStr, '$match.$and', []).push({
+                id: temp,
+              });
+            }
+          } else {
+            _.get(matchStr, '$match.$and', []).push({
+              'quotation.agent.dealerGroup': { $gte: startKeys[1], $lte: endKeys[1] },
+            });
             if (_.isEqual(startKeys[1], 'SINGPOST') || _.isEqual(endKeys[1], 'SINGPOST')) {
               caseSingPost = true;
-              agentIn.push('SINGPOST');
             }
             if (_.isEqual(startKeys[1], 'DIRECT') || _.isEqual(endKeys[1], 'DIRECT')) {
               caseDirect = true;
-              agentIn.push('DIRECT');
             }
-            if (startKeys && startKeys.length > 2) {
-              _.set(temp, '$gte', startKeys[2]);
+            const temp = [];
+            const tempId = {};
+            if (startKeys.length > 2) {
+              temp.push({
+                'quotation.agent.dealerGroup': startKeys[1],
+                id: { $gte: startKeys[2] },
+
+              });
+              _.set(tempId, '$gte', startKeys[2]);
             }
-            if (endKeys && endKeys.length > 2) {
-              _.set(temp, '$lte', endKeys[2]);
+            if (endKeys.length > 2) {
+              temp.push({
+                'quotation.agent.dealerGroup': endKeys[1],
+                id: { $lte: endKeys[2] },
+              });
+              _.set(tempId, '$lte', endKeys[2]);
             }
-            if (!_.isEmpty(agentIn)) {
-              _.get(matchStr, '$match.$and', []).push(
-                { 'quotation.agent.dealerGroup': { $in: agentIn } },
-              );
+            if (startKeys.length > 2 && endKeys.length > 2) {
+              temp.push({
+                id: tempId,
+              });
             }
             if (!_.isEmpty(temp)) {
-              _.get(matchStr, '$match.$and', []).push(
-                { id: temp },
-              );
+              _.get(matchStr, '$match.$and', []).push({
+                $or: temp,
+              });
             }
           }
         }
@@ -5752,6 +5955,259 @@ exports.api = {
               _.set(doc, 'key', ['01', 'DIRECT', doc.id]);
               delete doc.value.bankRefId;
               resultDirect.push(_.omit(doc, ['branchInfo', 'dealerGroup']));
+            }
+          });
+        }
+        const result = _.concat(resultSingPost, resultDirect);
+        const resultTemp = {};
+        resultTemp.total_rows = result.length;
+        resultTemp.rows = result;
+        res.json(resultTemp);
+      }
+    });
+  },
+  submissionRptPendingDetails(req, res) {
+    // doc.type === 'application') {
+    //  emit(['01',  payment.initPayMethod],
+    const aggregateStr = [];
+    const projectStr = {
+      $project: {
+        _id: 0, // 0 is not selected
+        id: '$id',
+        key: [],
+        value: {
+          compCode: '$compCode',
+          displayCaseNo: '$policyId',
+          caseNo: '$policyId',
+          product: '$productName',
+          dealerGroup: '$dealerGroup',
+          agentId: '$agentId',
+          agentName: '$agentName',
+          managerName: '$managerName',
+          managerId: '$managerId',
+          directorId: '$directorId',
+          directorName: '$directorName',
+          approveManagerId: '$approveRejectManagerId',
+          approveManagerName: '$approveRejectManagerName',
+          approveRejectManagerId: '$approveRejectManagerId',
+          approveRejectManagerName: '$approveRejectManagerName',
+          submittedDate: '$submittedDate',
+          approvalStatus: '$approvalStatus',
+          onHoldReason: '$onHoldReason',
+          approvalCaseId: '$approvalCaseId',
+          applicationId: '$applicationId',
+          quotationId: '$quotationId',
+          customerId: '$customerId',
+          customerName: '$customerName',
+          lastEditedBy: '$lastEditedBy',
+          lastEditedDate: '$lastEditedDate',
+          approveRejectDate: '$approveRejectDate',
+          caseLockedManagerCodebyStatus: '$caseLockedManagerCodebyStatus',
+          customerICNo: '$customerICNo',
+          agentProfileId: '$agentProfileId',
+          expiredDate: '$expiredDate',
+          masterApprovalId: { $cond: { if: '$masterApprovalId', then: '$masterApprovalId', else: '' } },
+          isShield: '$isShield',
+          proposalNumber: { $cond: { if: '$proposalNumber', then: '$proposalNumber', else: '$policyId' } },
+        },
+      },
+    };
+    let caseSingPost = false;
+    let caseDirect = false;
+    const singPostKeys = [];
+    const directKeys = [];
+    const startKey = req.query.startkey || '';
+    const endKey = req.query.endkey || '';
+    const keys = req.query.keys || '';
+    const key = req.query.key || '';
+    const matchStr = {
+      $match: {
+        $and: [
+          { approvalStatus: { $in: ['SUBMITTED', 'PDoc', 'PDis'] } },
+        ],
+      },
+    };
+    if (startKey !== '' && endKey !== '') {
+      const startKeys = JSON.parse(startKey);
+      const endKeys = JSON.parse(endKey);
+      if (startKeys || endKeys) {
+        if (startKeys.length > 1 && endKeys.length > 1) {
+          if (_.isEqual(startKeys, endKeys)) {
+            _.get(matchStr, '$match.$and', []).push({
+              dealerGroup: startKeys[1],
+            });
+            if (startKeys && startKeys.length > 2) {
+              _.get(matchStr, '$match.$and', []).push({
+                lastEditedDate: new Date(startKeys[2]).toISOString(),
+              });
+            }
+            if (_.isEqual(startKeys[1], 'SINGPOST')) {
+              caseSingPost = true;
+              if (startKeys && startKeys.length > 2) {
+                directKeys.push(new Date(startKeys[2]).toISOString());
+              }
+            }
+            if (_.isEqual(startKeys[1], 'DIRECT')) {
+              caseDirect = true;
+              if (startKeys && startKeys.length > 2) {
+                directKeys.push(new Date(startKeys[2]).toISOString());
+              }
+            }
+          } else if (_.isEqual(startKeys[1], endKeys[1])) {
+            _.get(matchStr, '$match.$and', []).push({
+              dealerGroup: startKeys[1],
+            });
+            if (_.isEqual(startKeys[1], 'SINGPOST')) {
+              caseSingPost = true;
+            }
+            if (_.isEqual(startKeys[1], 'DIRECT')) {
+              caseDirect = true;
+            }
+            const temp = {};
+            if (startKeys.length > 2) {
+              _.set(temp, '$gte', new Date(startKeys[2]).toISOString());
+            }
+            if (endKeys.length > 2) {
+              _.set(temp, '$lte', new Date(endKeys[2]).toISOString());
+            }
+            if (!_.isEmpty(temp)) {
+              _.get(matchStr, '$match.$and', []).push({
+                lastEditedDate: temp,
+              });
+            }
+          } else {
+            _.get(matchStr, '$match.$and', []).push({
+              dealerGroup: { $gte: startKeys[1], $lte: endKeys[1] },
+            });
+            if (_.isEqual(startKeys[1], 'SINGPOST') || _.isEqual(endKeys[1], 'SINGPOST')) {
+              caseSingPost = true;
+            }
+            if (_.isEqual(startKeys[1], 'DIRECT') || _.isEqual(endKeys[1], 'DIRECT')) {
+              caseDirect = true;
+            }
+            const temp = [];
+            const tempLastEditedDate = {};
+            if (startKeys.length > 2) {
+              temp.push({
+                dealerGroup: startKeys[1],
+                lastEditedDate: { $gte: new Date(startKeys[2]).toISOString() },
+              });
+              _.set(tempLastEditedDate, '$gte', new Date(startKeys[2]).toISOString());
+            }
+            if (endKeys.length > 2) {
+              temp.push({
+                dealerGroup: endKeys[1],
+                lastEditedDate: { $lte: new Date(endKeys[2]).toISOString() },
+              });
+              _.set(tempLastEditedDate, '$lte', new Date(endKeys[2]).toISOString());
+            }
+            if (startKeys.length > 2 && endKeys.length > 2) {
+              temp.push({
+                lastEditedDate: tempLastEditedDate,
+              });
+            }
+            if (!_.isEmpty(temp)) {
+              _.get(matchStr, '$match.$and', []).push({
+                $or: temp,
+              });
+            }
+          }
+        }
+      }
+    } else if (keys !== '') {
+      const keysList = JSON.parse(keys);
+      const inArray = [];
+      if (keysList && keysList.length > 0) {
+        _.forEach(keysList, (keyItem) => {
+          if (keyItem && keyItem.length > 1) {
+            const temp = {};
+            _.set(temp, 'dealerGroup', keyItem[1]);
+            if (_.isEqual(keyItem[1], 'SINGPOST')) {
+              caseSingPost = true;
+              if (keyItem && keyItem.length > 2) {
+                singPostKeys.push(new Date(keyItem[2]).toISOString());
+                _.set(temp, 'lastEditedDate', new Date(keyItem[2]).toISOString());
+              }
+            } else if (_.isEqual(keyItem[1], 'DIRECT')) {
+              caseDirect = true;
+              if (keyItem && keyItem.length > 2) {
+                directKeys.push(new Date(keyItem[2]).toISOString());
+                _.set(temp, 'lastEditedDate', new Date(keyItem[2]).toISOString());
+              }
+            }
+            inArray.push(temp);
+          }
+        });
+      }
+      if (!_.isEmpty(inArray)) {
+        _.get(matchStr, '$match.$and', []).push(
+          { $or: inArray },
+        );
+      }
+    } else if (key !== '' && key !== '[null]') {
+      const keyJson = JSON.parse(key);
+      if (keyJson && keyJson.length > 1) {
+        _.get(matchStr, '$match.$and', []).push({
+          dealerGroup: keyJson[1],
+        });
+        if (_.isEqual(keyJson[1], 'SINGPOST')) {
+          caseSingPost = true;
+          if (keyJson && keyJson.length > 2) {
+            singPostKeys.push(new Date(keyJson[2]).toISOString());
+            _.get(matchStr, '$match.$and', []).push({
+              lastEditedDate: new Date(keyJson[2]).toISOString(),
+            });
+          }
+        } else if (_.isEqual(keyJson[1], 'DIRECT')) {
+          caseDirect = true;
+          if (keyJson && keyJson.length > 2) {
+            directKeys.push(new Date(keyJson[2]).toISOString());
+            _.get(matchStr, '$match.$and', []).push({
+              lastEditedDate: new Date(keyJson[2]).toISOString(),
+            });
+          }
+        }
+      }
+    } else {
+      _.get(matchStr, '$match.$and', []).push(
+        { dealerGroup: { $in: ['SINGPOST', 'DIRECT'] } },
+      );
+      caseSingPost = true;
+      caseDirect = true;
+    }
+    if (!_.isEmpty(matchStr)) {
+      aggregateStr.push(matchStr);
+    }
+    // console.log('>>>>>>matchStr= ', JSON.stringify(matchStr));
+    aggregateStr.push({ $sort: { dealerGroup: 1, lastEditedDate: 1 } });
+
+    aggregateStr.push(projectStr);
+    mongoose.connection.collection('approval').aggregate(aggregateStr).toArray((err, docs) => {
+      if (err) {
+        res.json({ status: 400, message: err.message });
+      } else {
+        const resultSingPost = [];
+        const resultDirect = [];
+        // console.log('>>>>>>docs.length= ', docs.length);
+        if (docs && docs.length > 0) {
+          _.forEach(docs, (item) => {
+            const dealerGroup = _.get(item, 'value.dealerGroup', '');
+            const lastEditedDate = _.get(item, 'value.lastEditedDate', '');
+            if (caseSingPost && dealerGroup === 'SINGPOST' && (
+              _.isEmpty(singPostKeys) || (!_.isEmpty(singPostKeys)
+            && _.some(singPostKeys, it => (it === lastEditedDate)))
+            )) {
+              const doc = _.cloneDeep(item);
+              _.set(doc, 'key', ['01', 'SINGPOST', Date.parse(lastEditedDate)]);
+              resultSingPost.push(doc);
+            }
+            if (caseDirect && item.dealerGroup === 'DIRECT' && (
+              _.isEmpty(directKeys) || (!_.isEmpty(directKeys)
+            && _.some(directKeys, it => (it === lastEditedDate)))
+            )) {
+              const doc = _.cloneDeep(item);
+              _.set(doc, 'key', ['01', 'DIRECT', Date.parse(lastEditedDate)]);
+              resultDirect.push(doc);
             }
           });
         }
@@ -6051,6 +6507,86 @@ exports.api = {
         // const result = _.concat(endTimeResult, docs);
         resultTemp.total_rows = result.length;
         resultTemp.rows = result;
+        res.json(resultTemp);
+      }
+    });
+  },
+  validBundleById(req, res) {
+    const aggregateStr = [];
+    // This is the query result and alias -> projectStr
+    const projectStr = {
+      $project: {
+        _id: 0, // 0 is not selected
+        id: '$id',
+        key: ['01', '$id'],
+        value: {
+          id: '$id',
+          fna: '$fna',
+        },
+      },
+    };
+
+    const startKey = req.query.startkey || '';
+    const endKey = req.query.endkey || '';
+    const keys = req.query.keys || '';
+    const key = req.query.key || '';
+    const matchStr = {
+      $match: {
+        isValid: true,
+      },
+    };
+
+    if (startKey !== '' && endKey !== '') {
+      const startKeys = JSON.parse(startKey);
+      const endKeys = JSON.parse(endKey);
+      if (startKeys || endKeys) {
+        if (_.isEqual(startKeys, endKeys)) {
+          if (startKeys.length > 1) {
+            _.set(matchStr, '$match.id', startKeys[1]);
+          }
+        } else {
+          if (startKeys && startKeys.length > 1) {
+            _.set(matchStr, '$match.id.$gte', startKeys[1]);
+          }
+
+          if (endKeys && endKeys.length > 1) {
+            _.set(matchStr, '$match.id.$lte', endKeys[1]);
+          }
+        }
+      }
+    } else if (keys !== '') {
+      const keysList = JSON.parse(keys);
+      const inArray = [];
+      if (keysList && keysList.length > 0) {
+        _.forEach(keysList, (keyItem) => {
+          if (keyItem && keyItem.length > 1) {
+            inArray.push(keyItem[1]);
+          }
+        });
+      }
+      if (!_.isEmpty(inArray)) {
+        _.set(matchStr, '$match.id', { $in: inArray });
+      }
+    } else if (key !== '' && key !== '[null]') {
+      const keyJson = JSON.parse(key);
+      if (keyJson && keyJson.length > 1) {
+        _.set(matchStr, '$match.id', keyJson[1]);
+      }
+    }
+    if (!_.isEmpty(matchStr)) {
+      aggregateStr.push(matchStr);
+    }
+    // console.log('>>>>>>  matchStr', JSON.stringify(matchStr));
+    aggregateStr.push({ $sort: { id: 1 } });
+    aggregateStr.push(projectStr);
+
+    mongoose.connection.collection('fna').aggregate(aggregateStr).toArray((err, docs) => {
+      if (err) {
+        res.json({ status: 400, message: err.message });
+      } else {
+        const resultTemp = {};
+        resultTemp.total_rows = docs.length;
+        resultTemp.rows = docs;
         res.json(resultTemp);
       }
     });
