@@ -3187,6 +3187,99 @@ exports.api = {
       }
     });
   },
+  healthDeclarationNotification(req, res) {
+    const aggregateStr = [];
+    // This is the query result and alias -> projectStr
+    const projectStr = {
+      $project: {
+        _id: 0, // 0 is not selected
+        id: '$id',
+        key: [],
+        value: {
+          appId: '$id',
+          bundleId: '$bundleId',
+          quotId: '$quotationDocId',
+          docType: '$type',
+        },
+        applicationSignedDate: '$applicationSignedDate',
+      },
+    };
+
+    const startKey = req.query.startkey || '';
+    const endKey = req.query.endkey || '';
+    const keys = req.query.keys || '';
+    const key = req.query.key || '';
+    const matchStr = {
+      $match: {
+        'quotation.quotType': 'SHIELD',
+        applicationSignedDate: { $exists: true, $ne: 0 },
+      },
+    };
+
+    if (startKey !== '' && endKey !== '') {
+      const startKeys = JSON.parse(startKey);
+      const endKeys = JSON.parse(endKey);
+      if (startKeys || endKeys) {
+        if (_.isEqual(startKeys, endKeys)) {
+          if (startKeys.length > 1) {
+            _.set(matchStr, '$match.applicationSignedDate', new Date(startKeys[1]).toISOString());
+          }
+        } else {
+          if (startKeys && startKeys.length > 1) {
+            _.set(matchStr, '$match.applicationSignedDate.$gte', new Date(startKeys[1]).toISOString());
+          }
+
+          if (endKeys && endKeys.length > 1) {
+            _.set(matchStr, '$match.applicationSignedDate.$lte', new Date(endKeys[1]).toISOString());
+          }
+        }
+      }
+    } else if (keys !== '') {
+      const keysList = JSON.parse(keys);
+      const inArray = [];
+      if (keysList && keysList.length > 0) {
+        _.forEach(keysList, (keyItem) => {
+          if (keyItem && keyItem.length > 1) {
+            inArray.push(new Date(keyItem[1]).toISOString());
+          }
+        });
+      }
+      if (!_.isEmpty(inArray)) {
+        _.set(matchStr, '$match.applicationSignedDate', { $in: inArray });
+      }
+    } else if (key !== '' && key !== '[null]') {
+      const keyJson = JSON.parse(key);
+      if (keyJson && keyJson.length > 1) {
+        _.set(matchStr, '$match.applicationSignedDate', new Date(keyJson[1]).toISOString());
+      }
+    }
+    if (!_.isEmpty(matchStr)) {
+      aggregateStr.push(matchStr);
+    }
+    // console.log('>>>>>>  matchStr', JSON.stringify(matchStr));
+    aggregateStr.push({ $sort: { applicationSignedDate: 1 } });
+    aggregateStr.push(projectStr);
+
+    mongoose.connection.collection('shieldApplication').aggregate(aggregateStr).toArray((err, docs) => {
+      if (err) {
+        res.json({ status: 400, message: err.message });
+      } else {
+        const resultTemp = {};
+        const result = [];
+        if (docs && docs.length > 0) {
+          _.forEach(docs, (item) => {
+            const applicationSignedDate = _.get(item, 'applicationSignedDate');
+            const doc = _.omit(item, ['applicationSignedDate']);
+            _.set(doc, 'key', ['01', new Date(applicationSignedDate).getTime()]);
+            result.push(doc);
+          });
+        }
+        resultTemp.total_rows = result.length;
+        resultTemp.rows = result;
+        res.json(resultTemp);
+      }
+    });
+  },
   async inProgressQuotFunds(req, res) { // 这个视图如果START-KEY和 END-KEY如果不同，将拿全部（查询代码这个视图是没有条件全部拿出来的）
     // doc.type === 'approval') {
     //   emit(['01', doc.approvalStatus, doc.approvalCaseId], emitObj);

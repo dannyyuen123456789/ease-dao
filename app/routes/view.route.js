@@ -19,6 +19,7 @@ router.get('/main/_view/approvalDetails', $main.api.approvalDetails);
 router.get('/main/_view/directorDownline', $main.api.directorDownline);
 router.get('/main/_view/downloadMaterial', $main.api.downloadMaterial);
 router.get('/main/_view/funds', $main.api.funds);
+router.get('/main/_view/healthDeclarationNotification', $main.api.healthDeclarationNotification);
 router.get('/main/_view/inProgressQuotFunds', $main.api.inProgressQuotFunds);
 router.get('/main/_view/managerDownline', $main.api.managerDownline);
 router.get('/main/_view/masterApprovalDetails', $main.api.masterApprovalDetails);
@@ -63,6 +64,7 @@ router.get('/dataAnalyze/_view/documentsWithoutLstChgDate', $dataAnalyze.api.doc
 router.get('/invalidateViews/_view/quotationsByBaseProductCode', $invalidateViews.api.quotationsByBaseProductCode);
 router.get('/invalidateViews/_view/quotationsByNHAFFund', $invalidateViews.api.quotationsByNHAFFund);
 router.get('/invalidateViews/_view/validBundleInClient', $invalidateViews.api.validBundleInClient);
+
 
 // _design/main/_view/masterApprovalDetails
 // router.get('/:dName/_view/masterApprovalDetails', $main.api.masterApprovalDetails);
