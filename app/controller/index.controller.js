@@ -139,18 +139,20 @@ exports.api = {
        if(!errMessage || _.isEmpty(errMessage)) {
         const dao = new DAO('AWS');
         const awsDao = dao.getInstance();
-        var fileSize = fileInstance.calBase64FileSize(attachment);
-        var pullData = {attachments:{name:attachmentId,key:fileName}};
-        // let pushResult = await awsDao.updateDocPushData(docId,{attachments:{$elemMatch:{name:attachmentId,key:fileName}}},pushData);
-        let pullResult = await awsDao.updateDocPullData(docId,{},pullData);
-        if(_.get(pullResult,"success")){
-          var pushData = {attachments:{name:attachmentId,key:fileName,contentType:mime,fileSize:fileSize}};
-          let pushResult = await awsDao.updateDocPushData(docId,{},pushData);
-          if(!_.get(pushResult,"success")){
-            errMessage = pushResult.result;
-          }
-        }else{          
-          errMessage = pullResult.result;
+        const fileSize = fileInstance.calBase64FileSize(attachment);
+        // var pushData = _.set({},_.join(["attachments",attachmentId],"."),{key:fileName,contentType:mime,fileSize:fileSize})
+        const docResult = await awsDao.getDoc(docId);
+        // console.log("docResult = ",docResult);
+        if(_.get(docResult,"success")){
+          var doc = _.get(docResult,"result");
+          var docAttachment = _.get(doc,"attachments",{});
+          _.set(docAttachment,attachmentId,{key:fileName,contentType:mime,fileSize:fileSize});
+          const updResult = await awsDao.updateDoc(docId,{attachments:docAttachment});
+          if(!_.get(updResult,"success")){
+            errMessage = _.get(updResult,"result");
+          }          
+        }else{
+          errMessage = _.get(docResult,"result");
         }
        }
     }else{
@@ -172,12 +174,51 @@ exports.api = {
     res.json({ success: true, result });
   },
   async delAttachment(req, res, next) {
-    const docType = _.get(req.params, 'docType', _.get(req.query, 'docType'));
+    var errMessage = ""
     const docId = _.get(req.params, 'docId', _.get(req.query, 'docId'));
-    log4jUtil.log('docType = ', docType);
-    log4jUtil.log('docId = ', docId);
-    const result = await mongoose.connection.collection(docType).findOne({ _id: mongoose.Types.ObjectId(docId) });
-    console.log('result = ', result);
-    res.json({ success: true, result });
+    const attachmentId = _.get(req.params, 'attachment', _.get(req.query, 'attachment'));
+    
+    const attachment = req.body.data;
+    const mime = req.body.mime;
+    const fileUtil = new fileUtils("AWS-S3");
+    const fileInstance = await fileUtil.getInstance();
+    const initSuccess = await fileInstance.init();
+    const fileName = fileInstance.getFileKeyById(docId,attachmentId);
+    if(initSuccess){
+      log4jUtil.log('log', "deleting ...");
+      await fileInstance.deleteObject(docId,attachmentId).catch(error=>
+        {
+          if(error){
+            log4jUtil.log('log', "error=",error.message);
+            errMessage = error.message}
+        });
+       if(!errMessage || _.isEmpty(errMessage)) {
+        const dao = new DAO('AWS');
+        const awsDao = dao.getInstance();
+        const docResult = await awsDao.getDoc(docId);
+        // console.log("docResult = ",docResult);
+        if(_.get(docResult,"success")){
+          var doc = _.get(docResult,"result");
+          var docAttachment = _.get(doc,"attachments",{});
+          _.unset(docAttachment,attachmentId);
+          const updResult = await awsDao.updateDoc(docId,{attachments:docAttachment});
+          if(!_.get(updResult,"success")){
+            errMessage = _.get(updResult,"result");
+          }          
+        }else{
+          errMessage = _.get(docResult,"result");
+        }
+
+       }
+    }else{
+      errMessage = "initial S3 failed"
+    }
+    if(errMessage){
+      log4jUtil.log('log', "--------delete failed---------");
+      res.json({ ok: false,message:errMessage });
+    }else{
+      log4jUtil.log('log', "--------delete success---------");
+      res.json({id:docId, ok: true});
+    }
   },
 };

@@ -11,6 +11,9 @@ class DAO {
             var aws = require("./aws/awsDAO") ;
             dao = new aws();
         }
+        if(_.isEmpty(this.dbType)){
+          dao = this;
+      }
         return dao;
     }
     getCollectionNameById(docId) {

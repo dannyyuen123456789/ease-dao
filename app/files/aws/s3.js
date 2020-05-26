@@ -1,7 +1,6 @@
 import AWS from 'aws-sdk';
 import _ from 'lodash';
-import config from '../../../config/config';
-import s3Config from '../../../config/system.json';
+import s3Config from '../../../config/config';
 const fileUtils = require("../fileUtils");
 const logger = console;
 const awsConf = s3Config.awsS3;
@@ -85,6 +84,29 @@ uploadBase64(docId,attachmentType,data,fileType){
       } else {
         resolve();
         logger.log(`Successfully uploaded data to ${bucketName}/${fileKey}`);
+      }
+    });
+  });
+};
+deleteObject(docId,attachmentType){
+
+  return new Promise((resolve, reject) => {
+    // const buf = new Buffer(data.replace(/^data:image\/\w+;base64,/, ""),'base64');
+    const fileKey = this.getFileKeyById(docId,attachmentType);
+    const bucketName = this.getBucketNameById(docId);
+    const params = {
+      Bucket: bucketName,
+      Key: fileKey,
+      // ServerSideEncryption: 'aws:kms',
+      // SSEKMSKeyId: awsConf.KmsID
+    };
+      s3Object.deleteObject(params, function (error, dat) {
+      if (error) {
+        logger.log('awsUtil delete error', error);
+        reject(error);
+      } else {
+        resolve();
+        logger.log(`Successfully delete ${bucketName}/${fileKey}`);
       }
     });
   });

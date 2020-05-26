@@ -1,7 +1,7 @@
 import log4jUtil from '../utils/log4j.util';
 const util = require('util');
 const _ = require('lodash');
-const config = require("../../config/config")
+const DAO = require('../database/DAO');
 class fileUtils {
     constructor(fileSystem) {
         this.fileSystem = fileSystem;
@@ -49,8 +49,11 @@ class fileUtils {
   else {
     bucket = "ease-master-data";
   }
-  console.log("docId = ",docId," || bucket = ",bucket);
-  return bucket;
+  const dao1 = new DAO();
+  const awsDao = dao1.getInstance();
+  bucket = bucket + "/" + awsDao.getCollectionNameById(docId);
+  console.log("docId = ",docId," || bucket = ",bucket);   
+   return bucket;
 };
 getFileKeyById(docId,attachent) {
     const fileKey = _.join([docId,attachent],"-");

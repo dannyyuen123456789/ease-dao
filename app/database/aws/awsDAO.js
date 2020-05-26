@@ -58,6 +58,9 @@ class awsDAO extends DAO{
       if(_.get(data,"_id")){
         delete data["_id"];
       }
+      if(!_.get(data,"rev")){
+        _.set(data,"rev","1")
+      }
       if(docType && !_.isEmpty(docType) && data && !_.isEmpty(data)){
         if(mongoose.connection.readyState===1){
           // data = JSON.parse(data);
@@ -84,10 +87,11 @@ class awsDAO extends DAO{
       var result = "";
       var status = true;
       var docType = this.getCollectionNameById(docId);
-      if(_.get(data,"_id")){
-        delete data["_id"];
-      }
+
       if(docType && !_.isEmpty(docType) && data && !_.isEmpty(data)){
+        if(_.get(data,"_id")){
+          delete data["_id"];
+        }
         if(mongoose.connection.readyState===1){
           // data = JSON.parse(data);
           // _.set(data,docId);
@@ -131,7 +135,8 @@ class awsDAO extends DAO{
             _.assignIn(condition,extCondition);
           }
           console.log("condition = ",condition);
-          await mongoose.connection.collection(docType).updateOne(condition,{"$pull":data}).then(r=>{
+          console.log("data = ",data);
+          await mongoose.connection.collection(docType).update(condition,{"$pull":data}).then(r=>{
             result = r.result;
           }).catch(error=>
           {

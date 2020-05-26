@@ -1,4 +1,4 @@
-import systemConfig from '../../config/system';
+import systemConfig from '../../config/config';
 // var MongoClient = require('mongodb').MongoClient;
 const fs = require('fs');
 const _ = require('lodash');
@@ -45,7 +45,7 @@ const initSshTunnel = async () => {
         if (server) {
           console.log('SSH connected ....... ');
         }
-        console.log("Mongo Db loading ----",DB_URL);
+        console.log("---- Mongo Db loading ----");
         if (_.eq(dbType, 'mongo')) {
           mongoose.connect(DB_URL, {
             ssl: true,
@@ -54,9 +54,9 @@ const initSshTunnel = async () => {
             sslCA: fs.readFileSync(caFile),
             useUnifiedTopology: true,
           }).then((result) => {
-            if (result) { console.log('Mongo Db init success ----', DB_URL); }
+            if (result) { console.log('----- Mongo Db init success ----'); }
           }).catch((err) => {
-            if (error) { console.log('Mongo Db:', DB_URL," init failed->",error.message);}
+            if (error) { console.log('Mongo Db:'," init failed->",error.message);}
           });
         }
       });
@@ -69,10 +69,10 @@ const initSshTunnel = async () => {
       // sslCA:fs.readFileSync("D:\\amazon\\rds-combined-ca-bundle.pem"),
       useUnifiedTopology: true,
     }).then((result) => {
-      if (result) { console.log('Mongo Db init success ----', DB_URL); return true;}
+      if (result) { console.log('---- Mongo Db init success ----'); return true;}
       
     }).catch((error) => {
-      if (error) { console.log('Mongo Db:', DB_URL," init failed->",error.message);}
+      if (error) { console.log('Mongo Db:'," init failed->",error.message);}
     });
   }
 };

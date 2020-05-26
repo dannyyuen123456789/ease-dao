@@ -1,31 +1,40 @@
 {
-    "easeApiConfig_requesttype": "http",
-    "easeApiConfig_path": "api.ease-sit3.intraeab",
-    "easeApiConfig_port": "",
-    "easeApiConfig_name": "ease-api",
-    "sourcedb_requesttype": "http",
-    "sourcedb_path": "192.168.225.97",
-    "sourcedb_port": "4984",
-    "sourcedb_name": "axasgsit",
-    "sourcedb_user": "easeWeb",
-    "sourcedb_pw": "ABC1234",
-    "AWS_HTTPS_PROXY": "http://your-username:123456@192.168.225.160:3128",
-    "kmsregion": "ap-southeast-1",
-    "kmsid": "cc348deb-3474-4c2e-909d-ff76a1311507",
-    "targetJsonPath" : "/tmp",
-    "S3folderFormat": "YYYY-MM-DD",
-    "dateFormat": "YYYY-M-D",
-    "idDateFormat": "YYYYMMDD",
-    "awsConfig": {
-      "savetoAWSs3": "N",
-      "isTestAws": "Y",
-      "bucketBaseName": "axasgease",
-      "proxy":false
+    "sshConnection":false,
+    "sshConfig": {
+        "sshUserName":"ec2-user",
+        "sshHost":"ec2-3-0-94-196.ap-southeast-1.compute.amazonaws.com",
+        "sshPrivateKeyFile":"F:\\aws\\axasgdev-ec2-ssh-login-key2.pem",
+        "sshPort":22,
+        "sshDstHost":"axasgdev.cluster-cm0ytepry9im.ap-southeast-1.docdb.amazonaws.com",
+        "sshDstPort":27017,
+        "sshLocalHost":"localhost",
+        "sshLocalPort": 27016
     },
-    "emailConfig": {
-      "needSendEmail": "Y",
-      "host": "192.168.225.99",
-      "port": "25"
-    }
+    "sslConfig" :{
+        "caFile":"D:\\amazon\\rds-combined-ca-bundle.pem"
+    },
+    "dbInUse":"AWSDocumentDB",
+    "dbSetting":{
+        "AWSDocumentDB":{
+            "dbType":"mongo",
+            "databaseURL": "192.168.225.180:47017",
+            "databaseName":"AXASG_DEV",
+            "databaseUsername":"admin",
+            "databasePassword":"x9NaTtr9"
+        }
+    },
+    "awsS3":{
+        "host":"https://<bucketName>.s3-ap-southeast-1.amazonaws.com/",
+        "masterBucket":"ease-master-data",
+        "transBucket":"ease-transaction-data",
+        "KmsID":"cc348deb-3474-4c2e-909d-ff76a1311507",
+        "isProxy":false,
+        "proxyLink":"",
+        "accessKeyId":"AKIA2RZMLZROCPKOK4XV",
+        "secretAccessKey":"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",
+        "region":"ap-southeast-1",
+        "signatureVersion":"v4"
+        }
+
   }
   
