@@ -36,14 +36,14 @@ exports.api = {
   async updateDoc(req, res, next) {
     // const docType = _.get(req.params,"docType",_.get(req.query,"docType"));
     const docId = _.get(req.params, 'docId', _.get(req.query, 'docId'));
-    const data = req.body.data;
+    const data = req.body;
     const dao = new DAO('AWS');
     const awsDao = dao.getInstance();
     const result = await awsDao.updateDoc(docId, data);
     if (_.get(result, 'success')) {
-      res.json({ id: docId, ok: true });
+      res.json({id:docId,ok:true,"rev":1});
     } else {
-      res.json({ status: 400, result: result.result });
+      res.json({ error: 400, reason: result.result });
     }
   },
   async deleteDoc(req, res, next) {
