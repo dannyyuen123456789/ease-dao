@@ -36,7 +36,7 @@ exports.api = {
   async updateDoc(req, res, next) {
     // const docType = _.get(req.params,"docType",_.get(req.query,"docType"));
     const docId = _.get(req.params, 'docId', _.get(req.query, 'docId'));
-    const data = req.body;
+    const data = req.body.data;
     const dao = new DAO('AWS');
     const awsDao = dao.getInstance();
     const result = await awsDao.updateDoc(docId, data);

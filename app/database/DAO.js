@@ -19,7 +19,7 @@ class DAO {
     getCollectionNameById(docId) {
         let type = '';
       if (docId.substring(0, 2) === '10' || docId.substring(0, 2) === '30') {
-        type = 'policy';
+        type = 'approval';
       } else if (docId.substring(0, 2) === 'CP') {
         type = 'customer';
       } else if (docId.substring(0, 2) === 'FN') {
