@@ -11,7 +11,7 @@ const $dataAnalyze = require('../controller/view/dataAnalyze_controller.js');
 
 const $dataSync = require('../controller/view/dataSync_controller.js');
 const $invalidateViews = require('../controller/view/invalidateViews_controller.js');
-
+const $report = require('../controller/view/report_controller.js');
 
 router.get('/main/_view/contacts', $main.api.contacts);
 router.get('/main/_view/applicationsByAgent', $main.api.applicationsByAgent);
@@ -65,6 +65,11 @@ router.get('/invalidateViews/_view/quotationsByBaseProductCode', $invalidateView
 router.get('/invalidateViews/_view/quotationsByNHAFFund', $invalidateViews.api.quotationsByNHAFFund);
 router.get('/invalidateViews/_view/validBundleInClient', $invalidateViews.api.validBundleInClient);
 
+
+router.get('/report/_view/agentsDetail', $report.api.agentsDetail);
+router.get('/report/_view/allChannelAppCases', $report.api.allChannelAppCases);
+router.get('/report/_view/allChannelPolicyCases', $report.api.allChannelPolicyCases);
+router.get('/report/_view/webvsiosReport', $report.api.webvsiosReport);
 
 // _design/main/_view/masterApprovalDetails
 // router.get('/:dName/_view/masterApprovalDetails', $main.api.masterApprovalDetails);
