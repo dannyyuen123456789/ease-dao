@@ -16,29 +16,30 @@ exports.api = {
     const result = await awsDao.getDoc(docId);
     // console.log("result = ",result.result);
     if (_.get(result, 'success')) {
+      var resResult = result.result;
       res.json(result.result);
     } else {
       res.json({ error: 'not_found', reason: 'missing' });
     }
   },
-  async insertDoc(req, res, next) {
-    const docId = _.get(req.params, 'docId', _.get(req.query, 'docId'));
-    const data = _.get(req.body, 'data', _.get(req.query, 'data'));
-    const dao = new DAO('AWS');
-    const awsDao = dao.getInstance();
-    const result = await awsDao.insertDoc(docId, data);
-    if (_.get(result, 'success')) {
-      res.json({ ok: true });
-    } else {
-      res.json({ status: 400, result: result.result });
-    }
-  },
+  // async insertDoc(req, res, next) {
+  //   const docId = _.get(req.params, 'docId', _.get(req.query, 'docId'));
+  //   const data = _.get(req.body, 'data', _.get(req.query, 'data'));
+  //   const dao = new DAO('AWS');
+  //   const awsDao = dao.getInstance();
+  //   const result = await awsDao.insertDoc(docId, data);
+  //   if (_.get(result, 'success')) {
+  //     res.json({ ok: true });
+  //   } else {
+  //     res.json({ status: 400, result: result.result });
+  //   }
+  // },
   async updateDoc(req, res, next) {
     // const docType = _.get(req.params,"docType",_.get(req.query,"docType"));
     const docId = _.get(req.params, 'docId', _.get(req.query, 'docId'));
     const data = req.body;
     const dao = new DAO('AWS');
-    const awsDao = dao.getInstance();
+    const awsDao = dao.getInstance();    
     const result = await awsDao.updateDoc(docId, data);
     if (_.get(result, 'success')) {
       res.json({id:docId,ok:true,"rev":1});

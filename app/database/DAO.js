@@ -60,6 +60,31 @@ class DAO {
       console.log("docId = ",docId," || collection = ",type);
       return type;
     };
+    replaceDot(obj,rev){
+      _.forOwn(obj, (value, key) => {
+        // if key has a period, replace all occurences with an underscore
+        var replaceKey = ".";
+        var replaceValue = "<|>";
+        if(rev){
+           replaceValue = ".";
+           replaceKey = "<|>";
+        }
+        if (_.includes(key, replaceKey)) {
+          const cleanKey = _.replace(key, replaceKey, replaceValue);
+          // eslint-disable-next-line no-param-reassign
+          obj[`${cleanKey}`] = value;
+          // eslint-disable-next-line no-param-reassign
+          delete obj[`${key}`];
+        }
+     
+        // continue recursively looping through if we have an object or array
+        if (_.isObject(value)) {
+          return this.replaceDot(value);
+        }
+        return null;
+      });
+      return obj;
+    };
 };
 
 
