@@ -1,11 +1,10 @@
 import mongoose from 'mongoose';
 
 const _ = require('lodash');
+// const moment = require('moment');
 
 exports.api = {
   async documentByLstChgDate(req, res) {
-    // doc.type === 'approval') {
-    //   emit(['01', doc.approvalStatus, doc.approvalCaseId], emitObj);
     const aggregateStr = [];
     // This is the query result and alias -> projectStr
     const projectStr = {
@@ -17,7 +16,7 @@ exports.api = {
     const startKey = req.query.startkey || '';
     const endKey = req.query.endkey || '';
     const keys = req.query.keys || '';
-    // const key = req.query.key || '';
+    const key = req.query.key || '';
 
 
     //  emit(['01', doc.agentId], emitObject);
@@ -32,26 +31,6 @@ exports.api = {
               $ne: 'DATA_SYNC_TRX_LOG',
             },
           },
-          {
-            id: {
-              $not: /^.*appid-.*$/i,
-            },
-          },
-          {
-            id: {
-              $not: /^.*clientid-.*$/i,
-            },
-          },
-          {
-            id: {
-              $not: /^.*_DELETEDID.*$/i,
-            },
-          },
-          {
-            id: {
-              $not: /^.*_RLSSTATUS.*$/i,
-            },
-          },
         ],
       },
     };
@@ -60,19 +39,25 @@ exports.api = {
       const endKeys = JSON.parse(endKey);
       if (startKeys.length > 1 && endKeys.length > 1) {
         if (_.isEqual(startKeys, endKeys)) {
+          const startT = new Date(startKeys[1]);
+          const startTime = new Date(`${startT.getFullYear()}-${startT.getMonth() + 1}-${startT.getDate()} 00:00:00`);
+          const endTime = new Date(`${startT.getFullYear()}-${startT.getMonth() + 1}-${startT.getDate()} 23:59:59`);
           _.get(matchStr, '$match.$and', []).push({
-            lstChgDate: new Date(startKeys[1]).getTime(),
+            lstChgDate: {
+              $gte: startTime.getTime(),
+              $lte: endTime.getTime(),
+            },
           });
         } else {
           const startT = new Date(startKeys[1]);
-          startT.setDate(startT.getDate() - 1);
+          const startTime = new Date(`${startT.getFullYear()}-${startT.getMonth() + 1}-${startT.getDate()} 00:00:00`);
           const endT = new Date(endKeys[1]);
-          endT.setDate(endT.getDate() + 1);
+          const endTime = new Date(`${endT.getFullYear()}-${endT.getMonth() + 1}-${endT.getDate()} 23:59:59`);
           _.get(matchStr, '$match.$and', []).push({
             lstChgDate:
               {
-                $gt: startT.getTime(),
-                $lt: endT.getTime(),
+                $gte: startTime.getTime(),
+                $lte: endTime.getTime(),
               },
           });
         }
@@ -85,17 +70,16 @@ exports.api = {
         _.forEach(keysList, (keyItem) => {
           if (keyItem && keyItem.length > 1) {
             const startT = new Date(keyItem[1]);
-            startT.setDate(startT.getDate() - 1);
-            const endT = new Date(keyItem[1]);
-            endT.setDate(endT.getDate() + 1);
-            // console.log('key 1 = ', keyItem[1]);
-            // console.log('key 2 = ', (`${t.getFullYear()}-${t.getMonth() + 1}-${t.getDate()}`));
+            const startTime = new Date(`${startT.getFullYear()}-${startT.getMonth() + 1}-${startT.getDate()} 00:00:00`);
+            const endTime = new Date(`${startT.getFullYear()}-${startT.getMonth() + 1}-${startT.getDate()} 23:59:59`);
+            // console.log('key 1 = ', startTime.getTime());
+            // console.log('key 2 = ', endTime.getTime());
             inArray.push(
               {
                 lstChgDate:
                   {
-                    $gt: startT.getTime(),
-                    $lt: endT.getTime(),
+                    $gte: startTime.getTime(),
+                    $lte: endTime.getTime(),
                   },
               },
             );
@@ -108,55 +92,124 @@ exports.api = {
         });
         // _.set(matchStr, '$match.$or', inArray);
       }
+    } else if (key !== '' && key !== '[null]') {
+      const keyJson = JSON.parse(key);
+      if (keyJson && keyJson.length > 1) {
+        const startT = new Date(keyJson[1]);
+        const startTime = new Date(`${startT.getFullYear()}-${startT.getMonth() + 1}-${startT.getDate()} 00:00:00`);
+        const endTime = new Date(`${startT.getFullYear()}-${startT.getMonth() + 1}-${startT.getDate()} 23:59:59`);
+        // const zone = moment().utcOffset() * 60 * 1000;
+        _.get(matchStr, '$match.$and', []).push({
+          lstChgDate: {
+            $gte: startTime.getTime(),
+            $lte: endTime.getTime(),
+          },
+        });
+      }
     }
-    // else if (key !== '' && key !== '[null]') {
-
-    // }
     if (!_.isEmpty(matchStr)) {
       aggregateStr.push(matchStr);
     }
-    // aggregateStr.push({ $sort: { approvalStatus: 1, approvalCaseId: 1 } });
-    // console.log(' >>>>> matchStr=', JSON.stringify(matchStr));
+    aggregateStr.push({ $sort: { lstChgDate: 1 } });
     aggregateStr.push(projectStr);
     const result = [];
     const createRow = (inDoc) => {
       const doc = _.cloneDeep(inDoc);
-
-      return {
-        id: doc.id,
-        key: ['01',
-          `${new Date(doc.lstChgDate).getFullYear()
-          }-${
-            new Date(doc.lstChgDate).getMonth() + 1
-          }-${
-            new Date(doc.lstChgDate).getDate()}`],
-        value: doc,
-      };
+      if (doc.id.indexOf('appid-') === -1 && doc.id.indexOf('clientid-') === -1
+      && doc.id.indexOf('_DELETEDID') === -1 && doc.id.indexOf('_RLSSTATUS') === -1) {
+        result.push({
+          id: doc.id,
+          key: ['01',
+            `${new Date(doc.lstChgDate).getFullYear()
+            }-${
+              new Date(doc.lstChgDate).getMonth() + 1
+            }-${
+              new Date(doc.lstChgDate).getDate()}`],
+          value: doc,
+        });
+      }
     };
-
     const agentResult = await mongoose.connection.collection('agent').aggregate(aggregateStr).toArray();
-    // log4jUtil.log('agentResult = ', JSON.stringify(agentResult));
     if (!_.isEmpty(agentResult)) {
       _.forEach(agentResult, (emitItem) => {
-        result.push(createRow(emitItem));
+        createRow(emitItem);
+      });
+    }
+    const agentExtResult = await mongoose.connection.collection('agentExtraInfo').aggregate(aggregateStr).toArray();
+    if (!_.isEmpty(agentExtResult)) {
+      _.forEach(agentExtResult, (emitItem) => {
+        createRow(emitItem);
       });
     }
     const applicationResult = await mongoose.connection.collection('application').aggregate(aggregateStr).toArray();
-    // log4jUtil.log('applicationResult = ', JSON.stringify(applicationResult));
     if (!_.isEmpty(applicationResult)) {
       _.forEach(applicationResult, (emitItem) => {
-        result.push(createRow(emitItem));
+        createRow(emitItem);
+      });
+    }
+    const shieldAppResult = await mongoose.connection.collection('shieldApplication').aggregate(aggregateStr).toArray();
+    if (!_.isEmpty(shieldAppResult)) {
+      _.forEach(shieldAppResult, (emitItem) => {
+        createRow(emitItem);
+      });
+    }
+    const approvalResult = await mongoose.connection.collection('approval').aggregate(aggregateStr).toArray();
+    if (!_.isEmpty(approvalResult)) {
+      _.forEach(approvalResult, (emitItem) => {
+        createRow(emitItem);
+      });
+    }
+    const shieldApprovalResult = await mongoose.connection.collection('shieldApproval').aggregate(aggregateStr).toArray();
+    if (!_.isEmpty(shieldApprovalResult)) {
+      _.forEach(shieldApprovalResult, (emitItem) => {
+        createRow(emitItem);
       });
     }
     const customerResult = await mongoose.connection.collection('customer').aggregate(aggregateStr).toArray();
-    // log4jUtil.log('agentResult = ', JSON.stringify(agentResult));
     if (!_.isEmpty(customerResult)) {
-      // result = _.concat(agentResult);
       _.forEach(customerResult, (emitItem) => {
-        result.push(createRow(emitItem));
+        createRow(emitItem);
       });
     }
-
+    const fnaResult = await mongoose.connection.collection('fna').aggregate(aggregateStr).toArray();
+    if (!_.isEmpty(fnaResult)) {
+      _.forEach(fnaResult, (emitItem) => {
+        createRow(emitItem);
+      });
+    }
+    const fnaFeResult = await mongoose.connection.collection('fnaFe').aggregate(aggregateStr).toArray();
+    if (!_.isEmpty(fnaFeResult)) {
+      _.forEach(fnaFeResult, (emitItem) => {
+        createRow(emitItem);
+      });
+    }
+    const fnaNaResult = await mongoose.connection.collection('fnaNa').aggregate(aggregateStr).toArray();
+    if (!_.isEmpty(fnaNaResult)) {
+      _.forEach(fnaNaResult, (emitItem) => {
+        createRow(emitItem);
+      });
+    }
+    const fnaPadResult = await mongoose.connection.collection('fnaPda').aggregate(aggregateStr).toArray();
+    if (!_.isEmpty(fnaPadResult)) {
+      _.forEach(fnaPadResult, (emitItem) => {
+        createRow(emitItem);
+      });
+    }
+    const quotationResult = await mongoose.connection.collection('quotation').aggregate(aggregateStr).toArray();
+    if (!_.isEmpty(quotationResult)) {
+      _.forEach(quotationResult, (emitItem) => {
+        createRow(emitItem);
+      });
+    }
+    const masterDataResult = await mongoose.connection.collection('masterData').aggregate(aggregateStr).toArray();
+    if (!_.isEmpty(masterDataResult)) {
+      _.forEach(masterDataResult, (emitItem) => {
+        createRow(emitItem);
+      });
+    }
+    // const collectionList = ['customer', 'agent', 'agentExtraInfo', 'fna', 'fnaFe', 'fnaNa',
+    // 'fnaPda', 'quotation', 'application', 'approval', 'shieldApplication',
+    //  'shieldApproval', 'masterData'];
     const resultTemp = {};
     resultTemp.total_rows = result.length;
     resultTemp.rows = result;
@@ -179,7 +232,7 @@ exports.api = {
     const startKey = req.query.startkey || '';
     const endKey = req.query.endkey || '';
     const keys = req.query.keys || '';
-    // const key = req.query.key || '';
+    const key = req.query.key || '';
 
 
     //  emit(['01', doc.agentId], emitObject);
@@ -188,31 +241,6 @@ exports.api = {
         $and: [
           {
             lstChgDate: { $exists: false },
-          },
-          // {
-          //   type: {
-          //     $ne: 'DATA_SYNC_TRX_LOG',
-          //   },
-          // },
-          {
-            id: {
-              $not: /^.*appid-.*$/i,
-            },
-          },
-          {
-            id: {
-              $not: /^.*clientid-.*$/i,
-            },
-          },
-          {
-            id: {
-              $not: /^.*_DELETEDID.*$/i,
-            },
-          },
-          {
-            id: {
-              $not: /^.*_RLSSTATUS.*$/i,
-            },
           },
         ],
       },
@@ -256,45 +284,106 @@ exports.api = {
         });
         // _.set(matchStr, '$match.$or', inArray);
       }
+    } else if (key !== '' && key !== '[null]') {
+      const keyJson = JSON.parse(key);
+      if (keyJson && keyJson.length > 1) {
+        _.get(matchStr, '$match.$and', []).push({
+          id: keyJson[1],
+        });
+      }
     }
-    // else if (key !== '' && key !== '[null]') {
-
-    // }
     if (!_.isEmpty(matchStr)) {
       aggregateStr.push(matchStr);
     }
     aggregateStr.push({ $sort: { id: 1 } });
     // console.log(' >>>>> matchStr=', JSON.stringify(matchStr));
     aggregateStr.push(projectStr);
-    let result = [];
-
-
+    const result = [];
+    const createRow = (inDoc) => {
+      const doc = _.cloneDeep(inDoc);
+      if (doc.id && doc.id.indexOf('appid-') === -1 && doc.id.indexOf('clientid-') === -1
+      && doc.id.indexOf('_DELETEDID') === -1 && doc.id.indexOf('_RLSSTATUS') === -1) {
+        result.push(doc);
+      }
+    };
     const agentResult = await mongoose.connection.collection('agent').aggregate(aggregateStr).toArray();
-    // log4jUtil.log('agentResult = ', JSON.stringify(agentResult));
     if (!_.isEmpty(agentResult)) {
-      result = _.concat(result, agentResult);
-      // _.forEach(agentResult, (emitItem) => {
-      //   result.push(createRow(emitItem));
-      // });
+      _.forEach(agentResult, (emitItem) => {
+        createRow(emitItem);
+      });
+    }
+    const agentExtResult = await mongoose.connection.collection('agentExtraInfo').aggregate(aggregateStr).toArray();
+    if (!_.isEmpty(agentExtResult)) {
+      _.forEach(agentExtResult, (emitItem) => {
+        createRow(emitItem);
+      });
     }
     const applicationResult = await mongoose.connection.collection('application').aggregate(aggregateStr).toArray();
-    // log4jUtil.log('applicationResult = ', JSON.stringify(applicationResult));
     if (!_.isEmpty(applicationResult)) {
-      result = _.concat(result, applicationResult);
-      // _.forEach(applicationResult, (emitItem) => {
-      //   result.push(createRow(emitItem));
-      // });
+      _.forEach(applicationResult, (emitItem) => {
+        createRow(emitItem);
+      });
+    }
+    const shieldAppResult = await mongoose.connection.collection('shieldApplication').aggregate(aggregateStr).toArray();
+    if (!_.isEmpty(shieldAppResult)) {
+      _.forEach(shieldAppResult, (emitItem) => {
+        createRow(emitItem);
+      });
+    }
+    const approvalResult = await mongoose.connection.collection('approval').aggregate(aggregateStr).toArray();
+    if (!_.isEmpty(approvalResult)) {
+      _.forEach(approvalResult, (emitItem) => {
+        createRow(emitItem);
+      });
+    }
+    const shieldApprovalResult = await mongoose.connection.collection('shieldApproval').aggregate(aggregateStr).toArray();
+    if (!_.isEmpty(shieldApprovalResult)) {
+      _.forEach(shieldApprovalResult, (emitItem) => {
+        createRow(emitItem);
+      });
     }
     const customerResult = await mongoose.connection.collection('customer').aggregate(aggregateStr).toArray();
-    // log4jUtil.log('agentResult = ', JSON.stringify(agentResult));
     if (!_.isEmpty(customerResult)) {
-      result = _.concat(result, customerResult);
-      // result = _.concat(agentResult);
-      // _.forEach(customerResult, (emitItem) => {
-      //   result.push(createRow(emitItem));
-      // });
+      _.forEach(customerResult, (emitItem) => {
+        createRow(emitItem);
+      });
     }
-
+    const fnaResult = await mongoose.connection.collection('fna').aggregate(aggregateStr).toArray();
+    if (!_.isEmpty(fnaResult)) {
+      _.forEach(fnaResult, (emitItem) => {
+        createRow(emitItem);
+      });
+    }
+    const fnaFeResult = await mongoose.connection.collection('fnaFe').aggregate(aggregateStr).toArray();
+    if (!_.isEmpty(fnaFeResult)) {
+      _.forEach(fnaFeResult, (emitItem) => {
+        createRow(emitItem);
+      });
+    }
+    const fnaNaResult = await mongoose.connection.collection('fnaNa').aggregate(aggregateStr).toArray();
+    if (!_.isEmpty(fnaNaResult)) {
+      _.forEach(fnaNaResult, (emitItem) => {
+        createRow(emitItem);
+      });
+    }
+    const fnaPadResult = await mongoose.connection.collection('fnaPda').aggregate(aggregateStr).toArray();
+    if (!_.isEmpty(fnaPadResult)) {
+      _.forEach(fnaPadResult, (emitItem) => {
+        createRow(emitItem);
+      });
+    }
+    const quotationResult = await mongoose.connection.collection('quotation').aggregate(aggregateStr).toArray();
+    if (!_.isEmpty(quotationResult)) {
+      _.forEach(quotationResult, (emitItem) => {
+        createRow(emitItem);
+      });
+    }
+    const masterDataResult = await mongoose.connection.collection('masterData').aggregate(aggregateStr).toArray();
+    if (!_.isEmpty(masterDataResult)) {
+      _.forEach(masterDataResult, (emitItem) => {
+        createRow(emitItem);
+      });
+    }
     const resultTemp = {};
     resultTemp.total_rows = result.length;
     resultTemp.rows = result;

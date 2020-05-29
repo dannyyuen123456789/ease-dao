@@ -10,7 +10,7 @@ exports.api = {
     const startKey = req.query.startkey || '';
     const endKey = req.query.endkey || '';
     const keys = req.query.keys || '';
-    // const key = req.query.key || '';
+    const key = req.query.key || '';
     const matchStr = {};
     let caseUser = false;
     let caseAgent = false;
@@ -116,15 +116,38 @@ exports.api = {
         _.set(matchStr, '$match.$or', inArray);
         // matchStr.$match = { $or: inArray };
       }
+    } else if (key !== '' && key !== '[null]') {
+      const keyJson = JSON.parse(key);
+      if (keyJson && keyJson.length > 2) {
+        if (_.isEqual(keyJson[1], 'userId')) {
+          caseUser = true;
+          matchStr.$match = { 'rawData.agentCode': keyJson[2] };
+          userIds.push(keyJson[2]);
+        }
+        if (_.isEqual(keyJson[1], 'agentCode')) {
+          caseAgent = true;
+          matchStr.$match = { agentCode: keyJson[2] };
+          agentIds.push(keyJson[2]);
+        }
+        if (_.isEqual(keyJson[1], 'fafirmCode')) {
+          caseFafirmCode = true;
+          matchStr.$match = { 'rawData.upline2Code': keyJson[2] };
+          fafirmCodeIds.push(keyJson[2]);
+        }
+        if (_.isEqual(keyJson[1], 'proxy')) {
+          caseProxy = true;
+          matchStr.$match = {
+            $or: [{ 'rawData.proxy1UserId': keyJson[2] }, { 'rawData.proxy2UserId': keyJson[2] }],
+          };
+          proxyIds.push(keyJson[2]);
+        }
+      }
     } else {
       caseUser = true;
       caseAgent = true;
       caseFafirmCode = true;
       caseProxy = true;
     }
-    // } else if (key !== '' && key !== '[null]') {
-
-    // }
     if (!_.isEmpty(matchStr)) {
       aggregateStr.push(matchStr);
     }
@@ -268,8 +291,7 @@ exports.api = {
     const endKey = req.query.endkey || '';
     const keys = req.query.keys || '';
     const descending = req.query.descending || false;
-    // console.log('>>>>> descending ', descending);
-    // const key = req.query.key || '';
+    const key = req.query.key || '';
     const matchStr = {
     };
     let caseTime = false;
@@ -834,13 +856,172 @@ exports.api = {
       if (!_.isEmpty(inArray)) {
         matchStr.$match = { $or: inArray };
       }
+    } else if (key !== '' && key !== '[null]') {
+      const keyJson = JSON.parse(key);
+      if (keyJson && keyJson.length > 2) {
+        const orInArray = [];
+        if (_.isEqual(keyJson[1], 'timeFirst')) {
+          caseTime = true;
+          orInArray.push(
+            {
+              $and: [
+                {
+                  lstChgDate: {
+                    $exists: true,
+                  },
+                },
+                {
+                  lstChgDate: keyJson[2],
+                },
+              ],
+            },
+          );
+          orInArray.push(
+            {
+              $and: [
+                {
+                  $or: [{
+                    lstChgDate: {
+                      $exists: false,
+                    },
+                  },
+                  {
+                    lstChgDate: '',
+                  },
+                  ],
+                },
+                {
+                  lastUpdateDate: {
+                    $exists: true,
+                  },
+                },
+                {
+                  lastUpdateDate: new Date(keyJson[2]).toISOString(),
+                },
+              ],
+            },
+          );
+          if (keyJson[2] === 0) {
+            orInArray.push(
+              {
+                $and: [
+                  {
+                    $or: [{
+                      lstChgDate: {
+                        $exists: false,
+                      },
+                    },
+                    {
+                      lstChgDate: '',
+                    },
+                    ],
+                  },
+                  {
+                    $or: [{
+                      lastUpdateDate: {
+                        $exists: false,
+                      },
+                    },
+                    {
+                      lastUpdateDate: '',
+                    },
+                    ],
+                  },
+                ],
+              },
+            );
+          }
+          if (keyJson.length > 3) {
+            matchStr.$match = {
+              agentCode: keyJson[3],
+            };
+          }
+        }
+        if (_.isEqual(keyJson[1], 'agentCodeFirst')) {
+          caseAgent = true;
+          matchStr.$match = {
+            agentCode: keyJson[2],
+          };
+          if (keyJson.length > 3) {
+            orInArray.push(
+              {
+                $and: [
+                  {
+                    lstChgDate: {
+                      $exists: true,
+                    },
+                  },
+                  {
+                    lstChgDate: keyJson[3],
+                  },
+                ],
+              },
+            );
+            orInArray.push(
+              {
+                $and: [
+                  {
+                    $or: [{
+                      lstChgDate: {
+                        $exists: false,
+                      },
+                    },
+                    {
+                      lstChgDate: '',
+                    },
+                    ],
+                  },
+                  {
+                    lastUpdateDate: {
+                      $exists: true,
+                    },
+                  },
+                  {
+                    lastUpdateDate: new Date(keyJson[3]).toISOString(),
+                  },
+                ],
+              },
+            );
+          } else {
+            orInArray.push(
+              {
+                $and: [
+                  {
+                    $or: [{
+                      lstChgDate: {
+                        $exists: false,
+                      },
+                    },
+                    {
+                      lstChgDate: '',
+                    },
+                    ],
+                  },
+                  {
+                    $or: [{
+                      lastUpdateDate: {
+                        $exists: false,
+                      },
+                    },
+                    {
+                      lastUpdateDate: '',
+                    },
+                    ],
+                  },
+                ],
+              },
+            );
+          }
+        }
+        if (!_.isEmpty(orInArray)) {
+          _.set(matchStr, '$match.$or', orInArray);
+        }
+      }
     } else {
       caseTime = true;
       caseAgent = true;
     }
-    // } else if (key !== '' && key !== '[null]') {
 
-    // }
     if (!_.isEmpty(matchStr)) {
       aggregateStr.push(matchStr);
     }
@@ -983,7 +1164,7 @@ exports.api = {
     const startKey = req.query.startkey || '';
     const endKey = req.query.endkey || '';
     const keys = req.query.keys || '';
-    // const key = req.query.key || '';
+    const key = req.query.key || '';
     //  emit(['01', doc.agentId], emitObject);
     const matchStr = {};
     if (startKey !== '' && endKey !== '') {
@@ -1010,10 +1191,12 @@ exports.api = {
       if (!_.isEmpty(inArray)) {
         matchStr.$match = { agentCode: { $in: inArray } };
       }
+    } else if (key !== '' && key !== '[null]') {
+      const keyJson = JSON.parse(key);
+      if (keyJson && keyJson.length > 1) {
+        matchStr.$match = { agentCode: keyJson[1] };
+      }
     }
-    // } else if (key !== '' && key !== '[null]') {
-
-    // }
     if (!_.isEmpty(matchStr)) {
       aggregateStr.push(matchStr);
     }
@@ -1091,7 +1274,7 @@ exports.api = {
     const startKey = req.query.startkey || '';
     const endKey = req.query.endkey || '';
     const keys = req.query.keys || '';
-    // const key = req.query.key || '';
+    const key = req.query.key || '';
 
 
     //  emit(['01', doc.agentId], emitObject);
@@ -1120,10 +1303,12 @@ exports.api = {
       if (!_.isEmpty(inArray)) {
         matchStr.$match = { approvalCaseId: { $in: inArray } };
       }
+    } else if (key !== '' && key !== '[null]') {
+      const keyJson = JSON.parse(key);
+      if (keyJson && keyJson.length > 1) {
+        matchStr.$match = { approvalCaseId: keyJson[1] };
+      }
     }
-    // else if (key !== '' && key !== '[null]') {
-
-    // }
     if (!_.isEmpty(matchStr)) {
       aggregateStr.push(matchStr);
     }
@@ -2065,7 +2250,7 @@ exports.api = {
     const startKey = req.query.startkey || '';
     const endKey = req.query.endkey || '';
     const keys = req.query.keys || '';
-    // const key = req.query.key || '';
+    const key = req.query.key || '';
 
 
     //  emit(['01', doc.agentId], emitObject);
@@ -2113,6 +2298,9 @@ exports.api = {
         if (!_.isEmpty(where)) {
           matchStr.$match = where;
         }
+        if (!_.isEmpty(whereAgent)) {
+          matchStrAgent.$match = whereAgent;
+        }
       }
     } else if (keys !== '') {
       const keysList = JSON.parse(keys);
@@ -2140,14 +2328,31 @@ exports.api = {
       if (!_.isEmpty(inAgentArray)) {
         matchStrAgent.$match = { $or: inAgentArray };
       }
+    } else if (key !== '' && key !== '[null]') {
+      const keyJson = JSON.parse(key);
+      const where = {};
+      const whereAgent = {};
+      if (keyJson.length === 2) {
+        _.set(whereAgent, 'agentId', keyJson[1]);
+        addCaseAgent = true;
+      }
+      if (keyJson.length === 3) {
+        addCase1 = true;
+        _.set(where, 'approvalStatus', keyJson[1]);
+        _.set(where, 'approvalCaseId', keyJson[2]);
+      }
+      if (!_.isEmpty(where)) {
+        matchStr.$match = where;
+      }
+      if (!_.isEmpty(whereAgent)) {
+        matchStrAgent.$match = whereAgent;
+      }
     } else {
       addCase1 = true;
       fullCase = true;
       addCaseAgent = false;
     }
-    // else if (key !== '' && key !== '[null]') {
 
-    // }
     if (!_.isEmpty(matchStr)) {
       aggregateStr.push(matchStr);
     }
@@ -2646,7 +2851,7 @@ exports.api = {
     const startKey = req.query.startkey || '';
     const endKey = req.query.endkey || '';
     const keys = req.query.keys || '';
-    // const key = req.query.key || '';
+    const key = req.query.key || '';
     //  emit(['01', doc.agentId], emitObject);
     const matchStr = {};
     if (startKey !== '' && endKey !== '') {
@@ -2673,10 +2878,12 @@ exports.api = {
       if (!_.isEmpty(inArray)) {
         matchStr.$match = { agentId: { $in: inArray } };
       }
+    } else if (key !== '' && key !== '[null]') {
+      const keyJson = JSON.parse(key);
+      if (keyJson && keyJson.length > 1) {
+        matchStr.$match = { agentId: keyJson[1] };
+      }
     }
-    // } else if (key !== '' && key !== '[null]') {
-
-    // }
     if (!_.isEmpty(matchStr)) {
       aggregateStr.push(matchStr);
     }
@@ -2858,7 +3065,7 @@ exports.api = {
     const startKey = req.query.startkey || '';
     const endKey = req.query.endkey || '';
     const keys = req.query.keys || '';
-    // const key = req.query.key || '';
+    const key = req.query.key || '';
     //  emit(['01', doc.agentId], emitObject);
     const matchStr = {};
     if (startKey !== '' && endKey !== '') {
@@ -2885,10 +3092,12 @@ exports.api = {
       if (!_.isEmpty(inArray)) {
         matchStr.$match = { 'quotation.agent.agentCode': { $in: inArray } };
       }
+    } else if (key !== '' && key !== '[null]') {
+      const keyJson = JSON.parse(key);
+      if (keyJson && keyJson.length > 1) {
+        matchStr.$match = { 'quotation.agent.agentCode': keyJson[1] };
+      }
     }
-    // } else if (key !== '' && key !== '[null]') {
-
-    // }
     if (!_.isEmpty(matchStr)) {
       aggregateStr.push(matchStr);
     }
@@ -2963,7 +3172,7 @@ exports.api = {
     const startKey = req.query.startkey || '';
     const endKey = req.query.endkey || '';
     const keys = req.query.keys || '';
-    // const key = req.query.key || '';
+    const key = req.query.key || '';
     const matchStr = {
       $match: {
         'rawData.upline2Code': { $exists: true, $ne: '' },
@@ -2995,10 +3204,14 @@ exports.api = {
       if (!_.isEmpty(inArray)) {
         matchStr.$match = { 'rawData.upline2Code': { $in: inArray } };
       }
+    } else if (key !== '' && key !== '[null]') {
+      const keyJson = JSON.parse(key);
+      if (keyJson && keyJson.length > 1) {
+        matchStr.$match = {
+          'rawData.upline2Code': keyJson[1],
+        };
+      }
     }
-    // } else if (key !== '' && key !== '[null]') {
-
-    // }
     if (!_.isEmpty(matchStr)) {
       aggregateStr.push(matchStr);
     }
@@ -3281,7 +3494,7 @@ exports.api = {
     });
   },
   async inProgressQuotFunds(req, res) { // 这个视图如果START-KEY和 END-KEY如果不同，将拿全部（查询代码这个视图是没有条件全部拿出来的）
-    // doc.type === 'approval') {
+    // doc.type === 'approval') { //没加KEY
     //   emit(['01', doc.approvalStatus, doc.approvalCaseId], emitObj);
     const aggregateStr = [];
     // This is the query result and alias -> projectStr
@@ -3297,7 +3510,7 @@ exports.api = {
     const startKey = req.query.startkey || '';
     const endKey = req.query.endkey || '';
     const keys = req.query.keys || '';
-    // const key = req.query.key || '';
+    const key = req.query.key || '';
     const matchStrBundle = {
       $match: {
         applications: { $exists: true },
@@ -3421,13 +3634,45 @@ exports.api = {
           $or: inQuotationArray,
         };
       }
+    } else if (key !== '' && key !== '[null]') {
+      const keyJson = JSON.parse(key);
+      let whereBundle = {};
+      let whereQuotation = {};
+      if (keyJson && keyJson.length > 1) {
+        if (keyJson.length === 2) {
+          whereBundle = {
+            applications: { $elemMatch: { quotationDocId: keyJson[1] } },
+          };
+          addCaseBundle = true;
+          quotationDocIds.push(keyJson[1]);
+        }
+        if (keyJson.length === 3) {
+          addCaseQuotation = true;
+          whereQuotation = {
+            id: keyJson[1],
+            'fund.funds': { $elemMatch: { fundCode: keyJson[2] } },
+          };
+          keyFunds.push(keyJson[2]);
+        }
+      }
+      if (!_.isEmpty(whereBundle)) {
+        matchStrBundle.$match = {
+          applications: { $exists: true },
+          isValid: true,
+          ...whereBundle,
+        };
+      }
+      if (!_.isEmpty(whereQuotation)) {
+        matchStrQuotation.$match = {
+          'fund.funds': { $exists: true },
+          ...whereQuotation,
+        };
+      }
     } else {
       addCaseBundle = true;
       addCaseQuotation = true;
     }
-    // else if (key !== '' && key !== '[null]') {
 
-    // }
     if (!_.isEmpty(matchStrBundle)) {
       aggregateStr.push(matchStrBundle);
     }
@@ -3529,7 +3774,7 @@ exports.api = {
     const startKey = req.query.startkey || '';
     const endKey = req.query.endkey || '';
     const keys = req.query.keys || '';
-    // const key = req.query.key || '';
+    const key = req.query.key || '';
     const matchStr = {};
     if (startKey !== '' && endKey !== '') {
       const startKeys = JSON.parse(startKey);
@@ -3555,10 +3800,12 @@ exports.api = {
       if (!_.isEmpty(inArray)) {
         matchStr.$match = { managerCode: { $in: inArray } };
       }
+    } else if (key !== '' && key !== '[null]') {
+      const keyJson = JSON.parse(key);
+      if (keyJson && keyJson.length > 1) {
+        matchStr.$match = { managerCode: keyJson[1] };
+      }
     }
-    // } else if (key !== '' && key !== '[null]') {
-
-    // }
     if (!_.isEmpty(matchStr)) {
       aggregateStr.push(matchStr);
     }
@@ -3628,7 +3875,7 @@ exports.api = {
     const startKey = req.query.startkey || '';
     const endKey = req.query.endkey || '';
     const keys = req.query.keys || '';
-    // const key = req.query.key || '';
+    const key = req.query.key || '';
     const matchStr = {};
     const matchStrAgent = {};
     let addCase1 = false;
@@ -3641,11 +3888,11 @@ exports.api = {
         const where = {};
         const whereAgent = {};
         if (_.isEqual(startKeys, endKeys)) {
-          if (startKeys.length === 2) {
+          if (startKeys && startKeys.length === 2) {
             _.set(whereAgent, 'agentId', startKeys[1]);
             addCaseAgent = true;
           }
-          if (startKeys.length === 3) {
+          if (startKeys && startKeys.length === 3) {
             addCase1 = true;
             _.set(where, 'approvalStatus', startKeys[1]);
             _.set(where, 'approvalCaseId', startKeys[2]);
@@ -3672,6 +3919,9 @@ exports.api = {
         }
         if (!_.isEmpty(where)) {
           matchStr.$match = where;
+        }
+        if (!_.isEmpty(whereAgent)) {
+          matchStrAgent.$match = whereAgent;
         }
       }
     } else if (keys !== '') {
@@ -3700,14 +3950,31 @@ exports.api = {
       if (!_.isEmpty(inAgentArray)) {
         matchStrAgent.$match = { $or: inAgentArray };
       }
+    } else if (key !== '' && key !== '[null]') {
+      const keyJson = JSON.parse(key);
+      const where = {};
+      const whereAgent = {};
+      if (keyJson && keyJson.length === 2) {
+        _.set(whereAgent, 'agentId', keyJson[1]);
+        addCaseAgent = true;
+      }
+      if (keyJson && keyJson.length === 3) {
+        addCase1 = true;
+        _.set(where, 'approvalStatus', keyJson[1]);
+        _.set(where, 'approvalCaseId', keyJson[2]);
+      }
+      if (!_.isEmpty(where)) {
+        matchStr.$match = where;
+      }
+      if (!_.isEmpty(whereAgent)) {
+        matchStrAgent.$match = whereAgent;
+      }
     } else {
       addCase1 = true;
       fullCase = true;
       addCaseAgent = false;
     }
-    // else if (key !== '' && key !== '[null]') {
 
-    // }
     if (!_.isEmpty(matchStr)) {
       aggregateStr.push(matchStr);
     }
@@ -4254,7 +4521,7 @@ exports.api = {
     const startKey = req.query.startkey || '';
     const endKey = req.query.endkey || '';
     const keys = req.query.keys || '';
-    // const key = req.query.key || '';
+    const key = req.query.key || '';
     const matchStr = {
       $match: { type: 'pdfTemplate' },
     };
@@ -4284,10 +4551,12 @@ exports.api = {
       if (!_.isEmpty(inArray)) {
         _.set(matchStr, '$match.pdfCode', { $in: inArray });
       }
+    } else if (key !== '' && key !== '[null]') {
+      const keyJson = JSON.parse(key);
+      if (keyJson && keyJson.length > 2) {
+        _.set(matchStr, '$match.pdfCode', keyJson[2]);
+      }
     }
-    // } else if (key !== '' && key !== '[null]') {
-
-    // }
     if (!_.isEmpty(matchStr)) {
       aggregateStr.push(matchStr);
     }
@@ -4502,7 +4771,7 @@ exports.api = {
     const startKey = req.query.startkey || '';
     const endKey = req.query.endkey || '';
     const keys = req.query.keys || '';
-    // const key = req.query.key || '';
+    const key = req.query.key || '';
     const matchStr = {
       $match: {
         quickQuote: true,
@@ -4531,10 +4800,12 @@ exports.api = {
       if (!_.isEmpty(inArray)) {
         _.set(matchStr, '$match.pCid', { $in: inArray });
       }
+    } else if (key !== '' && key !== '[null]') {
+      const keyJson = JSON.parse(key);
+      if (keyJson && keyJson.length > 1) {
+        _.set(matchStr, '$match.pCid', keyJson[1]);
+      }
     }
-    // } else if (key !== '' && key !== '[null]') {
-
-    // }
     if (!_.isEmpty(matchStr)) {
       aggregateStr.push(matchStr);
     }
@@ -4599,7 +4870,7 @@ exports.api = {
     const startKey = req.query.startkey || '';
     const endKey = req.query.endkey || '';
     const keys = req.query.keys || '';
-    // const key = req.query.key || '';
+    const key = req.query.key || '';
     const matchStr = {};
     if (startKey !== '' && endKey !== '') {
       const startKeys = JSON.parse(startKey);
@@ -4624,10 +4895,12 @@ exports.api = {
       if (!_.isEmpty(inArray)) {
         matchStr.$match = { 'agent.agentCode': { $in: inArray } };
       }
+    } else if (key !== '' && key !== '[null]') {
+      const keyJson = JSON.parse(key);
+      if (keyJson && keyJson.length > 1) {
+        matchStr.$match = { 'agent.agentCode': keyJson[1] };
+      }
     }
-    // } else if (key !== '' && key !== '[null]') {
-
-    // }
     if (!_.isEmpty(matchStr)) {
       aggregateStr.push(matchStr);
     }
@@ -4669,7 +4942,7 @@ exports.api = {
     const startKey = req.query.startkey || '';
     const endKey = req.query.endkey || '';
     const keys = req.query.keys || '';
-    // const key = req.query.key || '';
+    const key = req.query.key || '';
     const matchStr = {
       $match: { type: 'campaign' },
     };
@@ -4726,13 +4999,23 @@ exports.api = {
         _.set(matchStr, '$match.$or', inArray);
         // matchStr.$match = { $or: inArray };
       }
+    } else if (key !== '' && key !== '[null]') {
+      const keyJson = JSON.parse(key);
+      if (keyJson && keyJson.length > 2) {
+        if (_.isEqual(keyJson[1], 'endTime')) {
+          caseEndTime = true;
+          _.set(matchStr, '$match.endTime', new Date(keyJson[2]).toISOString());
+        }
+        if (_.isEqual(keyJson[1], 'campaignId')) {
+          caseCampaignId = true;
+          _.set(matchStr, '$match.campaignId', keyJson[2]);
+        }
+      }
     } else {
       caseEndTime = true;
       caseCampaignId = true;
     }
-    // } else if (key !== '' && key !== '[null]') {
 
-    // }
     if (!_.isEmpty(matchStr)) {
       aggregateStr.push(matchStr);
     }
@@ -5404,7 +5687,7 @@ exports.api = {
               approvalStatus: keyJson[2],
             });
           }
-          _.set(matchStr, '$match', submitdocKeys);
+          _.set(matchStr, '$match', submitdocKey);
         }
         if (_.isEqual(keyJson[1], 'pendingapproval')) {
           casePendingapproval = true;
@@ -5417,7 +5700,7 @@ exports.api = {
             _.set(pendingapprovalKey, 'approvalStatus', keyJson[4]);
           }
           pendingapprovalKeys.push(_.cloneDeep(pendingapprovalKey));
-          _.set(matchStr, '$match', pendingapprovalKeys);
+          _.set(matchStr, '$match', pendingapprovalKey);
         }
         if (_.isEqual(keyJson[1], 'lastedit')) {
           caseLastedit = true;
@@ -5487,7 +5770,7 @@ exports.api = {
     const pendingForFAFirmResult = [];
     const expiredNotificationResult = [];
     const secondaryProxyNotificationResult = [];
-    // console.log(' >>>>> matchStr=', JSON.stringify(aggregateStr));
+    // console.log(' >>>>> matchStr=', JSON.stringify(matchStr));
 
     const escapeStatusForExpiryView = ['E', 'A', 'R'];
     const pendingForFAFirmStatus = ['PFAFA', 'PDocFAF', 'PDisFAF'];
@@ -5699,7 +5982,7 @@ exports.api = {
     const startKey = req.query.startkey || '';
     const endKey = req.query.endkey || '';
     const keys = req.query.keys || '';
-    // const key = req.query.key || '';
+    const key = req.query.key || '';
     const matchStr = {};
     if (startKey !== '' && endKey !== '') {
       const startKeys = JSON.parse(startKey);
@@ -5751,10 +6034,21 @@ exports.api = {
       if (!_.isEmpty(inArray)) {
         matchStr.$match = { $or: inArray };
       }
+    } else if (key !== '' && key !== '[null]') {
+      const keyJson = JSON.parse(key);
+      if (keyJson && keyJson.length > 1) {
+        const where = {};
+        if (keyJson && keyJson.length > 1) {
+          _.set(where, 'pCid', keyJson[1]);
+        }
+        if (keyJson && keyJson.length > 2) {
+          _.set(where, 'id', keyJson[2]);
+        }
+        if (!_.isEmpty(where)) {
+          matchStr.$match = where;
+        }
+      }
     }
-    // else if (key !== '' && key !== '[null]') {
-
-    // }
     if (!_.isEmpty(matchStr)) {
       aggregateStr.push(matchStr);
       aggregateStr.push({ $sort: { pCid: 1, id: 1 } });
@@ -6357,7 +6651,7 @@ exports.api = {
     const startKey = req.query.startkey || '';
     const endKey = req.query.endkey || '';
     const keys = req.query.keys || '';
-    // const key = req.query.key || '';
+    const key = req.query.key || '';
     const matchStr = {
       $match: {
         $or: [
@@ -6444,10 +6738,28 @@ exports.api = {
           ],
         };
       }
+    } else if (key !== '' && key !== '[null]') {
+      const keyJson = JSON.parse(key);
+      const where = {
+        $or: [
+          {
+            quickQuote: false,
+          },
+          {
+            quickQuote: { $exists: false },
+          },
+        ],
+      };
+      if (keyJson && keyJson.length > 1) {
+        _.set(where, 'pCid', keyJson[1]);
+      }
+      if (keyJson && keyJson.length > 2) {
+        _.set(where, 'id', keyJson[2]);
+      }
+      if (!_.isEmpty(where)) {
+        matchStr.$match = where;
+      }
     }
-    // else if (key !== '' && key !== '[null]') {
-
-    // }
     if (!_.isEmpty(matchStr)) {
       aggregateStr.push(matchStr);
       aggregateStr.push({ $sort: { pCid: 1, id: 1 } });
@@ -6500,7 +6812,7 @@ exports.api = {
     const startKey = req.query.startkey || '';
     const endKey = req.query.endkey || '';
     const keys = req.query.keys || '';
-    // const key = req.query.key || '';
+    const key = req.query.key || '';
     const matchStr = {
       $match: { type: 'campaign' },
     };
@@ -6557,13 +6869,23 @@ exports.api = {
         _.set(matchStr, '$match.$or', inArray);
         // matchStr.$match = { $or: inArray };
       }
+    } else if (key !== '' && key !== '[null]') {
+      const keyJson = JSON.parse(key);
+      if (keyJson && keyJson.length > 2) {
+        if (_.isEqual(keyJson[1], 'endTime')) {
+          caseEndTime = true;
+          _.set(matchStr, '$match.endTime', new Date(keyJson[2]).toISOString());
+        }
+        if (_.isEqual(keyJson[1], 'messageId')) {
+          caseMessageId = true;
+          _.set(matchStr, '$match.messageId', keyJson[2]);
+        }
+      }
     } else {
       caseEndTime = true;
       caseMessageId = true;
     }
-    // } else if (key !== '' && key !== '[null]') {
 
-    // }
     if (!_.isEmpty(matchStr)) {
       aggregateStr.push(matchStr);
     }
@@ -6700,7 +7022,7 @@ exports.api = {
     const startKey = req.query.startkey || '';
     const endKey = req.query.endkey || '';
     const keys = req.query.keys || '';
-    // const key = req.query.key || '';
+    const key = req.query.key || '';
     const matchStrBundle = {
       $match: {
         applications: { $exists: true },
@@ -6739,10 +7061,12 @@ exports.api = {
       if (!_.isEmpty(inArray)) {
         _.set(matchStrBundle, '$match.agentId', { $in: inArray });
       }
+    } else if (key !== '' && key !== '[null]') {
+      const keyJson = JSON.parse(key);
+      if (keyJson && keyJson.length > 1) {
+        _.set(matchStrBundle, '$match.agentId', keyJson[1]);
+      }
     }
-    // else if (key !== '' && key !== '[null]') {
-
-    // }
     if (!_.isEmpty(matchStrBundle)) {
       aggregateStr.push(matchStrBundle);
     }
