@@ -52,7 +52,7 @@ class fileUtils {
   const dao1 = new DAO();
   const awsDao = dao1.getInstance();
   bucket = bucket + "/" + awsDao.getCollectionNameById(docId);
-  console.log("docId = ",docId," || bucket = ",bucket);   
+  console.log("docId = ",docId," || bucket = ",bucket);
    return bucket;
 };
 getFileKeyById(docId,attachent) {

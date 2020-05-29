@@ -52,7 +52,6 @@ getCredentials(){
 
     AWS.config.getCredentials((err) => {
       if (err) {
-        logger.log('credentials error');
         reject(err);
       } else {
         logger.log('Access key:', AWS.config.credentials.accessKeyId);
@@ -79,7 +78,6 @@ uploadBase64(docId,attachmentType,data,fileType){
     };
       s3Object.upload(params, function (error, dat) {
       if (error) {
-        logger.log('awsUtil uploadDoc error', error);
         reject(error);
       } else {
         resolve();
@@ -102,7 +100,6 @@ deleteObject(docId,attachmentType){
     };
       s3Object.deleteObject(params, function (error, dat) {
       if (error) {
-        logger.log('awsUtil delete error', error);
         reject(error);
       } else {
         resolve();
@@ -130,7 +127,7 @@ async getAttachment(docId,attachmentType,cb){
   s3Object.getObject(executeParams, (err, data) => {
       if (err) {
         if (reject) {
-          reject();
+          reject(err);
         }
       } else if (resolve) {
         if (typeof cb === 'function') {

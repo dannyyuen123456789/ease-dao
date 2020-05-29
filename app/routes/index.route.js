@@ -10,7 +10,7 @@ router.delete('/deleteDoc/:docId', indexController.api.deleteDoc);
 router.get('/getAttachtment/:docId/:attachment', indexController.api.getAttachtment);
 router.get('/getAttachtmentUrl/:docId/:attachment', indexController.api.getAttachtmentUrl);
 router.put('/uploadAttachmentByBase64/:docId/:attachment', indexController.api.uploadAttachmentByBase64);
-router.put('/uploadAttachment/:docId/:attachment', indexController.api.uploadAttachment);
+// router.put('/uploadAttachment/:docId/:attachment', indexController.api.uploadAttachment);
 router.delete('/delAttachment/:docId/:attachment', indexController.api.delAttachment);
 
 // router.get('/:docId', indexController.api.getDoc);

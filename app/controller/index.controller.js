@@ -53,7 +53,7 @@ exports.api = {
     const result = await awsDao.deleteDoc(docId);
     // console.log("result = ",result);
     if (_.get(result, 'success')) {
-      res.json({ id: docId, ok: true });
+      res.json({ id: docId, ok: true ,"rev":1});
     } else {
       res.json({ status: 400, result: result.result });
     }
@@ -70,7 +70,8 @@ exports.api = {
     if(initSuccess){
       await fileInstance.getAttachment(docId,attachmentId,(attachment)=>{
         // console.log("attachment|||",attachment);
-        res.send(attachment);
+        if(attachment)
+          res.send(attachment);
       }).catch(error=>
         {
           if(error){
@@ -146,7 +147,7 @@ exports.api = {
         if(_.get(docResult,"success")){
           var doc = _.get(docResult,"result");
           var docAttachment = _.get(doc,"attachments",{});
-          _.set(docAttachment,attachmentId,{key:fileName,contentType:mime,fileSize:fileSize});
+          _.set(docAttachment,attachmentId,{key:fileName,content_type:mime,fileSize:fileSize});
           const updResult = await awsDao.updateDoc(docId,{attachments:docAttachment});
           if(!_.get(updResult,"success")){
             errMessage = _.get(updResult,"result");
@@ -160,19 +161,25 @@ exports.api = {
     }
     if(errMessage){
       log4jUtil.log('log', "--------upload failed---------");
-      res.json({ ok: false,message:errMessage });
+      // res.json({ ok: false,message:errMessage });
+      res.json({ error: false,reason:errMessage });
     }else{
       log4jUtil.log('log', "--------upload success---------");
-      res.json({id:docId, ok: true});
+      // res.setHeader('Content-Type','application/json')
+      res.json({
+        "id": `${docId}`,
+        "ok": true,
+        "rev": "1"
+      });
     }
   },
-  async uploadAttachment(req, res, next) {
-    const docId = _.get(req.params, 'docId', _.get(req.query, 'docId'));
-    const attchId = _.get(req.params, 'attchId', _.get(req.query, 'attchId'));
-    fileUtils.uploadAttachment();
-    console.log('result = ', result);
-    res.json({ success: true, result });
-  },
+  // async uploadAttachment(req, res, next) {
+  //   const docId = _.get(req.params, 'docId', _.get(req.query, 'docId'));
+  //   const attchId = _.get(req.params, 'attchId', _.get(req.query, 'attchId'));
+  //   fileUtils.uploadAttachment();
+  //   console.log('result = ', result);
+  //   res.json({ success: true, result });
+  // },
   async delAttachment(req, res, next) {
     var errMessage = ""
     const docId = _.get(req.params, 'docId', _.get(req.query, 'docId'));

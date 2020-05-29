@@ -11,7 +11,6 @@ class awsDAO extends DAO{
     var status = true;
     var docType = this.getCollectionNameById(docId);
     if(docType && !_.isEmpty(docType)){
-      // log4jUtil.log("111111",mongoose.connection.readyState)
       if(mongoose.connection.readyState===1){
         result = await mongoose.connection.collection(docType).findOne({"id":docId}).catch(error=>
         {
@@ -61,11 +60,10 @@ class awsDAO extends DAO{
       if(!_.get(data,"rev")){
         _.set(data,"rev","1")
       }
+      console.log("docId = ",docId);
+      console.log("docType = ",docType);
       if(docType && !_.isEmpty(docType) && data && !_.isEmpty(data)){
         if(mongoose.connection.readyState===1){
-          // data = JSON.parse(data);
-          // _.set(data,docId);
-          // _.set(data,docId);
           await mongoose.connection.collection(docType).updateOne({"id":docId},{"$set":data},{ "upsert":true}).then(r=>{
             result = r.result;
           }).catch(error=>
@@ -93,9 +91,6 @@ class awsDAO extends DAO{
           delete data["_id"];
         }
         if(mongoose.connection.readyState===1){
-          // data = JSON.parse(data);
-          // _.set(data,docId);
-          // _.set(data,docId);
           let condition = {"id":docId};
           if(extCondition){
             _.assignIn(condition,extCondition);
@@ -181,7 +176,7 @@ class awsDAO extends DAO{
       log4jUtil.log("docType = ",docType)
       log4jUtil.log("docId = ",docId)
       let result = await mongoose.connection.collection(docType).findOne({"id":mongoose.Types.ObjectId(docId)});
-      console.log("result = ",result);
+      // console.log("result = ",result);
       res.json({"success":true,result:result});
     };
     async insertAttachtment(req,res,next){
@@ -190,7 +185,7 @@ class awsDAO extends DAO{
       log4jUtil.log("docType = ",docType)
       log4jUtil.log("docId = ",docId)
       let result = await mongoose.connection.collection(docType).findOne({"id":mongoose.Types.ObjectId(docId)});
-      console.log("result = ",result);
+      // console.log("result = ",result);
       res.json({"success":true,result:result});
     };
     async updateAttachtment(req,res,next){
@@ -199,7 +194,7 @@ class awsDAO extends DAO{
       log4jUtil.log("docType = ",docType)
       log4jUtil.log("docId = ",docId)
       let result = await mongoose.connection.collection(docType).findOne({"id":mongoose.Types.ObjectId(docId)});
-      console.log("result = ",result);
+      // console.log("result = ",result);
       res.json({"success":true,result:result});
     };
     async deleteAttachtment(req,res,next){
@@ -208,7 +203,7 @@ class awsDAO extends DAO{
       log4jUtil.log("docType = ",docType)
       log4jUtil.log("docId = ",docId)
       let result = await mongoose.connection.collection(docType).findOne({"id":mongoose.Types.ObjectId(docId)});
-      console.log("result = ",result);
+      // console.log("result = ",result);
       res.json({"success":true,result:result});
     }
 
