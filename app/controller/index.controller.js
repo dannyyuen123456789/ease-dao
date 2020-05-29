@@ -17,9 +17,15 @@ exports.api = {
     // console.log("result = ",result.result);
     if (_.get(result, 'success')) {
       var resResult = result.result;
-      res.json(result.result);
+      if(resResult){
+        res.json(result.result);
+      }
+      else{
+        res.json({ error: 'not_found', reason: "missing" });
+      }
+      
     } else {
-      res.json({ error: 'not_found', reason: 'missing' });
+      res.json({ error: 'error', reason: result.result });
     }
   },
   // async insertDoc(req, res, next) {
