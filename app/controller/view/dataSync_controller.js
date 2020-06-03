@@ -17,7 +17,7 @@ exports.api = {
     const startKey = req.query.startkey || '';
     const endKey = req.query.endkey || '';
     const keys = req.query.keys || '';
-    // const key = req.query.key || '';
+    const key = req.query.key || '';
 
 
     //  emit(['01', doc.agentId], emitObject);
@@ -65,6 +65,16 @@ exports.api = {
       }
       if (!_.isEmpty(inArray)) {
         matchStr.$match = { $or: inArray };
+      }
+    } else if (key !== '' && key !== '[null]') {
+      const keyJson = JSON.parse(key);
+      if (keyJson && keyJson.length > 1) {
+        matchStr.$match = {
+          $or: [
+            { agentCode: keyJson[1] },
+            { agentId: keyJson[1] },
+          ],
+        };
       }
     }
     if (!_.isEmpty(matchStr)) {

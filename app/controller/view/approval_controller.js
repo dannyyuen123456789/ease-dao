@@ -56,8 +56,7 @@ exports.api = {
     const startKey = req.query.startkey || '';
     const endKey = req.query.endkey || '';
     const keys = req.query.keys || '';
-    // const key = req.query.key || '';
-
+    const key = req.query.key || '';
 
     //  emit(['01', doc.agentId], emitObject);
     const matchStr = {};
@@ -110,10 +109,19 @@ exports.api = {
       if (!_.isEmpty(inArray)) {
         matchStr.$match = { $or: inArray };
       }
+    } else if (key !== '' && key !== '[null]') {
+      const keyJson = JSON.parse(key);
+      const where = {};
+      if (keyJson && keyJson.length > 1) {
+        _.set(where, 'approvalStatus', keyJson[1]);
+        if (keyJson.length > 2) {
+          _.set(where, 'approvalCaseId', keyJson[2]);
+        }
+      }
+      if (!_.isEmpty(where)) {
+        matchStr.$match = where;
+      }
     }
-    // else if (key !== '' && key !== '[null]') {
-
-    // }
     if (!_.isEmpty(matchStr)) {
       aggregateStr.push(matchStr);
     }
