@@ -40,7 +40,6 @@ async init(){
 // gothrough proxy
   setProxyEnv(){
     const isProxy = _.get(s3Config,"awsS3.isProxy");
-    console.log("isProxy =",isProxy);
     if(isProxy){
       const HttpProxyAgent = require('https-proxy-agent');
       const proxyAgent = new HttpProxyAgent(process.env.aws_https_proxy || process.env.AWS_HTTPS_PROXY);
@@ -123,7 +122,6 @@ async getAttachment(docId,attachmentType,cb){
   //   accessKeyId: awsConf.accessKeyId,
   //   secretAccessKey: awsConf.secretAccessKey,
   //   });
-  logger.log('getAttachment executeParams= ',executeParams);
   s3Object.getObject(executeParams, (err, data) => {
       if (err) {
         if (reject) {

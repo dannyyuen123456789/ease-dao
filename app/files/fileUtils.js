@@ -3,6 +3,7 @@ const util = require('util');
 const _ = require('lodash');
 const DAO = require('../database/DAO');
 const config = require('../../config/config');
+import printLogWithTime from '../utils/log';
 class fileUtils {
     constructor(fileSystem) {
         this.fileSystem = fileSystem;
@@ -60,7 +61,8 @@ class fileUtils {
   else{
     bucket = bucket + "/" + awsDao.getCollectionNameById(docId);
   }
-  log4jUtil.log("info",`docId = ${docId} || bucket = ${bucket}`);
+  // log4jUtil.log("info",`docId = ${docId} || bucket = ${bucket}`);
+  printLogWithTime(`docId = ${docId} || bucket = ${bucket}`);
    return bucket;
 };
 getFileKeyById(docId,attachent) {

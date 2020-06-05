@@ -5,7 +5,8 @@
 import debugLib from 'debug';
 import http from 'http';
 import app from '../app/index';
-import log4jUtil from '../app/utils/log4j.util';
+import printLogWithTime from '../app/utils/log';
+import config from '../config/config';
 
 const debug = debugLib('masExternalAPI:server');
 
@@ -32,20 +33,20 @@ const normalizePort = (val) => {
 /**
  * Get port from environment and store in Express.
  */
-const port = normalizePort(process.env.PORT || '3600');
+const port = normalizePort(process.env.PORT || config.apiPort);
 app.set('port', port);
 
 /**
  * Create HTTP server.
  */
-log4jUtil.log('info', 'Initializing server');
+// printLogWithTime('Initializing server');
 const server = http.createServer(app);
 
 /**
  * Event listener for HTTP server "error" event.
  */
 const onError = (error) => {
-  log4jUtil.log('error', `Error occur when start server. Message: ${JSON.stringify(error)}`);
+  printLogWithTime(`Error occur when start server. Message: ${JSON.stringify(error)}`);
   if (error.syscall !== 'listen') {
     throw error;
   }
@@ -55,11 +56,11 @@ const onError = (error) => {
   // handle specific listen errors with friendly messages
   switch (error.code) {
     case 'EACCES':
-      log4jUtil.log('error', `${bind} requires elevated privileges`);
+      printLogWithTime(`${bind} requires elevated privileges`);
       process.exit(1);
       break;
     case 'EADDRINUSE':
-      log4jUtil.log('error', `${bind} is already in use`);
+      printLogWithTime(`${bind} is already in use`);
       process.exit(1);
       break;
     default:
@@ -73,7 +74,7 @@ const onError = (error) => {
 const onListening = () => {
   const addr = server.address();
   const bind = typeof addr === 'string' ? `pipe ${addr}` : `port ${addr.port}`;
-  log4jUtil.log('info', `Listening on ${bind}`);
+  
   debug(`Listening on ${bind}`);
 };
 

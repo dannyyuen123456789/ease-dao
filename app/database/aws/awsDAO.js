@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import log4jUtil from '../../utils/log4j.util';
+// import printLogWithTime from '../../utils/log';
 const _ = require('lodash');
 var DAO = require("../DAO");
 class awsDAO extends DAO{
@@ -54,7 +54,6 @@ class awsDAO extends DAO{
           status = false;
         }
       }
-      log4jUtil.log("result = ",result)
       return {success:status,result:result};
     };
     async deleteDoc(docId){
@@ -77,45 +76,7 @@ class awsDAO extends DAO{
           status = false;
         }
       }
-      // log4jUtil.log("result = ",result)
       return {success:status,result:result};
     };
-    async getAttachtment(req,res,next){
-      const docType = _.get(req.params,"docType",_.get(req.query,"docType"));
-      const docId = _.get(req.params,"docId",_.get(req.query,"docId"));
-      log4jUtil.log("docType = ",docType)
-      log4jUtil.log("docId = ",docId)
-      let result = await mongoose.connection.collection(docType).findOne({"id":mongoose.Types.ObjectId(docId)});
-      // console.log("result = ",result);
-      res.json({"success":true,result:result});
-    };
-    async insertAttachtment(req,res,next){
-      const docType = _.get(req.params,"docType",_.get(req.query,"docType"));
-      const docId = _.get(req.params,"docId",_.get(req.query,"docId"));
-      log4jUtil.log("docType = ",docType)
-      log4jUtil.log("docId = ",docId)
-      let result = await mongoose.connection.collection(docType).findOne({"id":mongoose.Types.ObjectId(docId)});
-      // console.log("result = ",result);
-      res.json({"success":true,result:result});
-    };
-    async updateAttachtment(req,res,next){
-      const docType = _.get(req.params,"docType",_.get(req.query,"docType"));
-      const docId = _.get(req.params,"docId",_.get(req.query,"docId"));
-      log4jUtil.log("docType = ",docType)
-      log4jUtil.log("docId = ",docId)
-      let result = await mongoose.connection.collection(docType).findOne({"id":mongoose.Types.ObjectId(docId)});
-      // console.log("result = ",result);
-      res.json({"success":true,result:result});
-    };
-    async deleteAttachtment(req,res,next){
-      const docType = _.get(req.params,"docType",_.get(req.query,"docType"));
-      const docId = _.get(req.params,"docId",_.get(req.query,"docId"));
-      log4jUtil.log("docType = ",docType)
-      log4jUtil.log("docId = ",docId)
-      let result = await mongoose.connection.collection(docType).findOne({"id":mongoose.Types.ObjectId(docId)});
-      // console.log("result = ",result);
-      res.json({"success":true,result:result});
-    }
-
 };
 module.exports = awsDAO;

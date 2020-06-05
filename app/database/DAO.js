@@ -1,4 +1,4 @@
-import log4jUtil from '../utils/log4j.util';
+import printLogWithTime from '../utils/log';
 const util = require('util');
 const _ = require('lodash');
 class DAO {
@@ -57,7 +57,7 @@ class DAO {
       else {
         type = 'masterData';
       }
-      console.log("docId = ",docId," || collection = ",type);
+      printLogWithTime(`docId = ${docId} || collection = ${type}`);
       return type;
     };
     replaceDot(obj,rev){

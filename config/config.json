@@ -1,21 +1,29 @@
 {
+    "apiPort":"3600",
     "sshConnection":false,
     "sshConfig": {
         "sshUserName":"ec2-user",
-        "sshHost":"ec2-3-0-94-196.ap-southeast-1.compute.amazonaws.com",
-        "sshPrivateKeyFile":"F:\\aws\\axasgdev-ec2-ssh-login-key2.pem",
+        "sshHost":"13.250.186.245",
+        "sshPrivateKeyFile":"./config/axasgdev-ec2-ssh-login-key2.pem",
         "sshPort":22,
         "sshDstHost":"axasgdev.cluster-cm0ytepry9im.ap-southeast-1.docdb.amazonaws.com",
         "sshDstPort":27017,
         "sshLocalHost":"localhost",
         "sshLocalPort": 27016
     },
-    "sslConfig" :{
-        "caFile":"D:\\amazon\\rds-combined-ca-bundle.pem"
+    "sslConfig": {
+        "caFile":"./config/rds-combined-ca-bundle.pem"
     },
-    "dbInUse":"AWSDocumentDB",
+    "dbInUse":"mongoDB",
     "dbSetting":{
         "AWSDocumentDB":{
+            "dbType":"aws",
+            "databaseURL": "localhost:27016",
+            "databaseName":"AXASG_DEV",
+            "databaseUsername":"axasgdev",
+            "databasePassword":"D?o3F]Cp{~"
+        },
+        "mongoDB":{
             "dbType":"mongo",
             "databaseURL": "192.168.225.180:47017",
             "databaseName":"AXASG_DEV",
@@ -34,7 +42,6 @@
         "secretAccessKey":"EC3fLX5fqNgqQqbdlOzvaFhDPwgmRZoAfr9hdv0O",
         "region":"ap-southeast-1",
         "signatureVersion":"v4"
-        }
-
+    }
   }
   
