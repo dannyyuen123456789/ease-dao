@@ -2,6 +2,9 @@ import mongoose from 'mongoose';
 
 const _ = require('lodash');
 
+const config = require('../../../config/config');
+
+const CAN_ORDER = config.CAN_ORDER_VIEW;
 exports.api = {
   approvalDetails(req, res) {
     // doc.type === 'approval') {
@@ -125,7 +128,9 @@ exports.api = {
     if (!_.isEmpty(matchStr)) {
       aggregateStr.push(matchStr);
     }
-    aggregateStr.push({ $sort: { approvalStatus: 1, approvalCaseId: 1 } });
+    if (CAN_ORDER) {
+      aggregateStr.push({ $sort: { approvalStatus: 1, approvalCaseId: 1 } });
+    }
     // console.log(' >>>>> matchStr=', JSON.stringify(matchStr));
     aggregateStr.push(projectStr);
     mongoose.connection.collection('approval').aggregate(aggregateStr).toArray((err, docs) => {

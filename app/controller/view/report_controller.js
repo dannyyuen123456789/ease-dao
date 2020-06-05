@@ -1,7 +1,9 @@
 import mongoose from 'mongoose';
 
 const _ = require('lodash');
+const config = require('../../../config/config');
 
+const CAN_ORDER = config.CAN_ORDER_VIEW;
 const webVsIosReportBundle = async (req) => {
   const aggregateStr = [];
   // This is the query result and alias -> projectStr
@@ -123,7 +125,10 @@ const webVsIosReportBundle = async (req) => {
       aggregateStr.push(matchStr);
     }
     // console.log('>>>>> matchStr', JSON.stringify(matchStr));
-    aggregateStr.push({ $sort: { createDate: 1 } });
+    if (CAN_ORDER) {
+      aggregateStr.push({ $sort: { createDate: 1 } });
+    }
+
     aggregateStr.push(projectStr);
     const emitResult = await mongoose.connection.collection('fna').aggregate(aggregateStr).toArray();
     if (emitResult && emitResult.length > 0) {
@@ -358,7 +363,9 @@ const webVsIosReportQuot = async (req) => {
     if (!_.isEmpty(matchStr)) {
       aggregateStr.push(matchStr);
     }
-    aggregateStr.push({ $sort: { lastUpdateDate: 1, pCid: 1 } });
+    if (CAN_ORDER) {
+      aggregateStr.push({ $sort: { lastUpdateDate: 1, pCid: 1 } });
+    }
     aggregateStr.push(projectStr);
     const quickResult = [];
     const quotResult = [];
@@ -519,7 +526,9 @@ const webVsIosReportApplication = async (req) => {
     if (!_.isEmpty(matchStr)) {
       aggregateStr.push(matchStr);
     }
-    aggregateStr.push({ $sort: { applicationStartedDate: 1 } });
+    if (CAN_ORDER) {
+      aggregateStr.push({ $sort: { applicationStartedDate: 1 } });
+    }
     aggregateStr.push(projectStr);
 
     const emitResult = await mongoose.connection.collection('application').aggregate(aggregateStr).toArray();
@@ -626,7 +635,9 @@ const webVsIosReportAgents = async (req) => {
       aggregateStr.push(matchStr);
     }
     // console.log('>>>>>>  matchStr', JSON.stringify(matchStr));
-    aggregateStr.push({ $sort: { agentCode: 1 } });
+    if (CAN_ORDER) {
+      aggregateStr.push({ $sort: { agentCode: 1 } });
+    }
     aggregateStr.push(projectStr);
     const result = await mongoose.connection.collection('agent').aggregate(aggregateStr).toArray();
     return result;
@@ -765,7 +776,9 @@ const webVsIosReportCust = async (req) => {
       aggregateStr.push(matchStr);
     }
     // console.log('>>>>>>  matchStr', JSON.stringify(matchStr));
-    aggregateStr.push({ $sort: { agentCode: 1 } });
+    if (CAN_ORDER) {
+      aggregateStr.push({ $sort: { agentCode: 1 } });
+    }
     aggregateStr.push(projectStr);
     const emitResult = await mongoose.connection.collection('customer').aggregate(aggregateStr).toArray();
     if (emitResult && emitResult.length > 0) {
@@ -876,7 +889,9 @@ exports.api = {
       aggregateStr.push(matchStr);
     }
     // console.log('>>>>>>  matchStr', JSON.stringify(matchStr));
-    aggregateStr.push({ $sort: { agentCode: 1 } });
+    if (CAN_ORDER) {
+      aggregateStr.push({ $sort: { agentCode: 1 } });
+    }
     aggregateStr.push(projectStr);
 
     mongoose.connection.collection('agent').aggregate(aggregateStr).toArray((err, docs) => {
@@ -1196,7 +1211,9 @@ exports.api = {
         _.set(sortStr, 'applicationSubmittedDate', 1);
       }
       if (!_.isEmpty(sortStr)) {
-        aggregateStr.push({ $sort: sortStr });
+        if (CAN_ORDER) {
+          aggregateStr.push({ $sort: sortStr });
+        }
       }
     }
     // console.log(' >>>>> matchStr=', JSON.stringify(matchStr));
@@ -1371,7 +1388,9 @@ exports.api = {
     if (!_.isEmpty(matchStr)) {
       aggregateStr.push(matchStr);
     }
-    aggregateStr.push({ $sort: { approveRejectDate: 1 } });
+    if (CAN_ORDER) {
+      aggregateStr.push({ $sort: { approveRejectDate: 1 } });
+    }
     // console.log(' >>>>> matchStr=', JSON.stringify(matchStr));
     aggregateStr.push(projectStr);
     mongoose.connection.collection('approval').aggregate(aggregateStr).toArray((err, docs) => {

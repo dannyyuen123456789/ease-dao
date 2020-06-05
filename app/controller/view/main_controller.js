@@ -1,6 +1,10 @@
 import mongoose from 'mongoose';
 
 const _ = require('lodash');
+
+const config = require('../../../config/config');
+
+const CAN_ORDER = config.CAN_ORDER_VIEW;
 // xue.hua
 exports.api = {
   agentDetails(req, res) {
@@ -167,15 +171,18 @@ exports.api = {
     if (!_.isEmpty(matchStr)) {
       aggregateStr.push(matchStr);
     }
-    if (caseAgent) {
-      aggregateStr.push({ $sort: { agentCode: 1 } });
-    } else if (caseUser) {
-      aggregateStr.push({ $sort: { 'rawData.agentCode': 1 } });
-    } else if (caseFafirmCode) {
-      aggregateStr.push({ $sort: { 'rawData.upline2Code': 1 } });
-    } else if (caseProxy) {
-      aggregateStr.push({ $sort: { 'rawData.proxy1UserId': 1, 'rawData.proxy2UserId': 1 } });
+    if (CAN_ORDER) {
+      if (caseAgent) {
+        aggregateStr.push({ $sort: { agentCode: 1 } });
+      } else if (caseUser) {
+        aggregateStr.push({ $sort: { 'rawData.agentCode': 1 } });
+      } else if (caseFafirmCode) {
+        aggregateStr.push({ $sort: { 'rawData.upline2Code': 1 } });
+      } else if (caseProxy) {
+        aggregateStr.push({ $sort: { 'rawData.proxy1UserId': 1, 'rawData.proxy2UserId': 1 } });
+      }
     }
+
     if (caseUser || caseAgent || caseFafirmCode) {
       projectStr.$project = {
         _id: 0, // 0 is not selected
@@ -1045,22 +1052,24 @@ exports.api = {
     if (!_.isEmpty(matchStr)) {
       aggregateStr.push(matchStr);
     }
-    if (caseTime) {
-      aggregateStr.push({
-        $sort: {
-          lstChgDate: (descending ? -1 : 1),
-          lastUpdateDate: (descending ? -1 : 1),
-          agentCode: (descending ? -1 : 1),
-        },
-      });
-    } else if (caseAgent) {
-      aggregateStr.push({
-        $sort: {
-          agentCode: (descending ? -1 : 1),
-          lstChgDate: (descending ? -1 : 1),
-          lastUpdateDate: (descending ? -1 : 1),
-        },
-      });
+    if (CAN_ORDER) {
+      if (caseTime) {
+        aggregateStr.push({
+          $sort: {
+            lstChgDate: (descending ? -1 : 1),
+            lastUpdateDate: (descending ? -1 : 1),
+            agentCode: (descending ? -1 : 1),
+          },
+        });
+      } else if (caseAgent) {
+        aggregateStr.push({
+          $sort: {
+            agentCode: (descending ? -1 : 1),
+            lstChgDate: (descending ? -1 : 1),
+            lastUpdateDate: (descending ? -1 : 1),
+          },
+        });
+      }
     }
     aggregateStr.push(projectStr);
 
@@ -1222,7 +1231,9 @@ exports.api = {
     if (!_.isEmpty(matchStr)) {
       aggregateStr.push(matchStr);
     }
-    aggregateStr.push({ $sort: { agentCode: 1 } });
+    if (CAN_ORDER) {
+      aggregateStr.push({ $sort: { agentCode: 1 } });
+    }
     //  console.log(" >>>>> aggregateStr=", JSON.stringify(aggregateStr));
     aggregateStr.push(projectStr);
     mongoose.connection.collection('agent').aggregate(aggregateStr).toArray((err, docs) => {
@@ -1334,7 +1345,9 @@ exports.api = {
     if (!_.isEmpty(matchStr)) {
       aggregateStr.push(matchStr);
     }
-    aggregateStr.push({ $sort: { approvalCaseId: 1 } });
+    if (CAN_ORDER) {
+      aggregateStr.push({ $sort: { approvalCaseId: 1 } });
+    }
     // console.log(' >>>>> matchStr=', JSON.stringify(matchStr));
     aggregateStr.push(projectStr);
     mongoose.connection.collection('approval').aggregate(aggregateStr).toArray((err, docs) => {
@@ -1585,7 +1598,9 @@ exports.api = {
     if (!_.isEmpty(matchStr)) {
       aggregateStr.push(matchStr);
     }
-    aggregateStr.push({ $sort: { applicationSubmittedDate: 1 } });
+    if (CAN_ORDER) {
+      aggregateStr.push({ $sort: { applicationSubmittedDate: 1 } });
+    }
     // console.log(' >>>>> aggregateStr=', JSON.stringify(aggregateStr));
     aggregateStr.push(projectStr);
     mongoose.connection.collection('application').aggregate(aggregateStr).toArray((err, docs) => {
@@ -1778,7 +1793,9 @@ exports.api = {
     if (!_.isEmpty(matchStr)) {
       aggregateStr.push(matchStr);
     }
-    aggregateStr.push({ $sort: { id: 1 } });
+    if (CAN_ORDER) {
+      aggregateStr.push({ $sort: { id: 1 } });
+    }
     // console.log(' >>>>> aggregateStr=', JSON.stringify(aggregateStr));
     aggregateStr.push(projectStr);
     mongoose.connection.collection('application').aggregate(aggregateStr).toArray((err, docs) => {
@@ -1968,7 +1985,9 @@ exports.api = {
     if (!_.isEmpty(matchStr)) {
       aggregateStr.push(matchStr);
     }
-    aggregateStr.push({ $sort: { approvalCaseId: 1 } });
+    if (CAN_ORDER) {
+      aggregateStr.push({ $sort: { approvalCaseId: 1 } });
+    }
     // console.log(' >>>>> matchStr=', JSON.stringify(matchStr));
     aggregateStr.push(projectStr);
     mongoose.connection.collection('approval').aggregate(aggregateStr).toArray((err, docs) => {
@@ -2070,7 +2089,9 @@ exports.api = {
     if (!_.isEmpty(matchStr)) {
       aggregateStr.push(matchStr);
     }
-    aggregateStr.push({ $sort: { approvalCaseId: 1 } });
+    if (CAN_ORDER) {
+      aggregateStr.push({ $sort: { approvalCaseId: 1 } });
+    }
     // console.log(' >>>>> matchStr=', JSON.stringify(matchStr));
     aggregateStr.push(projectStr);
     mongoose.connection.collection('approval').aggregate(aggregateStr).toArray((err, docs) => {
@@ -2197,7 +2218,9 @@ exports.api = {
     if (!_.isEmpty(matchStr)) {
       aggregateStr.push(matchStr);
     }
-    aggregateStr.push({ $sort: { approveRejectDate: 1 } });
+    if (CAN_ORDER) {
+      aggregateStr.push({ $sort: { approveRejectDate: 1 } });
+    }
     // console.log(' >>>>> matchStr=', JSON.stringify(matchStr));
     aggregateStr.push(projectStr);
     mongoose.connection.collection('approval').aggregate(aggregateStr).toArray((err, docs) => {
@@ -2380,7 +2403,9 @@ exports.api = {
     }
     let result = [];
     const projectStrAgent = _.cloneDeep(projectStr);
-    aggregateStr.push({ $sort: { approvalStatus: 1, approvalCaseId: 1 } });
+    if (CAN_ORDER) {
+      aggregateStr.push({ $sort: { approvalStatus: 1, approvalCaseId: 1 } });
+    }
     aggregateStr.push(projectStr);
     if (addCase1) {
       const emitResult = await mongoose.connection.collection('approval').aggregate(aggregateStr).toArray();
@@ -2403,7 +2428,9 @@ exports.api = {
         aggregateStrAgent.push(matchStrAgent);
       }
       _.set(projectStrAgent, '$project.key', ['01', '$agentId']);
-      aggregateStrAgent.push({ $sort: { agentId: 1 } });
+      if (CAN_ORDER) {
+        aggregateStrAgent.push({ $sort: { agentId: 1 } });
+      }
       aggregateStrAgent.push(projectStrAgent);
       // console.log(' >>>>> aggregateStrAgent=', JSON.stringify(aggregateStrAgent));
       const emitAgentResult = await mongoose.connection.collection('approval').aggregate(aggregateStrAgent).toArray();
@@ -2519,7 +2546,9 @@ exports.api = {
     if (!_.isEmpty(matchStrBundle)) {
       aggregateStr.push(matchStrBundle);
     }
-    aggregateStr.push({ $sort: { id: 1, 'applications.applicationDocId': 1 } });
+    if (CAN_ORDER) {
+      aggregateStr.push({ $sort: { id: 1, 'applications.applicationDocId': 1 } });
+    }
     aggregateStr.push(projectStr);
     mongoose.connection.collection('fna').aggregate(aggregateStr).toArray((err, docs) => {
       if (err) {
@@ -2749,12 +2778,13 @@ exports.api = {
     if (!_.isEmpty(matchStrBundle)) {
       aggregateStr.push(matchStrBundle);
     }
-    if (caseApp) {
-      aggregateStr.push({ $sort: { 'applications.appStatus': 1, 'applications.applicationDocId': 1 } });
-    } else if (caseQuot) {
-      aggregateStr.push({ $sort: { 'applications.quotationDocId': 1 } });
+    if (CAN_ORDER) {
+      if (caseApp) {
+        aggregateStr.push({ $sort: { 'applications.appStatus': 1, 'applications.applicationDocId': 1 } });
+      } else if (caseQuot) {
+        aggregateStr.push({ $sort: { 'applications.quotationDocId': 1 } });
+      }
     }
-
     aggregateStr.push(projectStr);
     mongoose.connection.collection('fna').aggregate(aggregateStr).toArray((err, docs) => {
       if (err) {
@@ -2909,7 +2939,9 @@ exports.api = {
     if (!_.isEmpty(matchStr)) {
       aggregateStr.push(matchStr);
     }
-    aggregateStr.push({ $sort: { agentId: 1 } });
+    if (CAN_ORDER) {
+      aggregateStr.push({ $sort: { agentId: 1 } });
+    }
     //  console.log(" >>>>> aggregateStr=", JSON.stringify(aggregateStr));
     aggregateStr.push(projectStr);
     mongoose.connection.collection('customer').aggregate(aggregateStr).toArray((err, docs) => {
@@ -3025,9 +3057,9 @@ exports.api = {
     if (!_.isEmpty(matchStr)) {
       aggregateStr.push(matchStr);
     }
-
-    aggregateStr.push({ $sort: { 'payment.initPayMethod': 1 } });
-
+    if (CAN_ORDER) {
+      aggregateStr.push({ $sort: { 'payment.initPayMethod': 1 } });
+    }
     aggregateStr.push(projectStr);
     mongoose.connection.collection('application').aggregate(aggregateStr).toArray((err, docs) => {
       if (err) {
@@ -3123,7 +3155,9 @@ exports.api = {
     if (!_.isEmpty(matchStr)) {
       aggregateStr.push(matchStr);
     }
-    aggregateStr.push({ $sort: { 'quotation.agent.agentCode': 1 } });
+    if (CAN_ORDER) {
+      aggregateStr.push({ $sort: { 'quotation.agent.agentCode': 1 } });
+    }
     // console.log(' >>>>> aggregateStr=', JSON.stringify(aggregateStr));
     aggregateStr.push(projectStr);
     // console.log(' >>>>> aggregateStr=', JSON.stringify(aggregateStr));
@@ -3237,7 +3271,9 @@ exports.api = {
     if (!_.isEmpty(matchStr)) {
       aggregateStr.push(matchStr);
     }
-    aggregateStr.push({ $sort: { 'rawData.upline2Code': 1 } });
+    if (CAN_ORDER) {
+      aggregateStr.push({ $sort: { 'rawData.upline2Code': 1 } });
+    }
     // console.log(' >>>>> aggregateStr=', JSON.stringify(aggregateStr));
     aggregateStr.push(projectStr);
     mongoose.connection.collection('agent').aggregate(aggregateStr).toArray((err, docs) => {
@@ -3321,7 +3357,9 @@ exports.api = {
       aggregateStr.push(matchStr);
     }
     // console.log('>>>>>>  matchStr', JSON.stringify(matchStr));
+    if (CAN_ORDER) {
     // aggregateStr.push({ $sort: { id: 1 } });
+    }
     aggregateStr.push(projectStr);
 
     mongoose.connection.collection('masterData').aggregate(aggregateStr).toArray((err, docs) => {
@@ -3408,7 +3446,9 @@ exports.api = {
       aggregateStr.push(matchStr);
     }
     // console.log('>>>>>>  matchStr', JSON.stringify(matchStr));
-    aggregateStr.push({ $sort: { fundCode: 1 } });
+    if (CAN_ORDER) {
+      aggregateStr.push({ $sort: { fundCode: 1 } });
+    }
     aggregateStr.push(projectStr);
 
     mongoose.connection.collection('masterData').aggregate(aggregateStr).toArray((err, docs) => {
@@ -3492,7 +3532,9 @@ exports.api = {
       aggregateStr.push(matchStr);
     }
     // console.log('>>>>>>  matchStr', JSON.stringify(matchStr));
-    aggregateStr.push({ $sort: { applicationSignedDate: 1 } });
+    if (CAN_ORDER) {
+      aggregateStr.push({ $sort: { applicationSignedDate: 1 } });
+    }
     aggregateStr.push(projectStr);
 
     mongoose.connection.collection('shieldApplication').aggregate(aggregateStr).toArray((err, docs) => {
@@ -3700,7 +3742,9 @@ exports.api = {
     }
     const result = [];
     const projectStrQuotation = _.cloneDeep(projectStr);
-    aggregateStr.push({ $sort: { id: 1, 'applications.quotationDocId': 1 } });
+    if (CAN_ORDER) {
+      aggregateStr.push({ $sort: { id: 1, 'applications.quotationDocId': 1 } });
+    }
     aggregateStr.push(projectStr);
     if (addCaseBundle) {
       const emitResult = await mongoose.connection.collection('fna').aggregate(aggregateStr).toArray();
@@ -3750,7 +3794,9 @@ exports.api = {
       }
       delete projectStrQuotation.$project.applications;
       _.set(projectStrQuotation, '$project.funds', '$fund.funds');
-      aggregateStrQuotation.push({ $sort: { id: 1, 'fund.funds.fundCode': 1 } });
+      if (CAN_ORDER) {
+        aggregateStrQuotation.push({ $sort: { id: 1, 'fund.funds.fundCode': 1 } });
+      }
       aggregateStrQuotation.push(projectStrQuotation);
       // console.log(' >>>>> aggregateStrQuotation=', JSON.stringify(aggregateStrQuotation));
       const emitAgentResult = await mongoose.connection.collection('quotation').aggregate(aggregateStrQuotation).toArray();
@@ -3833,7 +3879,9 @@ exports.api = {
     }
     // console.log(' >>>>> aggregateStr=', JSON.stringify(aggregateStr));
     // order by managerCode (注意 显示字段（projectStr）要放到最后)
-    aggregateStr.push({ $sort: { managerCode: 1 } });
+    if (CAN_ORDER) {
+      aggregateStr.push({ $sort: { managerCode: 1 } });
+    }
     aggregateStr.push(projectStr);
     mongoose.connection.collection('agent').aggregate(aggregateStr).toArray((err, docs) => {
       if (err) {
@@ -4002,7 +4050,9 @@ exports.api = {
     }
     let result = [];
     const projectStrAgent = _.cloneDeep(projectStr);
-    aggregateStr.push({ $sort: { approvalStatus: 1, approvalCaseId: 1 } });
+    if (CAN_ORDER) {
+      aggregateStr.push({ $sort: { approvalStatus: 1, approvalCaseId: 1 } });
+    }
     aggregateStr.push(projectStr);
     const createRow = (inDoc) => {
       const doc = _.cloneDeep(inDoc);
@@ -4047,7 +4097,9 @@ exports.api = {
         aggregateStrAgent.push(matchStrAgent);
       }
       _.set(projectStrAgent, '$project.key', ['01', '$agentId']);
-      aggregateStrAgent.push({ $sort: { agentId: 1 } });
+      if (CAN_ORDER) {
+        aggregateStrAgent.push({ $sort: { agentId: 1 } });
+      }
       aggregateStrAgent.push(projectStrAgent);
       const emitAgentResult = await mongoose.connection.collection('shieldApproval').aggregate(aggregateStrAgent).toArray();
       if (!_.isEmpty(emitAgentResult)) {
@@ -4115,8 +4167,9 @@ exports.api = {
       aggregateStr.push(matchStr);
     }
     // console.log(' >>>>> aggregateStr=', JSON.stringify(aggregateStr));
-    // order by managerCode (注意 显示字段（projectStr）要放到最后)
-    aggregateStr.push({ $sort: { id: 1 } });
+    if (CAN_ORDER) {
+      aggregateStr.push({ $sort: { id: 1 } });
+    }
     aggregateStr.push(projectStr);
     mongoose.connection.collection('fnaNa').aggregate(aggregateStr).toArray((err, docs) => {
       if (err) {
@@ -4448,7 +4501,9 @@ exports.api = {
     if (!_.isEmpty(matchStr)) {
       aggregateStr.push(matchStr);
     }
-    aggregateStr.push({ $sort: { 'payment.initPayMethod': 1 } });
+    if (CAN_ORDER) {
+      aggregateStr.push({ $sort: { 'payment.initPayMethod': 1 } });
+    }
     // console.log(' >>>>> matchStr=', JSON.stringify(matchStr));
     aggregateStr.push(projectStr);
     mongoose.connection.collection('application').aggregate(aggregateStr).toArray((err, docs) => {
@@ -4582,7 +4637,9 @@ exports.api = {
     if (!_.isEmpty(matchStr)) {
       aggregateStr.push(matchStr);
     }
-    aggregateStr.push({ $sort: { pdfCode: 1 } });
+    if (CAN_ORDER) {
+      aggregateStr.push({ $sort: { pdfCode: 1 } });
+    }
     aggregateStr.push(projectStr);
     mongoose.connection.collection('masterData').aggregate(aggregateStr).toArray((err, docs) => {
       if (err) {
@@ -4753,7 +4810,9 @@ exports.api = {
       aggregateStr.push(matchStr);
     }
     // console.log(' >>>>> matchStr=', JSON.stringify(matchStr));
-    aggregateStr.push({ $sort: { planInd: 1, covCode: 1 } });
+    if (CAN_ORDER) {
+      aggregateStr.push({ $sort: { planInd: 1, covCode: 1 } });
+    }
     aggregateStr.push(projectStr);
     mongoose.connection.collection('masterData').aggregate(aggregateStr).toArray((err, docs) => {
       if (err) {
@@ -4831,7 +4890,9 @@ exports.api = {
     if (!_.isEmpty(matchStr)) {
       aggregateStr.push(matchStr);
     }
-    aggregateStr.push({ $sort: { pCid: 1 } });
+    if (CAN_ORDER) {
+      aggregateStr.push({ $sort: { pCid: 1 } });
+    }
     aggregateStr.push(projectStr);
     // console.log(' >>>>> matchStr=', JSON.stringify(matchStr));
     mongoose.connection.collection('quotation').aggregate(aggregateStr).toArray((err, docs) => {
@@ -4926,7 +4987,9 @@ exports.api = {
     if (!_.isEmpty(matchStr)) {
       aggregateStr.push(matchStr);
     }
-    aggregateStr.push({ $sort: { 'agent.agentCode': 1 } });
+    if (CAN_ORDER) {
+      aggregateStr.push({ $sort: { 'agent.agentCode': 1 } });
+    }
     aggregateStr.push(projectStr);
     // console.log(' >>>>> matchStr=', JSON.stringify(matchStr));
     mongoose.connection.collection('quotation').aggregate(aggregateStr).toArray((err, docs) => {
@@ -5041,12 +5104,13 @@ exports.api = {
     if (!_.isEmpty(matchStr)) {
       aggregateStr.push(matchStr);
     }
-    if (caseEndTime) {
-      aggregateStr.push({ $sort: { endTime: 1 } });
-    } else {
-      aggregateStr.push({ $sort: { campaignId: 1 } });
+    if (CAN_ORDER) {
+      if (caseEndTime) {
+        aggregateStr.push({ $sort: { endTime: 1 } });
+      } else {
+        aggregateStr.push({ $sort: { campaignId: 1 } });
+      }
     }
-
     // aggregateStr.push(projectStr);
     // console.log(' >>>>> matchStr=', JSON.stringify(aggregateStr));
     mongoose.connection.collection('masterData').aggregate(aggregateStr).toArray((err, docs) => {
@@ -5185,8 +5249,9 @@ exports.api = {
     if (!_.isEmpty(matchStr)) {
       aggregateStr.push(matchStr);
     }
-
-    aggregateStr.push({ $sort: { biSignedDate: 1 } });
+    if (CAN_ORDER) {
+      aggregateStr.push({ $sort: { biSignedDate: 1 } });
+    }
     aggregateStr.push(projectStr);
 
     const createRow = (item) => {
@@ -6073,7 +6138,9 @@ exports.api = {
     }
     if (!_.isEmpty(matchStr)) {
       aggregateStr.push(matchStr);
-      aggregateStr.push({ $sort: { pCid: 1, id: 1 } });
+      if (CAN_ORDER) {
+        aggregateStr.push({ $sort: { pCid: 1, id: 1 } });
+      }
     }
     let result = [];
 
@@ -6335,8 +6402,9 @@ exports.api = {
       aggregateStr.push(matchStr);
     }
     // console.log('>>>>>>matchStr= ', JSON.stringify(matchStr));
-    aggregateStr.push({ $sort: { 'quotation.agent.dealerGroup': 1, id: 1 } });
-
+    if (CAN_ORDER) {
+      aggregateStr.push({ $sort: { 'quotation.agent.dealerGroup': 1, id: 1 } });
+    }
     aggregateStr.push(projectStr);
     mongoose.connection.collection('application').aggregate(aggregateStr).toArray((err, docs) => {
       if (err) {
@@ -6588,8 +6656,9 @@ exports.api = {
       aggregateStr.push(matchStr);
     }
     // console.log('>>>>>>matchStr= ', JSON.stringify(matchStr));
-    aggregateStr.push({ $sort: { dealerGroup: 1, lastEditedDate: 1 } });
-
+    if (CAN_ORDER) {
+      aggregateStr.push({ $sort: { dealerGroup: 1, lastEditedDate: 1 } });
+    }
     aggregateStr.push(projectStr);
     mongoose.connection.collection('approval').aggregate(aggregateStr).toArray((err, docs) => {
       if (err) {
@@ -6784,7 +6853,9 @@ exports.api = {
     }
     if (!_.isEmpty(matchStr)) {
       aggregateStr.push(matchStr);
-      aggregateStr.push({ $sort: { pCid: 1, id: 1 } });
+      if (CAN_ORDER) {
+        aggregateStr.push({ $sort: { pCid: 1, id: 1 } });
+      }
     }
     // console.log('?????>>>>  ', matchStr);
     aggregateStr.push(projectStr);
@@ -6911,12 +6982,13 @@ exports.api = {
     if (!_.isEmpty(matchStr)) {
       aggregateStr.push(matchStr);
     }
-    if (caseEndTime) {
-      aggregateStr.push({ $sort: { endTime: 1 } });
-    } else {
-      aggregateStr.push({ $sort: { messageId: 1 } });
+    if (CAN_ORDER) {
+      if (caseEndTime) {
+        aggregateStr.push({ $sort: { endTime: 1 } });
+      } else {
+        aggregateStr.push({ $sort: { messageId: 1 } });
+      }
     }
-
     aggregateStr.push(projectStr);
     // console.log(' >>>>> matchStr=', JSON.stringify(aggregateStr));
     mongoose.connection.collection('masterData').aggregate(aggregateStr).toArray((err, docs) => {
@@ -7014,7 +7086,9 @@ exports.api = {
       aggregateStr.push(matchStr);
     }
     // console.log('>>>>>>  matchStr', JSON.stringify(matchStr));
-    aggregateStr.push({ $sort: { id: 1 } });
+    if (CAN_ORDER) {
+      aggregateStr.push({ $sort: { id: 1 } });
+    }
     aggregateStr.push(projectStr);
 
     mongoose.connection.collection('fna').aggregate(aggregateStr).toArray((err, docs) => {
@@ -7093,7 +7167,9 @@ exports.api = {
       aggregateStr.push(matchStrBundle);
     }
     // console.log('>>>>>>  matchStrBundle', JSON.stringify(matchStrBundle));
-    aggregateStr.push({ $sort: { agentId: 1 } });
+    if (CAN_ORDER) {
+      aggregateStr.push({ $sort: { agentId: 1 } });
+    }
     aggregateStr.push(projectStr);
 
     mongoose.connection.collection('fna').aggregate(aggregateStr).toArray((err, docs) => {

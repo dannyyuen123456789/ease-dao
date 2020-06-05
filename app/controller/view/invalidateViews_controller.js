@@ -2,6 +2,9 @@ import mongoose from 'mongoose';
 
 const _ = require('lodash');
 
+const config = require('../../../config/config');
+
+const CAN_ORDER = config.CAN_ORDER_VIEW;
 exports.api = {
   quotationsByBaseProductCode(req, res) {
     // console.log(">>>>>",req.query);
@@ -57,7 +60,9 @@ exports.api = {
     if (!_.isEmpty(matchStr)) {
       aggregateStr.push(matchStr);
     }
-    aggregateStr.push({ $sort: { baseProductCode: 1 } });
+    if (CAN_ORDER) {
+      aggregateStr.push({ $sort: { baseProductCode: 1 } });
+    }
     //  console.log(" >>>>> aggregateStr=", JSON.stringify(aggregateStr));
     aggregateStr.push(projectStr);
     mongoose.connection.collection('quotation').aggregate(aggregateStr).toArray((err, docs) => {
@@ -131,7 +136,9 @@ exports.api = {
     if (!_.isEmpty(matchStr)) {
       aggregateStr.push(matchStr);
     }
-    aggregateStr.push({ $sort: { baseProductCode: 1 } });
+    if (CAN_ORDER) {
+      aggregateStr.push({ $sort: { baseProductCode: 1 } });
+    }
     // console.log(' >>>>> aggregateStr=', JSON.stringify(aggregateStr));
     aggregateStr.push(projectStr);
     mongoose.connection.collection('quotation').aggregate(aggregateStr).toArray((err, docs) => {
@@ -222,7 +229,9 @@ exports.api = {
     if (!_.isEmpty(matchStr)) {
       aggregateStr.push(matchStr);
     }
-    aggregateStr.push({ $sort: { agentId: 1 } });
+    if (CAN_ORDER) {
+      aggregateStr.push({ $sort: { agentId: 1 } });
+    }
     // console.log(' >>>>> aggregateStr=', JSON.stringify(aggregateStr));
     aggregateStr.push(projectStr);
     mongoose.connection.collection('customer').aggregate(aggregateStr).toArray((err, docs) => {

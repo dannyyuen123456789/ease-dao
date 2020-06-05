@@ -2,7 +2,9 @@ import mongoose from 'mongoose';
 
 const _ = require('lodash');
 // const moment = require('moment');
+const config = require('../../../config/config');
 
+const CAN_ORDER = config.CAN_ORDER_VIEW;
 exports.api = {
   async documentByLstChgDate(req, res) {
     const aggregateStr = [];
@@ -110,7 +112,9 @@ exports.api = {
     if (!_.isEmpty(matchStr)) {
       aggregateStr.push(matchStr);
     }
-    aggregateStr.push({ $sort: { lstChgDate: 1 } });
+    if (CAN_ORDER) {
+      aggregateStr.push({ $sort: { lstChgDate: 1 } });
+    }
     aggregateStr.push(projectStr);
     const result = [];
     const createRow = (inDoc) => {
@@ -295,7 +299,9 @@ exports.api = {
     if (!_.isEmpty(matchStr)) {
       aggregateStr.push(matchStr);
     }
-    aggregateStr.push({ $sort: { id: 1 } });
+    if (CAN_ORDER) {
+      aggregateStr.push({ $sort: { id: 1 } });
+    }
     // console.log(' >>>>> matchStr=', JSON.stringify(matchStr));
     aggregateStr.push(projectStr);
     const result = [];
