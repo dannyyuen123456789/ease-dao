@@ -3321,7 +3321,7 @@ exports.api = {
       aggregateStr.push(matchStr);
     }
     // console.log('>>>>>>  matchStr', JSON.stringify(matchStr));
-    aggregateStr.push({ $sort: { id: 1 } });
+    // aggregateStr.push({ $sort: { id: 1 } });
     aggregateStr.push(projectStr);
 
     mongoose.connection.collection('masterData').aggregate(aggregateStr).toArray((err, docs) => {
