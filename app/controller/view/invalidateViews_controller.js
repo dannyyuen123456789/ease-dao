@@ -21,7 +21,7 @@ exports.api = {
     const startKey = req.query.startkey || '';
     const endKey = req.query.endkey || '';
     const keys = req.query.keys || '';
-    // const key = req.query.key || '';
+    const key = req.query.key || '';
     //  emit(['01', doc.agentId], emitObject);
     const matchStr = {};
     if (startKey !== '' && endKey !== '') {
@@ -48,10 +48,12 @@ exports.api = {
       if (!_.isEmpty(inArray)) {
         matchStr.$match = { baseProductCode: { $in: inArray } };
       }
+    } else if (key !== '' && key !== '[null]') {
+      const keyJson = JSON.parse(key);
+      if (keyJson && keyJson.length > 1) {
+        matchStr.$match = { baseProductCode: keyJson[1] };
+      }
     }
-    // } else if (key !== '' && key !== '[null]') {
-
-    // }
     if (!_.isEmpty(matchStr)) {
       aggregateStr.push(matchStr);
     }
@@ -88,7 +90,7 @@ exports.api = {
     const startKey = req.query.startkey || '';
     const endKey = req.query.endkey || '';
     const keys = req.query.keys || '';
-    // const key = req.query.key || '';
+    const key = req.query.key || '';
     //  emit(['01', doc.agentId], emitObject);
     const matchStr = {
       $match: {
@@ -119,10 +121,12 @@ exports.api = {
       if (!_.isEmpty(inArray)) {
         _.set(matchStr, '$match.baseProductCode', { $in: inArray });
       }
+    } else if (key !== '' && key !== '[null]') {
+      const keyJson = JSON.parse(key);
+      if (keyJson && keyJson.length > 1) {
+        _.set(matchStr, '$match.baseProductCode', keyJson[1]);
+      }
     }
-    // } else if (key !== '' && key !== '[null]') {
-
-    // }
     // _.set(matchStr, '$match.fund', { $ne: null });
     if (!_.isEmpty(matchStr)) {
       aggregateStr.push(matchStr);
@@ -177,7 +181,7 @@ exports.api = {
     const startKey = req.query.startkey || '';
     const endKey = req.query.endkey || '';
     const keys = req.query.keys || '';
-    // const key = req.query.key || '';
+    const key = req.query.key || '';
     //  emit(['01', doc.agentId], emitObject);
     const matchStr = {
       $match: {
@@ -208,10 +212,12 @@ exports.api = {
       if (!_.isEmpty(inArray)) {
         _.set(matchStr, '$match.agentId', { $in: inArray });
       }
+    } else if (key !== '' && key !== '[null]') {
+      const keyJson = JSON.parse(key);
+      if (keyJson && keyJson.length > 1) {
+        _.set(matchStr, '$match.agentId', keyJson[1]);
+      }
     }
-    // } else if (key !== '' && key !== '[null]') {
-
-    // }
     // _.set(matchStr, '$match.fund', { $ne: null });
     if (!_.isEmpty(matchStr)) {
       aggregateStr.push(matchStr);

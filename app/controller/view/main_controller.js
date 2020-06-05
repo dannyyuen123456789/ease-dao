@@ -11,7 +11,16 @@ exports.api = {
     const endKey = req.query.endkey || '';
     const keys = req.query.keys || '';
     const key = req.query.key || '';
-    const matchStr = {};
+    const matchStr = {
+      $match: {
+        $and: [
+          {
+            type: 'agent',
+          },
+        ],
+
+      },
+    };
     let caseUser = false;
     let caseAgent = false;
     let caseFafirmCode = false;
@@ -28,47 +37,54 @@ exports.api = {
         if (_.isEqual(startKeys, endKeys)) {
           if (_.isEqual(startKeys[1], 'userId')) {
             caseUser = true;
-            matchStr.$match = { 'rawData.agentCode': startKeys[2] };
+            _.get(matchStr, '$match.$and', []).push({ 'rawData.agentCode': startKeys[2] });
             userIds.push(startKeys[2]);
           }
           if (_.isEqual(startKeys[1], 'agentCode')) {
             caseAgent = true;
-            matchStr.$match = { agentCode: startKeys[2] };
+            _.get(matchStr, '$match.$and', []).push({ agentCode: startKeys[2] });
             agentIds.push(startKeys[2]);
           }
           if (_.isEqual(startKeys[1], 'fafirmCode')) {
             caseFafirmCode = true;
-            matchStr.$match = { 'rawData.upline2Code': startKeys[2] };
+            _.get(matchStr, '$match.$and', []).push({ 'rawData.upline2Code': startKeys[2] });
             fafirmCodeIds.push(startKeys[2]);
           }
           if (_.isEqual(startKeys[1], 'proxy')) {
             caseProxy = true;
-            matchStr.$match = {
+            _.get(matchStr, '$match.$and', []).push({
               $or: [{ 'rawData.proxy1UserId': startKeys[2] }, { 'rawData.proxy2UserId': startKeys[2] }],
-            };
+            });
             proxyIds.push(startKeys[2]);
           }
         } else {
           if (_.isEqual(startKeys[1], 'userId')) {
             caseUser = true;
-            matchStr.$match = { 'rawData.agentCode': { $gte: startKeys[2], $lte: endKeys[2] } };
+            _.get(matchStr, '$match.$and', []).push({ 'rawData.agentCode': { $gte: startKeys[2], $lte: endKeys[2] } });
           }
           if (_.isEqual(startKeys[1], 'agentCode')) {
             caseAgent = true;
-            matchStr.$match = { agentCode: { $gte: startKeys[2], $lte: endKeys[2] } };
+            const tempAgent = {};
+            _.set(tempAgent, '$gte', startKeys[2]);
+            if (endKeys[2] !== 'ZZZ') {
+              _.set(tempAgent, '$lte', endKeys[2]);
+            }
+            _.get(matchStr, '$match.$and', []).push({ agentCode: tempAgent });
           }
           if (_.isEqual(startKeys[1], 'fafirmCode')) {
             caseFafirmCode = true;
-            matchStr.$match = { 'rawData.upline2Code': { $gte: startKeys[2], $lte: endKeys[2] } };
+            _.get(matchStr, '$match.$and', []).push({ 'rawData.upline2Code': { $gte: startKeys[2], $lte: endKeys[2] } });
           }
           if (_.isEqual(startKeys[1], 'proxy')) {
             caseProxy = true;
-            matchStr.$match = {
+            _.get(matchStr, '$match.$and', []).push({
               $or: [
                 { 'rawData.proxy1UserId': { $gte: startKeys[2], $lte: endKeys[2] } },
+                { 'rawData.proxy1UserId': { $gte: 'a', $lte: _.toLower(endKeys[2]) } },
                 { 'rawData.proxy2UserId': { $gte: startKeys[2], $lte: endKeys[2] } },
+                { 'rawData.proxy2UserId': { $gte: 'a', $lte: _.toLower(endKeys[2]) } },
               ],
-            };
+            });
           }
         }
       }
@@ -113,7 +129,7 @@ exports.api = {
         });
       }
       if (!_.isEmpty(inArray)) {
-        _.set(matchStr, '$match.$or', inArray);
+        _.get(matchStr, '$match.$and', []).push({ $or: inArray });
         // matchStr.$match = { $or: inArray };
       }
     } else if (key !== '' && key !== '[null]') {
@@ -121,24 +137,24 @@ exports.api = {
       if (keyJson && keyJson.length > 2) {
         if (_.isEqual(keyJson[1], 'userId')) {
           caseUser = true;
-          matchStr.$match = { 'rawData.agentCode': keyJson[2] };
+          _.get(matchStr, '$match.$and', []).push({ 'rawData.agentCode': keyJson[2] });
           userIds.push(keyJson[2]);
         }
         if (_.isEqual(keyJson[1], 'agentCode')) {
           caseAgent = true;
-          matchStr.$match = { agentCode: keyJson[2] };
+          _.get(matchStr, '$match.$and', []).push({ agentCode: keyJson[2] });
           agentIds.push(keyJson[2]);
         }
         if (_.isEqual(keyJson[1], 'fafirmCode')) {
           caseFafirmCode = true;
-          matchStr.$match = { 'rawData.upline2Code': keyJson[2] };
+          _.get(matchStr, '$match.$and', []).push({ 'rawData.upline2Code': keyJson[2] });
           fafirmCodeIds.push(keyJson[2]);
         }
         if (_.isEqual(keyJson[1], 'proxy')) {
           caseProxy = true;
-          matchStr.$match = {
+          _.get(matchStr, '$match.$and', []).push({
             $or: [{ 'rawData.proxy1UserId': keyJson[2] }, { 'rawData.proxy2UserId': keyJson[2] }],
-          };
+          });
           proxyIds.push(keyJson[2]);
         }
       }
@@ -173,7 +189,7 @@ exports.api = {
       };
     }
     aggregateStr.push(projectStr);
-    // console.log(' >>>>> matchStr=', JSON.stringify(aggregateStr));
+    // console.log(' >>>>> matchStr=', JSON.stringify(matchStr));
     mongoose.connection.collection('agent').aggregate(aggregateStr).toArray((err, docs) => {
       if (err) {
         res.json({ status: 400, message: err.message });
@@ -571,11 +587,15 @@ exports.api = {
           if (_.isEqual(startKeys[1], 'agentCodeFirst')) {
             caseAgent = true;
             if (descending) {
-              _.set(matchStr, '$match.agentCode.$lte', startKeys[2] === 'ZZZ' ? 'zzz' : startKeys[2]);
+              if (startKeys[2] !== 'ZZZ') {
+                _.set(matchStr, '$match.agentCode.$lte', startKeys[2]);
+              }
               _.set(matchStr, '$match.agentCode.$gte', endKeys[2]);
             } else {
               _.set(matchStr, '$match.agentCode.$gte', startKeys[2]);
-              _.set(matchStr, '$match.agentCode.$lte', endKeys[2] === 'ZZZ' ? 'zzz' : endKeys[2]);
+              if (endKeys[2] !== 'ZZZ') {
+                _.set(matchStr, '$match.agentCode.$lte', endKeys[2]);
+              }
             }
 
             if (startKeys.length > 3 || endKeys.length > 3) {
@@ -1071,11 +1091,13 @@ exports.api = {
       }
       if (faadminCode) {
         _.set(doc, 'faAdminCode', faadminCode);
+      } else {
+        delete doc.faAdminCode;
       }
       return {
         id: doc.id,
         key: docKey,
-        value: _.omit(doc, ['lstChgDate', 'lastUpdateDate', 'faAdvisorRole', 'upline2Code']),
+        value: _.omit(doc, ['id', 'lstChgDate', 'lastUpdateDate', 'faAdvisorRole', 'upline2Code']),
 
       };
     };
