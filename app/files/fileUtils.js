@@ -2,6 +2,7 @@ import log4jUtil from '../utils/log4j.util';
 const util = require('util');
 const _ = require('lodash');
 const DAO = require('../database/DAO');
+const config = require('../../config/config');
 class fileUtils {
     constructor(fileSystem) {
         this.fileSystem = fileSystem;
@@ -17,7 +18,6 @@ class fileUtils {
     };
     // gothrough proxy
     setProxyEnv(){
-    console.log("fileUtils setProxyEnv");
     const HttpProxyAgent = require('https-proxy-agent');
     const proxyAgent = new HttpProxyAgent(process.env.aws_https_proxy || process.env.AWS_HTTPS_PROXY);
     return proxyAgent;
@@ -31,7 +31,7 @@ class fileUtils {
     return fileSize;
   };
   getBucketNameById(docId) {
-    let bucket = "ease-transaction-data";
+    let bucket = config.awsS3.transBucket;
   if (docId.substring(0, 2) === '10' || docId.substring(0, 2) === '30') {
   } else if (docId.substring(0, 2) === 'CP') {
   } else if (docId.substring(0, 2) === 'FN') {
@@ -47,12 +47,20 @@ class fileUtils {
   }else if (_.endsWith(docId,"-seq") || _.eq(docId,"agentNumberMap")) {
   }
   else {
-    bucket = "ease-master-data";
+    bucket = config.awsS3.masterBucket;
   }
   const dao1 = new DAO();
   const awsDao = dao1.getInstance();
-  bucket = bucket + "/" + awsDao.getCollectionNameById(docId);
-  console.log("docId = ",docId," || bucket = ",bucket);
+  const subFolder = awsDao.getCollectionNameById(docId);
+  if(_.eq(subFolder,"masterData")){
+    if(!_.eq(process.env.NODE_ENV,"production")){
+      bucket = bucket + "-" + process.env.NODE_ENV;
+    }
+  }
+  else{
+    bucket = bucket + "/" + awsDao.getCollectionNameById(docId);
+  }
+  log4jUtil.log("info",`docId = ${docId} || bucket = ${bucket}`);
    return bucket;
 };
 getFileKeyById(docId,attachent) {
