@@ -11,7 +11,8 @@ const checkDocumentConnection = () => new Promise((resolve, reject) => {
   const sshConfigs = _.get(systemConfig, 'sshConfig');
   const sshConnection = _.get(systemConfig, 'sshConnection');
   const dbInUse = _.get(systemConfig, 'dbInUse');
-  printLogWithTime(`==========Connecting to ${dbInUse}==========`);
+  printLogWithTime('');
+  printLogWithTime(`========== 2 - Connect to ${dbInUse}==========`);
   const dbSetting = _.get(systemConfig, 'dbSetting');
   let userName = _.get(dbSetting, _.join([dbInUse, 'databaseUsername'], '.'));
   userName = escape(userName);
@@ -29,7 +30,7 @@ const checkDocumentConnection = () => new Promise((resolve, reject) => {
         username: _.get(sshConfigs, 'sshUserName'),
         host: _.get(sshConfigs, 'sshHost'),
         agent: process.env.SSH_AUTH_SOCK,
-        // eslint-disable-next-line security/detect-non-literal-fs-filename
+
         privateKey: fs.readFileSync(_.get(sshConfigs, 'sshPrivateKeyFile')),
         port: _.get(sshConfigs, 'sshPort'),
         dstHost: _.get(sshConfigs, 'sshDstHost'),
@@ -45,7 +46,9 @@ const checkDocumentConnection = () => new Promise((resolve, reject) => {
         if (server) {
           printLogWithTime('Connect to SSH - OK ');
         }
-        printLogWithTime('Connecting to AWS Document DB...');
+        
+        printLogWithTime(`Connecting to ${dbInUse}...`);
+
         mongoose.connect(DB_URL, {
           ssl: true,
           sslValidate: false,
@@ -53,19 +56,16 @@ const checkDocumentConnection = () => new Promise((resolve, reject) => {
           sslCA: fs.readFileSync(systemConfig.sslConfig.caFile),
           useUnifiedTopology: true,
         });
-
-        printLogWithTime(`==========Connecting to ${dbInUse}==========`);
       });
     }
   } else if (_.eq(dbType, 'mongo')) {
-    // printLogWithTime('Connecting to Mongo DB...');
+    printLogWithTime(`Connecting to ${dbInUse}...`);
     mongoose.connect(DB_URL, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });
-    printLogWithTime(`==========Connected to ${dbInUse}==========`);
   } else if (_.eq(dbType, 'aws')) {
-    printLogWithTime('Connecting to AWS Document DB...');
+    printLogWithTime(`Connecting to ${dbInUse}...`);
     mongoose.connect(DB_URL, {
       ssl: true,
       sslValidate: false,
@@ -73,21 +73,18 @@ const checkDocumentConnection = () => new Promise((resolve, reject) => {
       sslCA: fs.readFileSync(systemConfig.sslConfig.caFile),
       useUnifiedTopology: true,
     });
-    printLogWithTime(`==========Connecting to ${dbInUse}==========`);
   }
   mongoose.set('useFindAndModify', false);
   mongoose.connection.on('connected', () => {
     resolve(true);
   });
   mongoose.connection.on('disconnecting', () => {
-    // eslint-disable-next-line no-console
     console.error('Disconnecting to Mongodb');
   });
   mongoose.connection.on('reconnected', () => {
     printLogWithTime('Mongodb reconnected.');
   });
   mongoose.connection.on('error', (err) => {
-    // eslint-disable-next-line no-console
     console.error('error', err);
     printLogWithTime('');
     reject();

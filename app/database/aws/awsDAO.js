@@ -20,7 +20,7 @@ class awsDAO extends DAO{
             }
         });
       }else{
-        result = "No DB connection";
+        result = "Database connection error!!!";
         status = false;
       }
     }
@@ -50,7 +50,7 @@ class awsDAO extends DAO{
               }
           });
         }else{
-          result = "No DB connection";
+          result = "Database connection error!!!";
           status = false;
         }
       }
@@ -72,7 +72,7 @@ class awsDAO extends DAO{
               }
           });
         }else{
-          result = "No DB connection";
+          result = "Database connection error!!!";
           status = false;
         }
       }

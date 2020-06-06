@@ -103,7 +103,7 @@ const generalInternalServerErrorResponse = (res, err) => {
    * @param {object} res - express response param
    */
 const generalNotFoundResponse = (res) => {
-  res.status(httpResponseStatus.notFound).send({ status: 'error', message: 'Not found' });
+  res.status(httpResponseStatus.notFound).send({ status: 'error', message: 'Incorrect API end point' });
 };
 
 /**

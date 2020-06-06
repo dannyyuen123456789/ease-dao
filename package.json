@@ -1,6 +1,6 @@
 {
-  "name": "cms-admin-backend",
-  "version": "1.0.0",
+  "name": "ease-dao",
+  "version": "1.0.1",
   "private": true,
   "scripts": {
     "dev": "cross-env NODE_ENV=dev nodemon --exec babel-node ./bin/www",
@@ -24,7 +24,8 @@
     "moment": "2.24.0",
     "mongoose": "5.9.10",
     "morgan": "1.9.1",
-    "tunnel-ssh": "4.1.4"
+    "tunnel-ssh": "4.1.4",
+    "https-proxy-agent": "*"
   },
   "devDependencies": {
     "@babel/cli": "7.2.3",

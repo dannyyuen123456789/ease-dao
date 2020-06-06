@@ -57,7 +57,7 @@ class DAO {
       else {
         type = 'masterData';
       }
-      printLogWithTime(`docId = ${docId} || collection = ${type}`);
+      printLogWithTime(`Collection name - ${type}`);
       return type;
     };
     replaceDot(obj,rev){

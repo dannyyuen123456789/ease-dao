@@ -4,8 +4,7 @@ import FileUtils from '../files/fileUtils';
 import s3Config from '../../config/config.json';
 
 const checkS3Connection = async () => {
-  printLogWithTime('');
-  printLogWithTime('==========Connecting to AWS S3==========');
+  printLogWithTime('========== 1 - Connect to AWS S3==========');
 
   const isProxy = _.get(s3Config, 'awsS3.isProxy');
   const proxyLink = _.get(s3Config, 'awsS3.proxyLink');
@@ -18,24 +17,25 @@ const checkS3Connection = async () => {
   }
 
   try {
+    printLogWithTime('Connecting to AWS S3...');
+    //printLogWithTime('AW3 init step 1');
     const fileUtil = new FileUtils('AWS-S3');
-    // printLogWithTime(`AW3 init step 1 - done ${JSON.stringify(fileUtil)}`);
-    const fileInstance = fileUtil.getInstance();
-    // printLogWithTime('AW3 init step 2 - done');
+    //printLogWithTime(`AW3 init step 2 - done ${JSON.stringify(fileUtil)}`);
+    const fileInstance = await fileUtil.getInstance();
+    //printLogWithTime('AW3 init step 3 - done');
     // eslint-disable-next-line no-console
+    //console.log(fileInstance);
     const initSuccess = await fileInstance.init();
-    // printLogWithTime(`AW3 init step 3 - ${initSuccess}`);
+    //printLogWithTime(`AW3 init step 4 - ${initSuccess}`);
     if (initSuccess) {
-      // printLogWithTime('Connect to AWS S3 - OK');
-      printLogWithTime('==========Connected to AWS S3==========');
+      printLogWithTime('Connect to AWS S3 - OK');
       return true;
     }
-    printLogWithTime('Connect to AWS S3 - Failed');
+    printLogWithTime('Connect to AWS S3 - Failed 1');
   } catch (error) {
-    printLogWithTime('Connect to AWS S3 - Failed');
+    printLogWithTime('Connect to AWS S3 - Failed 2');
     printLogWithTime(error);
   }
-  return false;
 };
 
 export default {

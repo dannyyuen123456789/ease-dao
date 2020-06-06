@@ -13,14 +13,13 @@ class fileUtils {
         if(_.eq(this.fileSystem,"AWS-S3")){
             var aws = require("./aws/s3") ;
             dao = new aws();
-            
         }
         return dao;
     };
     // gothrough proxy
     setProxyEnv(){
     const HttpProxyAgent = require('https-proxy-agent');
-    const proxyAgent = new HttpProxyAgent(process.env.aws_https_proxy || process.env.AWS_HTTPS_PROXY);
+    const proxyAgent = new HttpProxyAgent(config.awsS3.proxyLink);
     return proxyAgent;
     // AWS.config.httpOptions = { agent: proxyAgent };
   };

@@ -34,7 +34,6 @@ constructor(){
     };
 async init(){
   this.setProxyEnv();
-  // await this.getCredentials().catch(error=>{logger.log("error",error);return false});
   return true;
 }
 // gothrough proxy
@@ -42,7 +41,7 @@ async init(){
     const isProxy = _.get(s3Config,"awsS3.isProxy");
     if(isProxy){
       const HttpProxyAgent = require('https-proxy-agent');
-      const proxyAgent = new HttpProxyAgent(process.env.aws_https_proxy || process.env.AWS_HTTPS_PROXY);
+      const proxyAgent = new HttpProxyAgent(awsConf.proxyLink);
       AWS.config.httpOptions = { agent: proxyAgent };
     }
   };
