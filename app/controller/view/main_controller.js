@@ -2842,8 +2842,8 @@ exports.api = {
                   if (_.isEmpty(quotations)
                   || (!_.isEmpty(quotations)
                   && _.indexOf(quotations, app.quotationDocId) > -1)) {
-                    console.log('>>>>> app.quotationDocId=', app.quotationDocId);
-                    console.log('>>>>> ', JSON.stringify(quotations));
+                    // console.log('>>>>> app.quotationDocId=', app.quotationDocId);
+                    // console.log('>>>>> ', JSON.stringify(quotations));
                     if (!rangeCase || (rangeCase && !_.isEmpty(startEnd) && (
                       (startQuotationDocId !== '' && app.quotationDocId >= startQuotationDocId) || startQuotationDocId === ''
                     ) && (endQuotationDocId === '' || (endQuotationDocId !== '' && app.quotationDocId <= endQuotationDocId)))) {
