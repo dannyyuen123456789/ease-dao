@@ -1,3 +1,5 @@
+/* eslint-disable no-console */
+/* eslint-disable security/detect-new-buffer */
 /* eslint-disable no-useless-constructor */
 /* eslint-disable no-unused-vars */
 /* eslint-disable no-buffer-constructor */

@@ -11,7 +11,7 @@ const _ = require('lodash');
 exports.api = {
 
   // Get Json Document
-  async getDoc(req, res, next) {
+  async getDoc(req, res) {
     const docId = _.get(req.params, 'docId', _.get(req.query, 'docId'));
     printLogWithTime('');
     printLogWithTime(`getDoc/${docId}`);
@@ -38,7 +38,7 @@ exports.api = {
   },
 
   // Insert or update Json Document
-  async updateDoc(req, res, next) {
+  async updateDoc(req, res) {
     const docId = _.get(req.params, 'docId', _.get(req.query, 'docId'));
     printLogWithTime('');
     printLogWithTime(`updateDoc/${docId}`);
@@ -59,7 +59,7 @@ exports.api = {
   },
 
   // Delete Json Document
-  async deleteDoc(req, res, next) {
+  async deleteDoc(req, res) {
     const docId = _.get(req.params, 'docId', _.get(req.query, 'docId'));
     printLogWithTime('');
     printLogWithTime(`deleteDoc/${docId}`);
@@ -120,7 +120,7 @@ exports.api = {
   },
 
   // Get Attachment URL
-  async getAttachmentUrl(req, res, next) {
+  async getAttachmentUrl(req, res) {
     let errMessage = '';
     const docId = _.get(req.params, 'docId', _.get(req.query, 'docId'));
     const attachmentId = _.get(req.params, 'attachment', _.get(req.query, 'attachment'));
@@ -154,9 +154,7 @@ exports.api = {
 
     printLogWithTime('----------------------------------------------------------------------');
   },
-
-  // Upload Attachment by Base64 
-  async uploadAttachmentByBase64(req, res, next) {
+  async uploadAttachmentByBase64(req, res) {
     let errMessage = '';
     const docId = _.get(req.params, 'docId', _.get(req.query, 'docId'));
     const attachmentId = _.get(req.params, 'attachment', _.get(req.query, 'attachment'));
@@ -217,7 +215,7 @@ exports.api = {
   },
 
   // Delete Attachment
-  async delAttachment(req, res, next) {
+  async delAttachment(req, res) {
     let errMessage = '';
     const docId = _.get(req.params, 'docId', _.get(req.query, 'docId'));
     const attachmentId = _.get(req.params, 'attachment', _.get(req.query, 'attachment'));
