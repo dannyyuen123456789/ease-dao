@@ -7,5 +7,8 @@ module.exports = {
   plugins: [
     "jest",
     "security"
-  ]
+  ],
+  "rules": {
+    "linebreak-style":[0,"error", "windows"]
+  }
 };
