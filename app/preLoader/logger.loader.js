@@ -1,9 +1,10 @@
-import log4js from 'log4js';
-import morgan from 'morgan';
+/* eslint-disable no-unused-vars */
+// import log4js from 'log4js';
+// import morgan from 'morgan';
 
 const loadLoggerMiddleware = (app) => {
   // const log4j = log4js.getLogger();
-  // log4j.level = 'debug';
+  // log4j.level = 'dpebug';
 
   // app.use(morgan('dev'));
 };

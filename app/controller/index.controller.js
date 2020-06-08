@@ -79,12 +79,12 @@ exports.api = {
   },
 
   // Get Attachment
-  async getAttachtment(req, res, next) {
+  async getAttachment(req, res) {
     let errMessage = '';
     const docId = _.get(req.params, 'docId', _.get(req.query, 'docId'));
     const attachmentId = _.get(req.params, 'attachment', _.get(req.query, 'attachment'));
     printLogWithTime('');
-    printLogWithTime(`getAttachtment/${docId}/${attachmentId}`);
+    printLogWithTime(`getAttachment/${docId}/${attachmentId}`);
     const fileUtil = new fileUtils('AWS-S3');
     const fileInstance = await fileUtil.getInstance();
     const initSuccess = await fileInstance.init();
@@ -120,12 +120,12 @@ exports.api = {
   },
 
   // Get Attachment URL
-  async getAttachtmentUrl(req, res, next) {
+  async getAttachmentUrl(req, res, next) {
     let errMessage = '';
     const docId = _.get(req.params, 'docId', _.get(req.query, 'docId'));
     const attachmentId = _.get(req.params, 'attachment', _.get(req.query, 'attachment'));
     printLogWithTime('');
-    printLogWithTime(`getAttachtmentUrl/${docId}/${attachmentId}`);
+    printLogWithTime(`getAttachmentUrl/${docId}/${attachmentId}`);
     // eslint-disable-next-line new-cap
     const fileUtil = new fileUtils('AWS-S3');
     const fileInstance = await fileUtil.getInstance();

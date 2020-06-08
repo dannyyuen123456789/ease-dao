@@ -1,4 +1,6 @@
 import systemConfig from '../../config/config';
+import log4jUtil from '../utils/log4j.util';
+import printLogWithTime from '../utils/log';
 // var MongoClient = require('mongodb').MongoClient;
 const fs = require('fs');
 const _ = require('lodash');
@@ -38,14 +40,15 @@ const initSshTunnel = async () => {
 
 
       tunnel(config, async (error, server) => {
-        console.log('SSH connecting ....... ');
+        log4jUtil.log('info','SSH connecting ....... ');
+        printLogWithTime('Proxy enabled = true');
         if (error) {
-          console.log(`SSH connection error: ${error}`);
+          log4jUtil.log('error',`SSH connection error: ${error}`);
         }
         if (server) {
-          console.log('SSH connected ....... ');
+          log4jUtil.log('info','SSH connected ....... ');
         }
-        console.log("---- Mongo Db loading ----");
+        log4jUtil.log('info',"---- Mongo Db loading ----");
         if (_.eq(dbType, 'mongo')) {
           mongoose.connect(DB_URL, {
             ssl: true,
@@ -54,14 +57,15 @@ const initSshTunnel = async () => {
             sslCA: fs.readFileSync(caFile),
             useUnifiedTopology: true,
           }).then((result) => {
-            if (result) { console.log('----- Mongo Db init success ----'); }
+            if (result) { log4jUtil.log('info','----- Mongo Db init success ----'); }
           }).catch((err) => {
-            if (error) { console.log('Mongo Db:'," init failed->",error.message);}
+            if (error) { log4jUtil.log('info','Mongo Db:'," init failed->",error.message);}
           });
         }
       });
     }
   } else if (_.eq(dbType, 'mongo')) {
+    log4jUtil.log('info',"---- Mongo Db loading ----");
     mongoose.connect(DB_URL, {
       // ssl:true,
       // sslValidate: false,
@@ -69,10 +73,10 @@ const initSshTunnel = async () => {
       // sslCA:fs.readFileSync("D:\\amazon\\rds-combined-ca-bundle.pem"),
       useUnifiedTopology: true,
     }).then((result) => {
-      if (result) { console.log('---- Mongo Db init success ----'); return true;}
+      if (result) { log4jUtil.log('info','---- Mongo Db init success ----'); return true;}
       
     }).catch((error) => {
-      if (error) { console.log('Mongo Db:'," init failed->",error.message);}
+      if (error) { log4jUtil.log('info','Mongo Db:'," init failed->",error.message);}
     });
   }
 };

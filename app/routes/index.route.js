@@ -6,8 +6,8 @@ const router = express.Router();
 router.get('/getDoc/:docId', indexController.api.getDoc);
 router.put('/updateDoc/:docId', indexController.api.updateDoc);
 router.delete('/deleteDoc/:docId', indexController.api.deleteDoc);
-router.get('/getAttachtment/:docId/:attachment', indexController.api.getAttachtment);
-router.get('/getAttachtmentUrl/:docId/:attachment', indexController.api.getAttachtmentUrl);
+router.get('/getAttachment/:docId/:attachment', indexController.api.getAttachment);
+router.get('/getAttachmentUrl/:docId/:attachment', indexController.api.getAttachmentUrl);
 router.put('/uploadAttachmentByBase64/:docId/:attachment', indexController.api.uploadAttachmentByBase64);
 router.delete('/delAttachment/:docId/:attachment', indexController.api.delAttachment);
 
