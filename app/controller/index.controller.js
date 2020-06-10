@@ -93,13 +93,13 @@ exports.api = {
       console.log('6');
       await fileInstance.getAttachment(docId, attachmentId, (attachment) => {
         console.log('7');
-        if (attachment) {
+        // if (attachment) {
           console.log('8');
           printLogWithTime(`Result - Success - ${docId}`);
           res.send(attachment);
           console.log('9');
           printLogWithTime('----------------------------------------------------------------------');
-        }
+        // }
         console.log('10');
       }).catch((error) => {
         console.log('11');
