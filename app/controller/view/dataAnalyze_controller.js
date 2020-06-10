@@ -2,9 +2,8 @@ import mongoose from 'mongoose';
 
 const _ = require('lodash');
 // const moment = require('moment');
-const config = require('../../../config/config');
 
-const CAN_ORDER = config.CAN_ORDER_VIEW;
+const CAN_ORDER = false;
 exports.api = {
   async documentByLstChgDate(req, res) {
     const aggregateStr = [];

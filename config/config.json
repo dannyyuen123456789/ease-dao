@@ -42,7 +42,6 @@
         "secretAccessKey":"EC3fLX5fqNgqQqbdlOzvaFhDPwgmRZoAfr9hdv0O",
         "region":"ap-southeast-1",
         "signatureVersion":"v4"
-    },
-    "CAN_ORDER_VIEW": false
+    }
   }
   

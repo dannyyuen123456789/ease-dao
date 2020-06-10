@@ -2,9 +2,7 @@ import mongoose from 'mongoose';
 
 const _ = require('lodash');
 
-const config = require('../../../config/config');
-
-const CAN_ORDER = config.CAN_ORDER_VIEW;
+const CAN_ORDER = false;
 // xue.hua
 exports.api = {
   agentDetails(req, res) {

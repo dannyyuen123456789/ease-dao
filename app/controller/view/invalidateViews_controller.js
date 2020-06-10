@@ -2,9 +2,8 @@ import mongoose from 'mongoose';
 
 const _ = require('lodash');
 
-const config = require('../../../config/config');
 
-const CAN_ORDER = config.CAN_ORDER_VIEW;
+const CAN_ORDER = false;
 exports.api = {
   quotationsByBaseProductCode(req, res) {
     // console.log(">>>>>",req.query);
