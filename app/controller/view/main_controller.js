@@ -3595,20 +3595,21 @@ exports.api = {
         let whereBundle = {};
         let whereQuotation = {};
         if (_.isEqual(startKeys, endKeys)) {
-          if (startKeys.length === 2) {
-            whereBundle = {
-              applications: { $elemMatch: { quotationDocId: startKeys[1] } },
-            };
-            addCaseBundle = true;
-            quotationDocIds.push(startKeys[1]);
-          }
           if (startKeys.length === 3) {
-            addCaseQuotation = true;
-            whereQuotation = {
-              id: startKeys[1],
-              'fund.funds': { $elemMatch: { fundCode: startKeys[2] } },
-            };
-            keyFunds.push(startKeys[2]);
+            if (startKeys[2] === null) {
+              whereBundle = {
+                applications: { $elemMatch: { quotationDocId: startKeys[1] } },
+              };
+              addCaseBundle = true;
+              quotationDocIds.push(startKeys[1]);
+            } else {
+              addCaseQuotation = true;
+              whereQuotation = {
+                id: startKeys[1],
+                'fund.funds': { $elemMatch: { fundCode: startKeys[2] } },
+              };
+              keyFunds.push(startKeys[2]);
+            }
           }
         } else {
           // const elemStr = {};
@@ -3666,20 +3667,21 @@ exports.api = {
       const inBundleArray = [];
       if (keysList && keysList.length > 0) {
         _.forEach(keysList, (keyItem) => {
-          if (keyItem && keyItem.length === 2) {
-            addCaseBundle = true;
-            quotationDocIds.push(keyItem[1]);
-            inBundleArray.push({
-              applications: { $elemMatch: { quotationDocId: keyItem[1] } },
-            });
-          }
           if (keyItem && keyItem.length === 3) {
-            addCaseQuotation = true;
-            keyFunds.push(keyItem[2]);
-            inQuotationArray.push({
-              id: keyItem[1],
-              'fund.funds': { $elemMatch: { fundCode: keyItem[2] } },
-            });
+            if (keyItem[2] === null) {
+              addCaseBundle = true;
+              quotationDocIds.push(keyItem[1]);
+              inBundleArray.push({
+                applications: { $elemMatch: { quotationDocId: keyItem[1] } },
+              });
+            } else {
+              addCaseQuotation = true;
+              keyFunds.push(keyItem[2]);
+              inQuotationArray.push({
+                id: keyItem[1],
+                'fund.funds': { $elemMatch: { fundCode: keyItem[2] } },
+              });
+            }
           }
         });
       }
@@ -3701,20 +3703,21 @@ exports.api = {
       let whereBundle = {};
       let whereQuotation = {};
       if (keyJson && keyJson.length > 1) {
-        if (keyJson.length === 2) {
-          whereBundle = {
-            applications: { $elemMatch: { quotationDocId: keyJson[1] } },
-          };
-          addCaseBundle = true;
-          quotationDocIds.push(keyJson[1]);
-        }
         if (keyJson.length === 3) {
-          addCaseQuotation = true;
-          whereQuotation = {
-            id: keyJson[1],
-            'fund.funds': { $elemMatch: { fundCode: keyJson[2] } },
-          };
-          keyFunds.push(keyJson[2]);
+          if (keyJson[2] === null) {
+            whereBundle = {
+              applications: { $elemMatch: { quotationDocId: keyJson[1] } },
+            };
+            addCaseBundle = true;
+            quotationDocIds.push(keyJson[1]);
+          } else {
+            addCaseQuotation = true;
+            whereQuotation = {
+              id: keyJson[1],
+              'fund.funds': { $elemMatch: { fundCode: keyJson[2] } },
+            };
+            keyFunds.push(keyJson[2]);
+          }
         }
       }
       if (!_.isEmpty(whereBundle)) {
