@@ -1,3 +1,5 @@
+/* eslint-disable consistent-return */
+/* eslint-disable security/detect-non-literal-fs-filename */
 import systemConfig from '../../config/config';
 import log4jUtil from '../utils/log4j.util';
 import printLogWithTime from '../utils/log';
@@ -12,10 +14,10 @@ const initSshTunnel = async () => {
   const sshConnection = _.get(systemConfig, 'sshConnection');
   const dbInUse = _.get(systemConfig, 'dbInUse');
   const dbSetting = _.get(systemConfig, 'dbSetting');
-  const caFile = _.get(systemConfig,"sslConfig.caFile");
-  var userName = _.get(dbSetting, _.join([dbInUse, 'databaseUsername'], '.'));
+  const caFile = _.get(systemConfig, 'sslConfig.caFile');
+  let userName = _.get(dbSetting, _.join([dbInUse, 'databaseUsername'], '.'));
   userName = escape(userName);
-  var pwd = _.get(dbSetting, _.join([dbInUse, 'databasePassword'], '.'));
+  let pwd = _.get(dbSetting, _.join([dbInUse, 'databasePassword'], '.'));
   pwd = escape(pwd);
   const url = _.get(dbSetting, _.join([dbInUse, 'databaseURL'], '.'));
   const databaseName = _.get(dbSetting, _.join([dbInUse, 'databaseName'], '.'));
@@ -40,15 +42,15 @@ const initSshTunnel = async () => {
 
 
       tunnel(config, async (error, server) => {
-        log4jUtil.log('info','SSH connecting ....... ');
+        log4jUtil.log('info', 'SSH connecting ....... ');
         printLogWithTime('Proxy enabled = true');
         if (error) {
-          log4jUtil.log('error',`SSH connection error: ${error}`);
+          log4jUtil.log('error', `SSH connection error: ${error}`);
         }
         if (server) {
-          log4jUtil.log('info','SSH connected ....... ');
+          log4jUtil.log('info', 'SSH connected ....... ');
         }
-        log4jUtil.log('info',"---- Mongo Db loading ----");
+        log4jUtil.log('info', '---- Mongo Db loading ----');
         if (_.eq(dbType, 'mongo')) {
           mongoose.connect(DB_URL, {
             ssl: true,
@@ -57,15 +59,16 @@ const initSshTunnel = async () => {
             sslCA: fs.readFileSync(caFile),
             useUnifiedTopology: true,
           }).then((result) => {
-            if (result) { log4jUtil.log('info','----- Mongo Db init success ----'); }
+            if (result) { log4jUtil.log('info', '----- Mongo Db init success ----'); }
+          // eslint-disable-next-line no-unused-vars
           }).catch((err) => {
-            if (error) { log4jUtil.log('info','Mongo Db:'," init failed->",error.message);}
+            if (error) { log4jUtil.log('info', 'Mongo Db:', ' init failed->', error.message); }
           });
         }
       });
     }
   } else if (_.eq(dbType, 'mongo')) {
-    log4jUtil.log('info',"---- Mongo Db loading ----");
+    log4jUtil.log('info', '---- Mongo Db loading ----');
     mongoose.connect(DB_URL, {
       // ssl:true,
       // sslValidate: false,
@@ -73,10 +76,9 @@ const initSshTunnel = async () => {
       // sslCA:fs.readFileSync("D:\\amazon\\rds-combined-ca-bundle.pem"),
       useUnifiedTopology: true,
     }).then((result) => {
-      if (result) { log4jUtil.log('info','---- Mongo Db init success ----'); return true;}
-      
+      if (result) { log4jUtil.log('info', '---- Mongo Db init success ----'); return true; }
     }).catch((error) => {
-      if (error) { log4jUtil.log('info','Mongo Db:'," init failed->",error.message);}
+      if (error) { log4jUtil.log('info', 'Mongo Db:', ' init failed->', error.message); }
     });
   }
 };

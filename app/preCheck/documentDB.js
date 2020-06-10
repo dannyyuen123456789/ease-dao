@@ -1,3 +1,5 @@
+/* eslint-disable no-console */
+/* eslint-disable security/detect-non-literal-fs-filename */
 import mongoose from 'mongoose';
 import systemConfig from '../../config/config.json';
 import printLogWithTime from '../utils/log';
@@ -7,7 +9,6 @@ const _ = require('lodash');
 const tunnel = require('tunnel-ssh');
 
 const checkDocumentConnection = () => new Promise((resolve, reject) => {
-  
   const sshConfigs = _.get(systemConfig, 'sshConfig');
   const sshConnection = _.get(systemConfig, 'sshConnection');
   const dbInUse = _.get(systemConfig, 'dbInUse');
@@ -46,7 +47,7 @@ const checkDocumentConnection = () => new Promise((resolve, reject) => {
         if (server) {
           printLogWithTime('Connect to SSH - OK ');
         }
-        
+
         printLogWithTime(`Connecting to ${dbInUse}...`);
 
         mongoose.connect(DB_URL, {

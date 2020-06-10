@@ -23,10 +23,10 @@ exports.api = {
       const resResult = result.result;
 
       if (resResult) {
-        printLogWithTime('Result - Success');
+        printLogWithTime(`Result - Success - ${docId}`);
         res.json(result.result);
       } else {
-        printLogWithTime('Result - Missing');
+        printLogWithTime(`Result - Missing - ${docId}`);
         res.json({ error: 'not_found', reason: 'missing' });
       }
     } else {
@@ -48,10 +48,10 @@ exports.api = {
     const result = await awsDao.updateDoc(docId, data);
 
     if (_.get(result, 'success')) {
-      printLogWithTime('Result - Success');
+      printLogWithTime(`Result - Success - ${docId}`);
       res.json({ id: docId, ok: true, rev: 1 });
     } else {
-      printLogWithTime(`Error - ${result.result}`);
+      printLogWithTime(`Error - ${docId} - ${result.result}`);
       res.json({ error: 400, reason: result.result });
     }
 
@@ -68,10 +68,10 @@ exports.api = {
     const result = await awsDao.deleteDoc(docId);
 
     if (_.get(result, 'success')) {
-      printLogWithTime('Result - Success');
+      printLogWithTime(`Result - Success - ${docId}`);
       res.json({ id: docId, ok: true, rev: 1 });
     } else {
-      printLogWithTime(`Error - ${result.result}`);
+      printLogWithTime(`Error - ${docId} - ${result.result}`);
       res.json({ status: 400, result: result.result });
     }
 
@@ -92,14 +92,14 @@ exports.api = {
     if (initSuccess) {
       await fileInstance.getAttachment(docId, attachmentId, (attachment) => {
         if (attachment) {
-          printLogWithTime('Result - Success');
+          printLogWithTime(`Result - Success - ${docId}`);
           res.send(attachment);
 
           printLogWithTime('----------------------------------------------------------------------');
         }
       }).catch((error) => {
         if (error) {
-          printLogWithTime(`Error 1 - ${error.message}`);
+          printLogWithTime(`Error 1 - ${docId} - ${error.message}`);
           errMessage = error.message;
         }
       });
@@ -132,6 +132,7 @@ exports.api = {
     const initSuccess = await fileInstance.init();
     if (initSuccess) {
       await fileInstance.getAttachmentUrl(docId, attachmentId, (attachment) => {
+        printLogWithTime('----------------------------------------------------------------------');
         res.json(attachment);
       }).catch((error) => {
         if (error) {
@@ -152,7 +153,7 @@ exports.api = {
       res.json({ ok: false, message: errMessage });
     }
 
-    printLogWithTime('----------------------------------------------------------------------');
+    
   },
   async uploadAttachmentByBase64(req, res) {
     let errMessage = '';
@@ -199,10 +200,10 @@ exports.api = {
     }
 
     if (errMessage) {
-      printLogWithTime(`Error 2 - ${errMessage}`);
+      printLogWithTime(`Error 2 - ${docId} - ${errMessage}`);
       res.json({ error: false, reason: errMessage });
     } else {
-      printLogWithTime('Result - Success');
+      printLogWithTime(`Result - Success - ${docId}`);
 
       res.json({
         id: `${docId}`,

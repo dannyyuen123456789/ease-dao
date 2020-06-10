@@ -138,7 +138,7 @@ class s3 extends fileUtils {
         Key: fileKey,
         Expires: signedUrlExpireSeconds,
       };
-      logger.log('getAttachmentUrl executeParams= ', executeParams);
+      // logger.log('getAttachmentUrl executeParams= ', executeParams);
       const url = s3Object.getSignedUrl('getObject', executeParams);
       if (url) {
         cb(url);
