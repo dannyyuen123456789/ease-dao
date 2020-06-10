@@ -24,12 +24,8 @@ const s3Object = new AWS.S3({
 });
 
 class s3 extends fileUtils {
-  constructor() {
-    super();
-  }
-
   async init() {
-    this.setProxyEnv();
+    await this.setProxyEnv();
     return true;
   }
 
@@ -39,28 +35,10 @@ class s3 extends fileUtils {
     const proxyLink = _.get(s3Config, 'awsS3.proxyLink');
 
     if (isProxy) {
-      printLogWithTime('Proxy - Step 1');
       const HttpProxyAgent = require('https-proxy-agent');
-      printLogWithTime('Proxy - Step 2');
       const proxyAgent = new HttpProxyAgent(proxyLink);
-      printLogWithTime('Proxy - Step 3');
       AWS.config.httpOptions = { agent: proxyAgent };
-      console.log(AWS.config.httpOptions);
     }
-  }
-
-  getCredentials() {
-    return new Promise((resolve, reject) => {
-      AWS.config.getCredentials((err) => {
-        if (err) {
-          reject(err);
-        } else {
-          logger.log('Access key:', AWS.config.credentials.accessKeyId);
-          logger.log('Secret access key:', AWS.config.credentials.secretAccessKey);
-          resolve();
-        }
-      });
-    });
   }
 
   uploadBase64(docId, attachmentType, data, fileType) {
@@ -116,13 +94,20 @@ class s3 extends fileUtils {
       };
       s3Object.getObject(executeParams, (err, data) => {
         if (err) {
+          console.log(`1 - ${err}`);
           if (reject) {
+            console.log(`2 - ${reject}`);
             reject(err);
           }
+          console.log('2.1');
         } else if (resolve) {
+          console.log(`3 - ${resolve}`);
           if (typeof cb === 'function') {
+            console.log('4 - success');
             cb(data.Body);
+            console.log('4.1');
           }
+          console.log('4.2');
         }
       });
     });
@@ -138,8 +123,8 @@ class s3 extends fileUtils {
         Key: fileKey,
         Expires: signedUrlExpireSeconds,
       };
-      // logger.log('getAttachmentUrl executeParams= ', executeParams);
       const url = s3Object.getSignedUrl('getObject', executeParams);
+
       if (url) {
         cb(url);
       }

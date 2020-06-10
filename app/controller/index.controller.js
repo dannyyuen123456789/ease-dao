@@ -88,33 +88,46 @@ exports.api = {
     const fileUtil = new fileUtils('AWS-S3');
     const fileInstance = await fileUtil.getInstance();
     const initSuccess = await fileInstance.init();
-
+    console.log('5');
     if (initSuccess) {
+      console.log('6');
       await fileInstance.getAttachment(docId, attachmentId, (attachment) => {
+        console.log('7');
         if (attachment) {
+          console.log('8');
           printLogWithTime(`Result - Success - ${docId}`);
           res.send(attachment);
-
+          console.log('9');
           printLogWithTime('----------------------------------------------------------------------');
         }
+        console.log('10');
       }).catch((error) => {
+        console.log('11');
         if (error) {
+          console.log('12');
           printLogWithTime(`Error 1 - ${docId} - ${error.message}`);
           errMessage = error.message;
+          console.log('13');
         }
+        console.log('14');
       });
 
       if (!errMessage || _.isEmpty(errMessage)) {
         // TODO
+        console.log('15');
       }
     } else {
+      console.log('16');
       errMessage = 'initial S3 failed';
     }
-
+    console.log('17');
     if (errMessage) {
+      console.log('18');
       printLogWithTime(`Error 2 - ${errMessage}`);
       res.json({ ok: false, message: errMessage });
+      console.log('19');
     }
+    console.log('20');
 
     printLogWithTime('----------------------------------------------------------------------');
   },
@@ -152,8 +165,6 @@ exports.api = {
       printLogWithTime(`Error 2 - ${errMessage}`);
       res.json({ ok: false, message: errMessage });
     }
-
-    
   },
   async uploadAttachmentByBase64(req, res) {
     let errMessage = '';
