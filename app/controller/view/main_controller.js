@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 const _ = require('lodash');
 
 const CAN_ORDER = false;
+const FIX_SORT_UI = true;
 // xue.hua
 exports.api = {
   agentDetails(req, res) {
@@ -3844,15 +3845,19 @@ exports.api = {
     const endKey = req.query.endkey || '';
     const keys = req.query.keys || '';
     const key = req.query.key || '';
-    const matchStr = {};
+    const matchStr = {
+      $match: {
+        type: 'agent',
+      },
+    };
     if (startKey !== '' && endKey !== '') {
       const startKeys = JSON.parse(startKey);
       const endKeys = JSON.parse(endKey);
       if (startKeys.length > 1 && endKeys.length > 1) {
         if (_.isEqual(startKeys, endKeys)) {
-          matchStr.$match = { managerCode: startKeys[1] };
+          _.set(matchStr, '$match.managerCode', startKeys[1]);
         } else {
-          matchStr.$match = { managerCode: { $gte: startKeys[1], $lte: endKeys[1] } };
+          _.set(matchStr, '$match.managerCode', { $gte: startKeys[1], $lte: endKeys[1] });
         }
       }
     } else if (keys !== '') {
@@ -3867,12 +3872,12 @@ exports.api = {
         });
       }
       if (!_.isEmpty(inArray)) {
-        matchStr.$match = { managerCode: { $in: inArray } };
+        _.set(matchStr, '$match.managerCode', { $in: inArray });
       }
     } else if (key !== '' && key !== '[null]') {
       const keyJson = JSON.parse(key);
       if (keyJson && keyJson.length > 1) {
-        matchStr.$match = { managerCode: keyJson[1] };
+        _.set(matchStr, '$match.managerCode', keyJson[1]);
       }
     }
     if (!_.isEmpty(matchStr)) {
@@ -4811,7 +4816,7 @@ exports.api = {
       aggregateStr.push(matchStr);
     }
     // console.log(' >>>>> matchStr=', JSON.stringify(matchStr));
-    if (CAN_ORDER) {
+    if (CAN_ORDER || FIX_SORT_UI) { // 2020-06-11 fixed prod show list order
       aggregateStr.push({ $sort: { planInd: 1, covCode: 1 } });
     }
     aggregateStr.push(projectStr);
