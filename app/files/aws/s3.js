@@ -16,16 +16,19 @@ const fileUtils = require('../fileUtils');
 const logger = console;
 const awsConf = s3Config.awsS3;
 
-const s3Object = new AWS.S3({
-  signatureVersion: awsConf.signatureVersion,
-  region: awsConf.region,
-  accessKeyId: awsConf.accessKeyId,
-  secretAccessKey: awsConf.secretAccessKey,
-});
+let s3Object;
 
 class s3 extends fileUtils {
   async init() {
     await this.setProxyEnv();
+
+    s3Object = new AWS.S3({
+      signatureVersion: awsConf.signatureVersion,
+      region: awsConf.region,
+      accessKeyId: awsConf.accessKeyId,
+      secretAccessKey: awsConf.secretAccessKey,
+    });
+
     return true;
   }
 
