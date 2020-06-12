@@ -10,6 +10,7 @@ exports.api = {
       next();
     } else {
       printLogWithTime('!!!Database connection error!!!');
+      printLogWithTime('----------------------------------------------------------------------');
       res.json({ status: 400, message: '!!!Database connection error!!!' });
     }
   },
