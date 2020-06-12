@@ -4978,7 +4978,7 @@ exports.api = {
         value: {
           caseNo: '$id',
           displayCaseNo: '$id',
-          product: '',
+          // product: '',
           agentId: '$agent.agentCode',
           agentName: '$agent.name',
           submittedDate: '$lastUpdateDate',
@@ -5040,15 +5040,16 @@ exports.api = {
         if (docs && docs.length > 0) {
           _.forEach(docs, (item) => {
             const doc = _.cloneDeep(item);
-            let productName = '';
+
             const isShield = doc.quotType === 'SHIELD';
             if (doc && doc.plans && doc.plans[0] && doc.plans[0].covName && !isShield) {
-              productName = doc.plans[0].covName;
+              const productName = doc.plans[0].covName;
+              _.set(doc, 'value.product', productName);
             } else if (doc && doc.baseProductName && isShield) {
               doc.baseProductName.en = `${doc.baseProductName.en} Plan`;
-              productName = doc.baseProductName;
+              const productName = doc.baseProductName;
+              _.set(doc, 'value.product', productName);
             }
-            _.set(doc, 'value.product', productName);
             delete doc.quotType;
             delete doc.plans;
             delete doc.baseProductName;
