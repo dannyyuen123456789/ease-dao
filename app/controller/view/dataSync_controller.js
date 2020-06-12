@@ -1,8 +1,12 @@
 import mongoose from 'mongoose';
-// import log4jUtil from '../../utils/log4j.util';
+import printLogWithTime from '../../utils/log';
 
 const _ = require('lodash');
 
+const printlnEndLog = (cnt) => {
+  printLogWithTime(`Successful, result count: ${cnt}`);
+  printLogWithTime('----------------------------------------------------------------------');
+};
 exports.api = {
   async agentDocuments(req, res) {
     const aggregateStr = [];
@@ -111,6 +115,7 @@ exports.api = {
     const resultTemp = {};
     resultTemp.total_rows = result.length;
     resultTemp.rows = result;
+    printlnEndLog(result.length);
     res.json(resultTemp);
   },
 };

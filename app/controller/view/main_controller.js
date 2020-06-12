@@ -1,9 +1,14 @@
 import mongoose from 'mongoose';
+import printLogWithTime from '../../utils/log';
 
 const _ = require('lodash');
 
 const CAN_ORDER = false;
 const FIX_SORT_UI = true;
+const printlnEndLog = (cnt) => {
+  printLogWithTime(`Successful, result count: ${cnt}`);
+  printLogWithTime('----------------------------------------------------------------------');
+};
 // xue.hua
 exports.api = {
   agentDetails(req, res) {
@@ -281,6 +286,7 @@ exports.api = {
           fafirmCodeResult, proxy1Result, proxy2Result);
         resultTemp.total_rows = result.length;
         resultTemp.rows = result;
+        printlnEndLog(result.length);
         res.json(resultTemp);
       }
     });
@@ -1161,6 +1167,7 @@ exports.api = {
         result = _.concat(resultAgent, resultTime);
         resultTemp.total_rows = result.length;
         resultTemp.rows = result;
+        printlnEndLog(result.length);
         res.json(resultTemp);
       }
     });
@@ -1255,6 +1262,7 @@ exports.api = {
         }
         resultTemp.total_rows = result.length;
         resultTemp.rows = result;
+        printlnEndLog(result.length);
         res.json(resultTemp);
       }
     });
@@ -1371,6 +1379,7 @@ exports.api = {
         }
         resultTemp.total_rows = result.length;
         resultTemp.rows = result;
+        printlnEndLog(result.length);
         res.json(resultTemp);
       }
     });
@@ -1455,6 +1464,7 @@ exports.api = {
         }
         resultTemp.total_rows = result.length;
         resultTemp.rows = result;
+        printlnEndLog(result.length);
         res.json(resultTemp);
       }
     });
@@ -1698,6 +1708,7 @@ exports.api = {
         }
         resultTemp.total_rows = result.length;
         resultTemp.rows = result;
+        printlnEndLog(result.length);
         res.json(resultTemp);
       }
     });
@@ -1907,6 +1918,7 @@ exports.api = {
         }
         resultTemp.total_rows = result.length;
         resultTemp.rows = result;
+        printlnEndLog(result.length);
         res.json(resultTemp);
       }
     });
@@ -1996,6 +2008,7 @@ exports.api = {
         const resultTemp = {};
         resultTemp.total_rows = docs.length;
         resultTemp.rows = docs;
+        printlnEndLog(docs.length);
         res.json(resultTemp);
       }
     });
@@ -2115,6 +2128,7 @@ exports.api = {
         }
         resultTemp.total_rows = result.length;
         resultTemp.rows = result;
+        printlnEndLog(result.length);
         res.json(resultTemp);
       }
     });
@@ -2240,6 +2254,7 @@ exports.api = {
         }
         resultTemp.total_rows = result.length;
         resultTemp.rows = result;
+        printlnEndLog(result.length);
         res.json(resultTemp);
       }
     });
@@ -2440,6 +2455,7 @@ exports.api = {
     const resultTemp = {};
     resultTemp.total_rows = result.length;
     resultTemp.rows = result;
+    printlnEndLog(result.length);
     res.json(resultTemp);
   },
   bundleApp(req, res) {
@@ -2589,6 +2605,7 @@ exports.api = {
         // const result = _.concat(endTimeResult, docs);
         resultTemp.total_rows = result.length;
         resultTemp.rows = result;
+        printlnEndLog(result.length);
         res.json(resultTemp);
       }
     });
@@ -2869,6 +2886,7 @@ exports.api = {
         const result = _.concat(appResult, quotResult);
         resultTemp.total_rows = result.length;
         resultTemp.rows = result;
+        printlnEndLog(result.length);
         res.json(resultTemp);
       }
     });
@@ -2950,6 +2968,7 @@ exports.api = {
         const resultTemp = {};
         resultTemp.total_rows = docs.length;
         resultTemp.rows = docs;
+        printlnEndLog(docs.length);
         res.json(resultTemp);
       }
     });
@@ -3083,6 +3102,7 @@ exports.api = {
         const resultTemp = {};
         resultTemp.total_rows = result.length;
         resultTemp.rows = result;
+        printlnEndLog(result.length);
         res.json(resultTemp);
       }
     });
@@ -3209,6 +3229,7 @@ exports.api = {
     const resultTemp = {};
     resultTemp.total_rows = result.length;
     resultTemp.rows = result;
+    printlnEndLog(result.length);
     res.json(resultTemp);
   },
   directorDownline(req, res) {
@@ -3282,6 +3303,7 @@ exports.api = {
         const resultTemp = {};
         resultTemp.total_rows = docs.length;
         resultTemp.rows = docs;
+        printlnEndLog(docs.length);
         res.json(resultTemp);
       }
     });
@@ -3368,6 +3390,7 @@ exports.api = {
         const resultTemp = {};
         resultTemp.total_rows = docs.length;
         resultTemp.rows = docs;
+        printlnEndLog(docs.length);
         res.json(resultTemp);
       }
     });
@@ -3457,6 +3480,7 @@ exports.api = {
         const resultTemp = {};
         resultTemp.total_rows = docs.length;
         resultTemp.rows = docs;
+        printlnEndLog(docs.length);
         res.json(resultTemp);
       }
     });
@@ -3552,6 +3576,7 @@ exports.api = {
         }
         resultTemp.total_rows = result.length;
         resultTemp.rows = result;
+        printlnEndLog(result.length);
         res.json(resultTemp);
       }
     });
@@ -3826,6 +3851,7 @@ exports.api = {
     const resultTemp = {};
     resultTemp.total_rows = result.length;
     resultTemp.rows = result;
+    printlnEndLog(result.length);
     res.json(resultTemp);
   },
   managerDownline(req, res) {
@@ -3896,6 +3922,7 @@ exports.api = {
         const resultTemp = {};
         resultTemp.total_rows = docs.length;
         resultTemp.rows = docs;
+        printlnEndLog(docs.length);
         res.json(resultTemp);
       }
     });
@@ -4117,6 +4144,7 @@ exports.api = {
     const resultTemp = {};
     resultTemp.total_rows = result.length;
     resultTemp.rows = result;
+    printlnEndLog(result.length);
     res.json(resultTemp);
   },
   naById(req, res) {
@@ -4184,6 +4212,7 @@ exports.api = {
         const resultTemp = {};
         resultTemp.total_rows = docs.length;
         resultTemp.rows = docs;
+        printlnEndLog(docs.length);
         res.json(resultTemp);
       }
     });
@@ -4580,6 +4609,7 @@ exports.api = {
         }
         resultTemp.total_rows = result.length;
         resultTemp.rows = result;
+        printlnEndLog(result.length);
         res.json(resultTemp);
       }
     });
@@ -4654,6 +4684,7 @@ exports.api = {
         const resultTemp = {};
         resultTemp.total_rows = docs.length;
         resultTemp.rows = docs;
+        printlnEndLog(docs.length);
         res.json(resultTemp);
       }
     });
@@ -4827,6 +4858,7 @@ exports.api = {
         const resultTemp = {};
         resultTemp.total_rows = docs.length;
         resultTemp.rows = docs;
+        printlnEndLog(docs.length);
         res.json(resultTemp);
       }
     });
@@ -4930,6 +4962,7 @@ exports.api = {
         }
         resultTemp.total_rows = result.length;
         resultTemp.rows = result;
+        printlnEndLog(result.length);
         res.json(resultTemp);
       }
     });
@@ -5024,6 +5057,7 @@ exports.api = {
         }
         resultTemp.total_rows = result.length;
         resultTemp.rows = result;
+        printlnEndLog(result.length);
         res.json(resultTemp);
       }
     });
@@ -5150,6 +5184,7 @@ exports.api = {
         const result = _.concat(endTimeResult, campaignIdResult);
         resultTemp.total_rows = result.length;
         resultTemp.rows = result;
+        printlnEndLog(result.length);
         res.json(resultTemp);
       }
     });
@@ -5290,6 +5325,7 @@ exports.api = {
     const resultTemp = {};
     resultTemp.total_rows = result.length;
     resultTemp.rows = result;
+    printlnEndLog(result.length);
     res.json(resultTemp);
   },
   async submission(req, res) {
@@ -6014,6 +6050,7 @@ exports.api = {
       expiredNotificationResult, secondaryProxyNotificationResult);
     resultTemp.total_rows = result.length;
     resultTemp.rows = result;
+    printlnEndLog(result.length);
     res.json(resultTemp);
   },
   async summaryApps(req, res) {
@@ -6166,6 +6203,7 @@ exports.api = {
     const resultTemp = {};
     resultTemp.total_rows = result.length;
     resultTemp.rows = result;
+    printlnEndLog(result.length);
     res.json(resultTemp);
   },
   submissionRptApps(req, res) {
@@ -6445,6 +6483,7 @@ exports.api = {
         const resultTemp = {};
         resultTemp.total_rows = result.length;
         resultTemp.rows = result;
+        printlnEndLog(result.length);
         res.json(resultTemp);
       }
     });
@@ -6699,6 +6738,7 @@ exports.api = {
         const resultTemp = {};
         resultTemp.total_rows = result.length;
         resultTemp.rows = result;
+        printlnEndLog(result.length);
         res.json(resultTemp);
       }
     });
@@ -6883,6 +6923,7 @@ exports.api = {
         }
         resultTemp.total_rows = result.length;
         resultTemp.rows = result;
+        printlnEndLog(result.length);
         res.json(resultTemp);
       }
     });
@@ -7022,6 +7063,7 @@ exports.api = {
         // const result = _.concat(endTimeResult, docs);
         resultTemp.total_rows = result.length;
         resultTemp.rows = result;
+        printlnEndLog(result.length);
         res.json(resultTemp);
       }
     });
@@ -7104,6 +7146,7 @@ exports.api = {
         const resultTemp = {};
         resultTemp.total_rows = docs.length;
         resultTemp.rows = docs;
+        printlnEndLog(docs.length);
         res.json(resultTemp);
       }
     });
@@ -7219,6 +7262,7 @@ exports.api = {
         // const result = _.concat(endTimeResult, docs);
         resultTemp.total_rows = result.length;
         resultTemp.rows = result;
+        printlnEndLog(result.length);
         res.json(resultTemp);
       }
     });

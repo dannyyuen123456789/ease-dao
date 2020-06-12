@@ -1,9 +1,14 @@
 import mongoose from 'mongoose';
+import printLogWithTime from '../../utils/log';
 
 const _ = require('lodash');
 
 
 const CAN_ORDER = false;
+const printlnEndLog = (cnt) => {
+  printLogWithTime(`Successful, result count: ${cnt}`);
+  printLogWithTime('----------------------------------------------------------------------');
+};
 exports.api = {
   quotationsByBaseProductCode(req, res) {
     // console.log(">>>>>",req.query);
@@ -71,6 +76,7 @@ exports.api = {
         const resultTemp = {};
         resultTemp.total_rows = docs.length;
         resultTemp.rows = docs;
+        printlnEndLog(docs.length);
         res.json(resultTemp);
       }
     });
@@ -163,9 +169,11 @@ exports.api = {
           });
           resultTemp.total_rows = result.length;
           resultTemp.rows = result;
+          printlnEndLog(result.length);
         } else {
           resultTemp.total_rows = docs.length;
           resultTemp.rows = docs;
+          printlnEndLog(docs.length);
         }
         res.json(resultTemp);
       }
@@ -259,9 +267,11 @@ exports.api = {
           });
           resultTemp.total_rows = result.length;
           resultTemp.rows = result;
+          printlnEndLog(result.length);
         } else {
           resultTemp.total_rows = docs.length;
           resultTemp.rows = docs;
+          printlnEndLog(docs.length);
         }
         res.json(resultTemp);
       }

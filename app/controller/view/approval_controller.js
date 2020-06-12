@@ -1,8 +1,13 @@
 import mongoose from 'mongoose';
+import printLogWithTime from '../../utils/log';
 
 const _ = require('lodash');
 
 const CAN_ORDER = false;
+const printlnEndLog = (cnt) => {
+  printLogWithTime(`Successful, result count: ${cnt}`);
+  printLogWithTime('----------------------------------------------------------------------');
+};
 exports.api = {
   approvalDetails(req, res) {
     // doc.type === 'approval') {
@@ -138,6 +143,7 @@ exports.api = {
         const resultTemp = {};
         resultTemp.total_rows = docs.length;
         resultTemp.rows = docs;
+        printlnEndLog(docs.length);
         res.json(resultTemp);
       }
     });

@@ -1,8 +1,13 @@
 import mongoose from 'mongoose';
+import printLogWithTime from '../../utils/log';
 
 const _ = require('lodash');
 
 const CAN_ORDER = false;
+const printlnEndLog = (cnt) => {
+  printLogWithTime(`Successful, result count: ${cnt}`);
+  printLogWithTime('----------------------------------------------------------------------');
+};
 const webVsIosReportBundle = async (req) => {
   const aggregateStr = [];
   // This is the query result and alias -> projectStr
@@ -900,6 +905,7 @@ exports.api = {
         const resultTemp = {};
         resultTemp.total_rows = docs.length;
         resultTemp.rows = docs;
+        printlnEndLog(docs.length);
         res.json(resultTemp);
       }
     });
@@ -1307,6 +1313,7 @@ exports.api = {
         const result = _.concat(appIdResult, appStartResult, appSubResult);
         resultTemp.total_rows = result.length;
         resultTemp.rows = result;
+        printlnEndLog(result.length);
         res.json(resultTemp);
       }
     });
@@ -1410,6 +1417,7 @@ exports.api = {
         }
         resultTemp.total_rows = result.length;
         resultTemp.rows = result;
+        printlnEndLog(result.length);
         res.json(resultTemp);
       }
     });
@@ -1425,6 +1433,7 @@ exports.api = {
     const resultTemp = {};
     resultTemp.total_rows = result.length;
     resultTemp.rows = result;
+    printlnEndLog(result.length);
     res.json(resultTemp);
   },
 };

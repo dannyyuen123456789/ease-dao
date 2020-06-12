@@ -1,9 +1,14 @@
 import mongoose from 'mongoose';
+import printLogWithTime from '../../utils/log';
 
 const _ = require('lodash');
 // const moment = require('moment');
 
 const CAN_ORDER = false;
+const printlnEndLog = (cnt) => {
+  printLogWithTime(`Successful, result count: ${cnt}`);
+  printLogWithTime('----------------------------------------------------------------------');
+};
 exports.api = {
   async documentByLstChgDate(req, res) {
     const aggregateStr = [];
@@ -216,6 +221,7 @@ exports.api = {
     const resultTemp = {};
     resultTemp.total_rows = result.length;
     resultTemp.rows = result;
+    printlnEndLog(result.length);
     res.json(resultTemp);
   },
   async documentsWithoutLstChgDate(req, res) {
@@ -392,6 +398,7 @@ exports.api = {
     const resultTemp = {};
     resultTemp.total_rows = result.length;
     resultTemp.rows = result;
+    printlnEndLog(result.length);
     res.json(resultTemp);
   },
 };
