@@ -6706,13 +6706,13 @@ exports.api = {
       aggregateStr.push({ $sort: { dealerGroup: 1, lastEditedDate: 1 } });
     }
     aggregateStr.push(projectStr);
+
     mongoose.connection.collection('approval').aggregate(aggregateStr).toArray((err, docs) => {
       if (err) {
         res.json({ status: 400, message: err.message });
       } else {
         const resultSingPost = [];
         const resultDirect = [];
-        // console.log('>>>>>>docs.length= ', docs.length);
         if (docs && docs.length > 0) {
           _.forEach(docs, (item) => {
             const dealerGroup = _.get(item, 'value.dealerGroup', '');
@@ -6725,7 +6725,7 @@ exports.api = {
               _.set(doc, 'key', ['01', 'SINGPOST', Date.parse(lastEditedDate)]);
               resultSingPost.push(doc);
             }
-            if (caseDirect && item.dealerGroup === 'DIRECT' && (
+            if (caseDirect && dealerGroup === 'DIRECT' && (
               _.isEmpty(directKeys) || (!_.isEmpty(directKeys)
             && _.some(directKeys, it => (it === lastEditedDate)))
             )) {
