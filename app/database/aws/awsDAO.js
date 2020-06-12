@@ -27,7 +27,7 @@ class awsDAO extends DAO {
           }
         });
       } else {
-        result = 'Database connection error!!!';
+        result = '!!!Database connection error!!!';
         status = false;
       }
     }
@@ -57,7 +57,7 @@ class awsDAO extends DAO {
           }
         });
       } else {
-        result = 'Database connection error!!!';
+        result = '!!!Database connection error!!!';
         status = false;
       }
     }
@@ -79,7 +79,7 @@ class awsDAO extends DAO {
           }
         });
       } else {
-        result = 'Database connection error!!!';
+        result = '!!!Database connection error!!!';
         status = false;
       }
     }

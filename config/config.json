@@ -32,7 +32,6 @@
         }
     },
     "awsS3":{
-        "host":"https://<bucketName>.s3-ap-southeast-1.amazonaws.com/",
         "masterBucket":"ease-master-data",
         "transBucket":"ease-transaction-data",
         "KmsID":"cc348deb-3474-4c2e-909d-ff76a1311507",

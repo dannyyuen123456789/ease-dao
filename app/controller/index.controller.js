@@ -13,7 +13,6 @@ exports.api = {
   // Get Json Document
   async getDoc(req, res) {
     const docId = _.get(req.params, 'docId', _.get(req.query, 'docId'));
-    printLogWithTime('');
     printLogWithTime(`getDoc/${docId}`);
     const dao = new DAO('AWS');
     const awsDao = dao.getInstance();
@@ -26,11 +25,11 @@ exports.api = {
         printLogWithTime(`Result - Success - ${docId}`);
         res.json(result.result);
       } else {
-        printLogWithTime(`Result - Missing - ${docId}`);
+        printLogWithTime(`Result - FAILED - ${docId} - Document Not Found`);
         res.json({ error: 'not_found', reason: 'missing' });
       }
     } else {
-      printLogWithTime(`Error - ${result.result}`);
+      printLogWithTime(`Result - FAILED - ${result.result}`);
       res.json({ error: 'error', reason: result.result });
     }
 
@@ -40,7 +39,6 @@ exports.api = {
   // Insert or update Json Document
   async updateDoc(req, res) {
     const docId = _.get(req.params, 'docId', _.get(req.query, 'docId'));
-    printLogWithTime('');
     printLogWithTime(`updateDoc/${docId}`);
     const data = req.body;
     const dao = new DAO('AWS');
@@ -51,7 +49,7 @@ exports.api = {
       printLogWithTime(`Result - Success - ${docId}`);
       res.json({ id: docId, ok: true, rev: 1 });
     } else {
-      printLogWithTime(`Error - ${docId} - ${result.result}`);
+      printLogWithTime(`Result - FAILED - ${docId} - ${result.result}`);
       res.json({ error: 400, reason: result.result });
     }
 
@@ -61,7 +59,6 @@ exports.api = {
   // Delete Json Document
   async deleteDoc(req, res) {
     const docId = _.get(req.params, 'docId', _.get(req.query, 'docId'));
-    printLogWithTime('');
     printLogWithTime(`deleteDoc/${docId}`);
     const dao = new DAO('AWS');
     const awsDao = dao.getInstance();
@@ -71,7 +68,7 @@ exports.api = {
       printLogWithTime(`Result - Success - ${docId}`);
       res.json({ id: docId, ok: true, rev: 1 });
     } else {
-      printLogWithTime(`Error - ${docId} - ${result.result}`);
+      printLogWithTime(`Result - FAILED - ${docId} - ${result.result}`);
       res.json({ status: 400, result: result.result });
     }
 
@@ -83,51 +80,30 @@ exports.api = {
     let errMessage = '';
     const docId = _.get(req.params, 'docId', _.get(req.query, 'docId'));
     const attachmentId = _.get(req.params, 'attachment', _.get(req.query, 'attachment'));
-    printLogWithTime('');
+
     printLogWithTime(`getAttachment/${docId}/${attachmentId}`);
+
     const fileUtil = new fileUtils('AWS-S3');
     const fileInstance = await fileUtil.getInstance();
     const initSuccess = await fileInstance.init();
-    console.log('5');
-    if (initSuccess) {
-      console.log('6');
-      await fileInstance.getAttachment(docId, attachmentId, (attachment) => {
-        console.log('7');
-        // if (attachment) {
-          console.log('8');
-          printLogWithTime(`Result - Success - ${docId}`);
-          res.send(attachment);
-          console.log('9');
-          printLogWithTime('----------------------------------------------------------------------');
-        // }
-        console.log('10');
-      }).catch((error) => {
-        console.log('11');
-        if (error) {
-          console.log('12');
-          printLogWithTime(`Error 1 - ${docId} - ${error.message}`);
-          errMessage = error.message;
-          console.log('13');
-        }
-        console.log('14');
-      });
 
-      if (!errMessage || _.isEmpty(errMessage)) {
-        // TODO
-        console.log('15');
-      }
+    if (initSuccess) {
+      await fileInstance.getAttachment(docId, attachmentId, (attachment) => {
+        printLogWithTime(`Result - Success - ${docId}`);
+        res.send(attachment);
+      }).catch((error) => {
+        if (error) {
+          errMessage = error.message;
+        }
+      });
     } else {
-      console.log('16');
-      errMessage = 'initial S3 failed';
+      errMessage = 'Initial S3 failed';
     }
-    console.log('17');
+
     if (errMessage) {
-      console.log('18');
-      printLogWithTime(`Error 2 - ${errMessage}`);
+      printLogWithTime(`Result - Failed - ${docId} - ${errMessage}`);
       res.json({ ok: false, message: errMessage });
-      console.log('19');
     }
-    console.log('20');
 
     printLogWithTime('----------------------------------------------------------------------');
   },
@@ -137,41 +113,43 @@ exports.api = {
     let errMessage = '';
     const docId = _.get(req.params, 'docId', _.get(req.query, 'docId'));
     const attachmentId = _.get(req.params, 'attachment', _.get(req.query, 'attachment'));
-    printLogWithTime('');
+
     printLogWithTime(`getAttachmentUrl/${docId}/${attachmentId}`);
-    // eslint-disable-next-line new-cap
+
     const fileUtil = new fileUtils('AWS-S3');
     const fileInstance = await fileUtil.getInstance();
     const initSuccess = await fileInstance.init();
+
     if (initSuccess) {
       await fileInstance.getAttachmentUrl(docId, attachmentId, (attachment) => {
-        printLogWithTime('----------------------------------------------------------------------');
+        printLogWithTime(`Result - Success - ${docId}`);
         res.json(attachment);
+        printLogWithTime('----------------------------------------------------------------------');
       }).catch((error) => {
         if (error) {
-          printLogWithTime(`Error 1 - ${error.message}`);
           errMessage = error.message;
         }
       });
-
-      if (!errMessage || _.isEmpty(errMessage)) {
-        // TODO
-      }
     } else {
-      errMessage = 'initial S3 failed';
+      errMessage = 'Initial S3 failed';
     }
 
     if (errMessage) {
-      printLogWithTime(`Error 2 - ${errMessage}`);
+      printLogWithTime(`Result Failed -  ${docId} - ${errMessage}`);
       res.json({ ok: false, message: errMessage });
     }
+
+    printLogWithTime('----------------------------------------------------------------------');
   },
+
+  // Upload Attachment by base64
   async uploadAttachmentByBase64(req, res) {
     let errMessage = '';
     const docId = _.get(req.params, 'docId', _.get(req.query, 'docId'));
     const attachmentId = _.get(req.params, 'attachment', _.get(req.query, 'attachment'));
-    printLogWithTime('');
+
     printLogWithTime(`uploadAttachmentByBase64/${docId}/${attachmentId}`);
+
     const attachment = req.body.data;
     const { mime } = req.body;
     const fileUtil = new fileUtils('AWS-S3');
@@ -184,7 +162,6 @@ exports.api = {
 
       await fileInstance.uploadBase64(docId, attachmentId, attachment, mime).catch((error) => {
         if (error) {
-          printLogWithTime(`Error 1 - ${error.message}`);
           errMessage = error.message;
         }
       });
@@ -194,11 +171,13 @@ exports.api = {
         const awsDao = dao.getInstance();
         const fileSize = fileInstance.calBase64FileSize(attachment);
         const docResult = await awsDao.getDoc(docId);
+
         if (_.get(docResult, 'success')) {
           const doc = _.get(docResult, 'result');
           const docAttachment = _.get(doc, 'attachments', {});
           _.set(docAttachment, attachmentId, { key: fileName, content_type: mime, fileSize });
           const updResult = await awsDao.updateDoc(docId, { attachments: docAttachment });
+
           if (!_.get(updResult, 'success')) {
             errMessage = _.get(updResult, 'result');
           }
@@ -207,11 +186,11 @@ exports.api = {
         }
       }
     } else {
-      errMessage = 'initial S3 failed';
+      errMessage = 'Initial S3 failed';
     }
 
     if (errMessage) {
-      printLogWithTime(`Error 2 - ${docId} - ${errMessage}`);
+      printLogWithTime(`Result - Failed - ${docId} - ${errMessage}`);
       res.json({ error: false, reason: errMessage });
     } else {
       printLogWithTime(`Result - Success - ${docId}`);
@@ -231,8 +210,9 @@ exports.api = {
     let errMessage = '';
     const docId = _.get(req.params, 'docId', _.get(req.query, 'docId'));
     const attachmentId = _.get(req.params, 'attachment', _.get(req.query, 'attachment'));
-    printLogWithTime('');
+
     printLogWithTime(`delAttachment/${docId}/${attachmentId}`);
+
     const fileUtil = new fileUtils('AWS-S3');
     const fileInstance = await fileUtil.getInstance();
     const initSuccess = await fileInstance.init();
@@ -240,7 +220,6 @@ exports.api = {
     if (initSuccess) {
       await fileInstance.deleteObject(docId, attachmentId).catch((error) => {
         if (error) {
-          printLogWithTime(`Error 1 - ${error.message}`);
           errMessage = error.message;
         }
       });
@@ -264,17 +243,18 @@ exports.api = {
         }
       }
     } else {
-      errMessage = 'initial S3 failed';
+      errMessage = 'Initial S3 failed';
     }
 
     if (errMessage) {
-      printLogWithTime(`Error 2 - ${errMessage}`);
+      printLogWithTime(`Result - Failed - ${errMessage}`);
       res.json({ ok: false, message: errMessage });
     } else {
-      printLogWithTime(`Attachment delete success - ${docId}/${attachmentId}`);
+      printLogWithTime(`Result - success - ${docId}/${attachmentId}`);
       res.json({ id: docId, ok: true, rev: 1 });
     }
 
     printLogWithTime('----------------------------------------------------------------------');
   },
+
 };

@@ -62,7 +62,7 @@ class s3 extends fileUtils {
           reject(error);
         } else {
           resolve();
-          logger.log(`Successfully uploaded data to ${bucketName}/${fileKey}`);
+          //logger.log(`Successfully uploaded data to ${bucketName}/${fileKey}`);
         }
       });
     });
@@ -81,7 +81,7 @@ class s3 extends fileUtils {
           reject(error);
         } else {
           resolve();
-          logger.log(`Successfully delete ${bucketName}/${fileKey}`);
+          //logger.log(`Successfully delete ${bucketName}/${fileKey}`);
         }
       });
     });
@@ -96,29 +96,13 @@ class s3 extends fileUtils {
         Key: fileKey,
       };
       s3Object.getObject(executeParams, (err, data) => {
-        console.log(`0`);
         if (err) {
-          console.log(`1 - ${err}`);
-          // if (reject) {
-          //   console.log(`2 - ${reject}`);
           reject(err);
-          // }
-          console.log('2');
         } else {
-          console.log(`3 - ${resolve}`);
           resolve();
           cb(data.Body);
-          console.log('4 - success');
-          // if (typeof cb === 'function') {
-          //   console.log('4 - success');
-          //   cb(data.Body);
-          //   console.log('4.1');
-          // }
-          // console.log('4.2');
         }
-        console.log('4.1');
       });
-      console.log('4.2');
     });
   }
 
