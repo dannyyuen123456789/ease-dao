@@ -13,11 +13,11 @@ exports.api = {
   async documentByLstChgDate(req, res) {
     const aggregateStr = [];
     // This is the query result and alias -> projectStr
-    const projectStr = {
-      $project: {
-        _id: 0, // 0 is not selected
-      },
-    };
+    // const projectStr = {
+    //   $project: {
+    //     _id: 0, // 0 is not selected
+    //   },
+    // };
 
     const startKey = req.query.startkey || '';
     const endKey = req.query.endkey || '';
@@ -119,7 +119,7 @@ exports.api = {
     if (CAN_ORDER) {
       aggregateStr.push({ $sort: { lstChgDate: 1 } });
     }
-    aggregateStr.push(projectStr);
+    // aggregateStr.push(projectStr);
     const result = [];
     const createRow = (inDoc) => {
       const doc = _.cloneDeep(inDoc);
@@ -133,7 +133,7 @@ exports.api = {
               new Date(doc.lstChgDate).getMonth() + 1
             }-${
               new Date(doc.lstChgDate).getDate()}`],
-          value: doc,
+          value: _.omit(doc, ['_id']),
         });
       }
     };

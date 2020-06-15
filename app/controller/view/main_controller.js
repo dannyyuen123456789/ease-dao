@@ -13,8 +13,7 @@ const printlnEndLog = (cnt) => {
 exports.api = {
   agentDetails(req, res) {
     const aggregateStr = [];
-    const projectStr = {
-    };
+    const projectStr = {};
     const startKey = req.query.startkey || '';
     const endKey = req.query.endkey || '';
     const keys = req.query.keys || '';
@@ -188,9 +187,9 @@ exports.api = {
     }
 
     if (caseUser || caseAgent || caseFafirmCode) {
-      projectStr.$project = {
-        _id: 0, // 0 is not selected
-      };
+      // projectStr.$project = {
+      //   _id: 0, // 0 is not selected
+      // };
     } else if (caseProxy) {
       projectStr.$project = {
         _id: 0, // 0 is not selected
@@ -199,7 +198,10 @@ exports.api = {
         rawData: '$rawData',
       };
     }
-    aggregateStr.push(projectStr);
+    if (!_.isEmpty(projectStr)) {
+      aggregateStr.push(projectStr);
+    }
+
     // console.log(' >>>>> matchStr=', JSON.stringify(matchStr));
     mongoose.connection.collection('agent').aggregate(aggregateStr).toArray((err, docs) => {
       if (err) {
@@ -222,7 +224,7 @@ exports.api = {
                   userResult.push({
                     id: doc.id,
                     key: ['01', 'userId', doc.rawData.agentCode],
-                    value: Object.assign({}, doc),
+                    value: Object.assign({}, _.omit(doc, ['_id'])),
                   });
                 }
               }
@@ -234,7 +236,7 @@ exports.api = {
                 agentResult.push({
                   id: doc.id,
                   key: ['01', 'agentCode', doc.agentCode],
-                  value: Object.assign({}, doc),
+                  value: Object.assign({}, _.omit(doc, ['_id'])),
                 });
               }
             }
@@ -247,7 +249,7 @@ exports.api = {
                   fafirmCodeResult.push({
                     id: doc.id,
                     key: ['01', 'fafirmCode', doc.rawData.upline2Code],
-                    value: Object.assign({}, doc),
+                    value: Object.assign({}, _.omit(doc, ['_id'])),
                   });
                 }
               }
@@ -1387,11 +1389,11 @@ exports.api = {
   appByPolNum(req, res) {
     const aggregateStr = [];
     // This is the query result and alias -> projectStr
-    const projectStr = {
-      $project: {
-        _id: 0, // 0 is not selected
-      },
-    };
+    // const projectStr = {
+    //   $project: {
+    //     _id: 0, // 0 is not selected
+    //   },
+    // };
     const startKey = req.query.startkey || '';
     const endKey = req.query.endkey || '';
     const keys = req.query.keys || '';
@@ -1440,7 +1442,7 @@ exports.api = {
     }
     // aggregateStr.push({ $sort: { policyNumber: 1 } });
     // console.log(' >>>>> aggregateStr=', JSON.stringify(aggregateStr));
-    aggregateStr.push(projectStr);
+    // aggregateStr.push(projectStr);
     //  aggregate(aggregateStr, { allowDiskUse: true }).toArray((err, docs) => {
     // { allowDiskUse: true } 排序内存不够
     mongoose.connection.collection('application').aggregate(aggregateStr).toArray((err, docs) => {
@@ -1457,7 +1459,7 @@ exports.api = {
               result.push({
                 id: doc.id,
                 key: ['01', doc.policyNumber],
-                value: doc,
+                value: _.omit(doc, ['_id']),
               });
             }
           });
