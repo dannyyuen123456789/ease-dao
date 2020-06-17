@@ -20,13 +20,13 @@ let s3Object;
 
 class s3 extends fileUtils {
   async init() {
+    await this.getCredentials();
+
     await this.setProxyEnv();
 
     s3Object = new AWS.S3({
       signatureVersion: awsConf.signatureVersion,
       region: awsConf.region,
-      accessKeyId: awsConf.accessKeyId,
-      secretAccessKey: awsConf.secretAccessKey,
     });
 
     return true;
@@ -42,6 +42,19 @@ class s3 extends fileUtils {
       const proxyAgent = new HttpProxyAgent(proxyLink);
       AWS.config.httpOptions = { agent: proxyAgent };
     }
+  }
+
+  getCredentials() {
+    return new Promise((resolve, reject) => {
+      AWS.config.getCredentials((err) => {
+        if (err) {
+          printLogWithTime('Get AWS credentials error');
+          reject(err);
+        } else {
+          resolve();
+        }
+      });
+    });
   }
 
   uploadBase64(docId, attachmentType, data, fileType) {

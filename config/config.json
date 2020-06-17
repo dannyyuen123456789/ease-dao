@@ -19,16 +19,12 @@
         "AWSDocumentDB":{
             "dbType":"aws",
             "databaseURL": "localhost:27016",
-            "databaseName":"AXASG_DEV",
-            "databaseUsername":"axasgdev",
-            "databasePassword":"D?o3F]Cp{~"
+            "databaseName":"AXASG_DEV"
         },
         "mongoDB":{
             "dbType":"mongo",
             "databaseURL": "192.168.225.180:47017",
-            "databaseName":"AXASG_DEV",
-            "databaseUsername":"admin",
-            "databasePassword":"x9NaTtr9"
+            "databaseName":"AXASG_DEV"
         }
     },
     "awsS3":{
@@ -37,8 +33,6 @@
         "KmsID":"cc348deb-3474-4c2e-909d-ff76a1311507",
         "isProxy":false,
         "proxyLink":"",
-        "accessKeyId":"AKIA2RZMLZROCPKOK4XV",
-        "secretAccessKey":"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",
         "region":"ap-southeast-1",
         "signatureVersion":"v4"
     }

@@ -4,12 +4,13 @@
 
 import debugLib from 'debug';
 import http from 'http';
+import { config as dotenvConfig } from 'dotenv';
 import app from '../app/index';
 import printLogWithTime from '../app/utils/log';
 import config from '../config/config';
 
 const debug = debugLib('masExternalAPI:server');
-
+dotenvConfig();
 
 /**
  * Normalize a port into a number, string, or false.

@@ -15,9 +15,14 @@ const checkDocumentConnection = () => new Promise((resolve, reject) => {
   printLogWithTime('');
   printLogWithTime(`========== 2 - Connect to ${dbInUse}==========`);
   const dbSetting = _.get(systemConfig, 'dbSetting');
-  let userName = _.get(dbSetting, _.join([dbInUse, 'databaseUsername'], '.'));
+  // let userName = _.get(dbSetting, _.join([dbInUse, 'databaseUsername'], '.'));
+  let userName = process.env.databaseUsername;
+  console.log(userName);
   userName = escape(userName);
-  let pwd = _.get(dbSetting, _.join([dbInUse, 'databasePassword'], '.'));
+  // let pwd = _.get(dbSetting, _.join([dbInUse, 'databasePassword'], '.'));
+  let pwd = process.env.databasePassword;
+  console.log(pwd);
+
   pwd = escape(pwd);
   const url = _.get(dbSetting, _.join([dbInUse, 'databaseURL'], '.'));
   const databaseName = _.get(dbSetting, _.join([dbInUse, 'databaseName'], '.'));

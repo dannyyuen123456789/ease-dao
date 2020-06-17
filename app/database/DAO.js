@@ -49,12 +49,6 @@ class DAO {
       type = 'agent';
     } else if (docId.substring(0, 3) === 'UX_') {
       type = 'agentExtraInfo';
-    // } else if (docId.substring(0, 6) === 'appid-') {
-    //   type = 'appid';
-    } else if (docId.substring(0, 4) === 'AUD-') {
-      type = 'aud';
-    } else if (docId.length === 52 || docId.length === 50) {
-      type = 'dataSyncTransactionLog';
     } else if (_.endsWith(docId, '-seq') || _.eq(docId, 'agentNumberMap')) {
       type = 'seqMaster';
     } else {
