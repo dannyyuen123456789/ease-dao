@@ -12,22 +12,23 @@ const checkDocumentConnection = () => new Promise((resolve, reject) => {
   const sshConfigs = _.get(systemConfig, 'sshConfig');
   const sshConnection = _.get(systemConfig, 'sshConnection');
   const dbInUse = _.get(systemConfig, 'dbInUse');
+
   printLogWithTime('');
   printLogWithTime(`========== 2 - Connect to ${dbInUse}==========`);
-  const dbSetting = _.get(systemConfig, 'dbSetting');
-  // let userName = _.get(dbSetting, _.join([dbInUse, 'databaseUsername'], '.'));
-  let userName = process.env.databaseUsername;
-  console.log(userName);
-  userName = escape(userName);
-  // let pwd = _.get(dbSetting, _.join([dbInUse, 'databasePassword'], '.'));
-  let pwd = process.env.databasePassword;
-  console.log(pwd);
 
+  const dbSetting = _.get(systemConfig, 'dbSetting');
+
+  let userName = process.env.database_user_name;
+  userName = escape(userName);
+
+  let pwd = process.env.database_password;
   pwd = escape(pwd);
+
   const url = _.get(dbSetting, _.join([dbInUse, 'databaseURL'], '.'));
   const databaseName = _.get(dbSetting, _.join([dbInUse, 'databaseName'], '.'));
   const dbType = _.get(dbSetting, _.join([dbInUse, 'dbType'], '.'));
   const DB_URL = `mongodb://${userName}:${pwd}@${url}/${databaseName}`;
+
   // ==== db connection =====
   if (sshConnection) {
     if (sshConfigs) {
@@ -80,16 +81,20 @@ const checkDocumentConnection = () => new Promise((resolve, reject) => {
       useUnifiedTopology: true,
     });
   }
+
   mongoose.set('useFindAndModify', false);
   mongoose.connection.on('connected', () => {
     resolve(true);
   });
+
   mongoose.connection.on('disconnecting', () => {
     console.error('Disconnecting to Mongodb');
   });
+
   mongoose.connection.on('reconnected', () => {
     printLogWithTime('Mongodb reconnected.');
   });
+
   mongoose.connection.on('error', (err) => {
     console.error('error', err);
     printLogWithTime('');

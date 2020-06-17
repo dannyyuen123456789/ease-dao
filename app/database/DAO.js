@@ -77,7 +77,7 @@ class DAO {
 
       // continue recursively looping through if we have an object or array
       if (_.isObject(value)) {
-        return this.replaceDot(value);
+        return this.replaceDot(value, true);
       }
       return null;
     });

@@ -20,13 +20,15 @@ let s3Object;
 
 class s3 extends fileUtils {
   async init() {
-    await this.getCredentials();
+    //await this.getCredentials();
 
     await this.setProxyEnv();
 
     s3Object = new AWS.S3({
       signatureVersion: awsConf.signatureVersion,
       region: awsConf.region,
+      accessKeyId: process.env.aws_access_key_id,
+      secretAccessKey: process.env.aws_secret_access_key,
     });
 
     return true;
@@ -44,18 +46,18 @@ class s3 extends fileUtils {
     }
   }
 
-  getCredentials() {
-    return new Promise((resolve, reject) => {
-      AWS.config.getCredentials((err) => {
-        if (err) {
-          printLogWithTime('Get AWS credentials error');
-          reject(err);
-        } else {
-          resolve();
-        }
-      });
-    });
-  }
+  // getCredentials() {
+  //   return new Promise((resolve, reject) => {
+  //     AWS.config.getCredentials((err) => {
+  //       if (err) {
+  //         printLogWithTime('Get AWS credentials error');
+  //         reject(err);
+  //       } else {
+  //         resolve();
+  //       }
+  //     });
+  //   });
+  // }
 
   uploadBase64(docId, attachmentType, data, fileType) {
     return new Promise((resolve, reject) => {
@@ -67,7 +69,7 @@ class s3 extends fileUtils {
         Key: fileKey,
         Body: buf,
         ServerSideEncryption: 'aws:kms',
-        SSEKMSKeyId: awsConf.KmsID,
+        SSEKMSKeyId: process.env.kms_id,
         ContentType: fileType, // "image/jpeg"
       };
       s3Object.upload(params, (error, dat) => {

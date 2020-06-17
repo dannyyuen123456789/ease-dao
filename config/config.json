@@ -30,7 +30,6 @@
     "awsS3":{
         "masterBucket":"ease-master-data",
         "transBucket":"ease-transaction-data",
-        "KmsID":"cc348deb-3474-4c2e-909d-ff76a1311507",
         "isProxy":false,
         "proxyLink":"",
         "region":"ap-southeast-1",

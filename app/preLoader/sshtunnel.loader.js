@@ -15,11 +15,11 @@ const initSshTunnel = async () => {
   const dbInUse = _.get(systemConfig, 'dbInUse');
   const dbSetting = _.get(systemConfig, 'dbSetting');
   const caFile = _.get(systemConfig, 'sslConfig.caFile');
-  //let userName = _.get(dbSetting, _.join([dbInUse, 'databaseUsername'], '.'));
-  let userName = process.env.databaseUsername;
+  // let userName = _.get(dbSetting, _.join([dbInUse, 'databaseUsername'], '.'));
+  let userName = process.env.database_user_name;
   userName = escape(userName);
-  //let pwd = _.get(dbSetting, _.join([dbInUse, 'databasePassword'], '.'));
-  let pwd = process.env.databasePassword;
+  // let pwd = _.get(dbSetting, _.join([dbInUse, 'databasePassword'], '.'));
+  let pwd = process.env.database_password;
   pwd = escape(pwd);
   const url = _.get(dbSetting, _.join([dbInUse, 'databaseURL'], '.'));
   const databaseName = _.get(dbSetting, _.join([dbInUse, 'databaseName'], '.'));
