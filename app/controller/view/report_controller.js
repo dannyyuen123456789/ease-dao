@@ -1355,14 +1355,14 @@ exports.api = {
     if (startKey !== '' && endKey !== '') {
       const startKeys = JSON.parse(startKey);
       const endKeys = JSON.parse(endKey);
-      if (startKeys.length > 1 && endKeys.length > 1) {
+      if (startKeys.length > 2 && endKeys.length > 2) {
         if (_.isEqual(startKeys, endKeys)) {
-          _.get(matchStr, '$match.$and', []).push({ approveRejectDate: new Date(startKeys[1]).toISOString() });
+          _.get(matchStr, '$match.$and', []).push({ approveRejectDate: new Date(startKeys[2]).toISOString() });
         } else {
           _.get(matchStr, '$match.$and', []).push({
             approveRejectDate: {
-              $gte: new Date(startKeys[1]).toISOString(),
-              $lte: new Date(endKeys[1]).toISOString(),
+              $gte: new Date(startKeys[2]).toISOString(),
+              $lte: new Date(endKeys[2]).toISOString(),
             },
           });
         }
@@ -1373,8 +1373,8 @@ exports.api = {
       const inArray = [];
       if (keysList && keysList.length > 0) {
         _.forEach(keysList, (keyItem) => {
-          if (keyItem && keyItem.length > 1) {
-            inArray.push(new Date(keyItem[1]).toISOString());
+          if (keyItem && keyItem.length > 2) {
+            inArray.push(new Date(keyItem[2]).toISOString());
           }
         });
       }
@@ -1385,7 +1385,7 @@ exports.api = {
       }
     } else if (key !== '' && key !== '[null]') {
       const keyJson = JSON.parse(key);
-      if (keyJson && keyJson.length > 1) {
+      if (keyJson && keyJson.length > 2) {
         _.get(matchStr, '$match.$and', []).push({
           approveRejectDate: new Date(keyJson[2]).toISOString(),
         });
