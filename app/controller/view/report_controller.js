@@ -846,6 +846,7 @@ exports.api = {
     const endKey = req.query.endkey || '';
     const keys = req.query.keys || '';
     const key = req.query.key || '';
+    let canSearch = false;
     const matchStr = {
       $match: {
         type: 'agent',
@@ -858,36 +859,32 @@ exports.api = {
       if (startKeys || endKeys) {
         if (_.isEqual(startKeys, endKeys)) {
           if (startKeys.length > 1) {
-            _.set(matchStr, '$match.type', startKeys[1]);
-          }
-        } else {
-          if (startKeys && startKeys.length > 1) {
-            _.set(matchStr, '$match.type.$gte', startKeys[1]);
-          }
-
-          if (endKeys && endKeys.length > 1) {
-            _.set(matchStr, '$match.type.$lte', endKeys[1]);
+            if (startKeys[1] === 'agents') {
+              canSearch = true;
+            }
           }
         }
       }
     } else if (keys !== '') {
       const keysList = JSON.parse(keys);
-      const inArray = [];
       if (keysList && keysList.length > 0) {
         _.forEach(keysList, (keyItem) => {
           if (keyItem && keyItem.length > 1) {
-            inArray.push(keyItem[1]);
+            if (keyItem[1] === 'agents') {
+              canSearch = true;
+            }
           }
         });
-      }
-      if (!_.isEmpty(inArray)) {
-        _.set(matchStr, '$match.type', { $in: inArray });
       }
     } else if (key !== '' && key !== '[null]') {
       const keyJson = JSON.parse(key);
       if (keyJson && keyJson.length > 1) {
-        _.set(matchStr, '$match.type', keyJson[1]);
+        if (keyJson[1] === 'agents') {
+          canSearch = true;
+        }
       }
+    } else {
+      canSearch = true;
     }
     if (!_.isEmpty(matchStr)) {
       aggregateStr.push(matchStr);
@@ -897,18 +894,25 @@ exports.api = {
       aggregateStr.push({ $sort: { agentCode: 1 } });
     }
     aggregateStr.push(projectStr);
-
-    mongoose.connection.collection('agent').aggregate(aggregateStr).toArray((err, docs) => {
-      if (err) {
-        res.json({ status: 400, message: err.message });
-      } else {
-        const resultTemp = {};
-        resultTemp.total_rows = docs.length;
-        resultTemp.rows = docs;
-        printlnEndLog(docs.length);
-        res.json(resultTemp);
-      }
-    });
+    if (canSearch) {
+      mongoose.connection.collection('agent').aggregate(aggregateStr).toArray((err, docs) => {
+        if (err) {
+          res.json({ status: 400, message: err.message });
+        } else {
+          const resultTemp = {};
+          resultTemp.total_rows = docs.length;
+          resultTemp.rows = docs;
+          printlnEndLog(docs.length);
+          res.json(resultTemp);
+        }
+      });
+    } else {
+      const resultTemp = {};
+      resultTemp.total_rows = 0;
+      resultTemp.rows = [];
+      printlnEndLog(0);
+      res.json(resultTemp);
+    }
   },
   allChannelAppCases(req, res) {
     const aggregateStr = [];
