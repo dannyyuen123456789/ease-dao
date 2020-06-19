@@ -6782,7 +6782,7 @@ exports.api = {
           policyOptions: '$policyOptions',
           policyOptionsDesc: '$policyOptionsDesc',
           quotType: { $cond: { if: '$quotType', then: '$quotType', else: '' } },
-          insureds: { $cond: { if: '$quotType', then: '$quotType', else: {} } },
+          insureds: { $cond: { if: '$insureds', then: '$insureds', else: {} } },
           iCids: [],
         },
       },
