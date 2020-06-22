@@ -29,6 +29,7 @@ class s3 extends fileUtils {
       region: awsConf.region,
       accessKeyId: process.env.aws_access_key_id,
       secretAccessKey: process.env.aws_secret_access_key,
+      sslEnabled: _.get(s3Config, 'sslEnabled'),
     });
 
     return true;

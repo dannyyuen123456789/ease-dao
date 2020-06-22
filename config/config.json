@@ -33,7 +33,8 @@
         "isProxy":false,
         "proxyLink":"",
         "region":"ap-southeast-1",
-        "signatureVersion":"v4"
+        "signatureVersion":"v4",
+        "sslEnabled": false
     }
   }
   
