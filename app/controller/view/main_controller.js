@@ -6769,7 +6769,7 @@ exports.api = {
           totCpfPortion: '$totCpfPortion',
           totCashPortion: '$totCashPortion',
           totMedisave: '$totMedisave',
-          totPremium: { $cond: { if: { quotType: 'SHIELD' }, then: '$totPremium', else: '$premium' } },
+          totPremium: { $cond: { if: { $eq: ['$quotType', 'SHIELD'] }, then: '$totPremium', else: '$premium' } },
           paymentMode: { $cond: { if: '$paymentMode', then: '$paymentMode', else: '' } },
           lastUpdateDate: '$lastUpdateDate',
           statusChangeDate: { $cond: { if: '$proposedDate', then: '$proposedDate', else: '$lastUpdateDate' } },
