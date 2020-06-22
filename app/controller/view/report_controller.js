@@ -530,7 +530,7 @@ const webVsIosReportApplication = async (req) => {
     if (!_.isEmpty(matchStr)) {
       aggregateStr.push(matchStr);
     }
-    console.log('>>>>>  matchStr ', JSON.stringify(matchStr));
+    // console.log('>>>>>  matchStr ', JSON.stringify(matchStr));
     if (CAN_ORDER) {
       aggregateStr.push({ $sort: { applicationStartedDate: 1 } });
     }
