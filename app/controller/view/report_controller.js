@@ -292,7 +292,7 @@ const webVsIosReportQuot = async (req) => {
             }
             if (keyItem && keyItem.length > 3) {
               _.set(tempWhere, 'pCid', keyItem[3]);
-              _.set(temp, 'pCid', keyItem[2]);
+              _.set(temp, 'pCid', keyItem[3]);
             }
             if (!_.isEmpty(tempWhere)) {
               inArray.push(tempWhere);
@@ -380,7 +380,7 @@ const webVsIosReportQuot = async (req) => {
         const clientId = _.get(item, 'value.clientId');
         const quickQuote = _.get(item, 'quickQuote', false);
         if (quickQuote && caseQuick && (_.isEmpty(quickKeys) || (!_.isEmpty(quickKeys)
-         && _.some(quickKeys, it => (it.pCid === item.clientId
+         && _.some(quickKeys, it => (it.pCid === clientId
            && new Date(it.lastUpdateDate).toISOString() === quotCreateDate))))) {
           const doc = _.omit(item, ['quickQuote']);
           _.set(doc, 'key', ['01', 'quickQuote', new Date(quotCreateDate).getTime(), clientId]);
@@ -530,6 +530,7 @@ const webVsIosReportApplication = async (req) => {
     if (!_.isEmpty(matchStr)) {
       aggregateStr.push(matchStr);
     }
+    console.log('>>>>>  matchStr ', JSON.stringify(matchStr));
     if (CAN_ORDER) {
       aggregateStr.push({ $sort: { applicationStartedDate: 1 } });
     }
