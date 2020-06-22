@@ -1414,7 +1414,7 @@ exports.api = {
             const doc = _.cloneDeep(item);
             const approveRejectDate = _.get(doc, 'approveRejectDate');
             if (approveRejectDate && approveRejectDate !== '') {
-              _.set(doc, 'key', ['01', new Date(approveRejectDate).getTime()]);
+              _.set(doc, 'key', ['01', 'approveRejectDate', new Date(approveRejectDate).getTime()]);
               result.push(_.omit(doc, ['approveRejectDate']));
             }
           });
