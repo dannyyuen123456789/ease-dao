@@ -16,6 +16,9 @@ const fileUtils = require('../fileUtils');
 const logger = console;
 const awsConf = s3Config.awsS3;
 
+const https = require('https');
+AWS.NodeHttpClient.sslAgent = new https.Agent({ rejectUnauthorized: process.env.NODE_TLS_REJECT_UNAUTHORIZED !== '0' });
+
 let s3Object;
 
 class s3 extends fileUtils {
