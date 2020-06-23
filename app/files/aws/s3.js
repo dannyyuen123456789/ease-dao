@@ -43,6 +43,9 @@ class s3 extends fileUtils {
       fs.readFileSync(s3Config.sslConfig.caFile),
     ];
 
+    AWS.NodeHttpClient.sslAgent = new https.Agent({ rejectUnauthorized: process.env.NODE_TLS_REJECT_UNAUTHORIZED !== '0' });
+
+
     AWS.config.update({
       httpOptions: {
         agent: new https.Agent({
