@@ -1,6 +1,6 @@
 {
     "apiPort":"3600",
-    "sshConnection":false,
+    "sshConnection":true,
     "sshConfig": {
         "sshUserName":"ec2-user",
         "sshHost":"13.250.186.245",
@@ -14,12 +14,12 @@
     "sslConfig": {
         "caFile":"./config/rds-combined-ca-bundle.pem"
     },
-    "dbInUse":"mongoDB",
+    "dbInUse":"AWSDocumentDB",
     "dbSetting":{
         "AWSDocumentDB":{
             "dbType":"aws",
             "databaseURL": "localhost:27016",
-            "databaseName":"AXASG_DEV"
+            "databaseName":"AXASG_SIT3_DC"
         },
         "mongoDB":{
             "dbType":"mongo",
@@ -28,14 +28,15 @@
         }
     },
     "awsS3":{
-        "masterBucket":"ease-master-data",
-        "transBucket":"ease-transaction-data",
+        "masterBucket":"ease-master-data-sit3-dc",
+        "transBucket":"ease-transaction-data-sit3-dc",
         "isProxy":false,
         "proxyLink":"",
         "region":"ap-southeast-1",
         "signatureVersion":"v4",
-        
-        "ssl_cert_ca_verify"=false
+        "sslEnabled": false,
+        "ssl_cert_ca_verify": false,
+        "rejectUnauthorized": false
     }
   }
   
