@@ -24,15 +24,15 @@ let s3Object;
 class s3 extends fileUtils {
   async init() {
     await this.setProxyEnv();
-    await this.setCaCert();
+   // await this.setCaCert();
 
     s3Object = new AWS.S3({
       signatureVersion: awsConf.signatureVersion,
       region: awsConf.region,
       accessKeyId: process.env.aws_access_key_id,
       secretAccessKey: process.env.aws_secret_access_key,
-      sslEnabled: s3Config.sslConfig.sslEnabled,
-      ssl_cert_ca_verify: s3Config.sslConfig.ssl_cert_ca_verify,
+      //sslEnabled: s3Config.sslConfig.sslEnabled,
+      //ssl_cert_ca_verify: s3Config.sslConfig.ssl_cert_ca_verify,
     });
 
     return true;
