@@ -25,11 +25,11 @@ class s3 extends fileUtils {
     await this.setProxyEnv();
 
     s3Object = new AWS.S3({
+      sslEnabled: _.get(s3Config, 'awsS3.sslEnabled'),
       signatureVersion: awsConf.signatureVersion,
       region: awsConf.region,
       accessKeyId: process.env.aws_access_key_id,
       secretAccessKey: process.env.aws_secret_access_key,
-      sslEnabled: false,
     });
 
     return true;
