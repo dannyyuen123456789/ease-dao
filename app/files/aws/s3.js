@@ -131,7 +131,9 @@ class s3 extends fileUtils {
       };
       s3Object.getObject(executeParams, (err, data) => {
         if (err) {
+          console.log('11111111111111111111111111');
           reject(err);
+          console.log('22222222222222222222222222');
         } else {
           resolve();
           cb(data.Body);
