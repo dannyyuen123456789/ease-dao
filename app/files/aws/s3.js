@@ -16,44 +16,23 @@ const fileUtils = require('../fileUtils');
 const logger = console;
 const awsConf = s3Config.awsS3;
 
-
 let s3Object;
 
 class s3 extends fileUtils {
   async init() {
+    //await this.getCredentials();
+
     await this.setProxyEnv();
-   // await this.setCaCert();
 
     s3Object = new AWS.S3({
       signatureVersion: awsConf.signatureVersion,
       region: awsConf.region,
       accessKeyId: process.env.aws_access_key_id,
       secretAccessKey: process.env.aws_secret_access_key,
-      //sslEnabled: s3Config.sslConfig.sslEnabled,
-      //ssl_cert_ca_verify: s3Config.sslConfig.ssl_cert_ca_verify,
+      sslEnabled: _.get(s3Config, 'sslEnabled'),
     });
 
     return true;
-  }
-
-  setCaCert() {
-    const fs = require('fs');
-    const https = require('https');
-    const certs = [
-      fs.readFileSync(s3Config.sslConfig.caFile),
-    ];
-
-    AWS.NodeHttpClient.sslAgent = new https.Agent({ rejectUnauthorized: process.env.NODE_TLS_REJECT_UNAUTHORIZED !== '0' });
-
-
-    AWS.config.update({
-      httpOptions: {
-        agent: new https.Agent({
-          rejectUnauthorized: _.get(s3Config, 'rejectUnauthorized'),
-          ca: certs,
-        }),
-      },
-    });
   }
 
   // go through proxy
@@ -134,10 +113,7 @@ class s3 extends fileUtils {
       };
       s3Object.getObject(executeParams, (err, data) => {
         if (err) {
-          console.log('11111111111111111111111111');
-          console.log(err);
           reject(err);
-          console.log('22222222222222222222222222');
         } else {
           resolve();
           cb(data.Body);

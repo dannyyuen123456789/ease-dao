@@ -93,7 +93,7 @@ exports.api = {
         res.send(attachment);
       }).catch((error) => {
         if (error) {
-          errMessage = error.message;
+          errMessage = error;
         }
       });
     } else {
@@ -127,7 +127,7 @@ exports.api = {
         printLogWithTime('----------------------------------------------------------------------');
       }).catch((error) => {
         if (error) {
-          errMessage = error.message;
+          errMessage = error;
         }
       });
     } else {
@@ -162,7 +162,7 @@ exports.api = {
 
       await fileInstance.uploadBase64(docId, attachmentId, attachment, mime).catch((error) => {
         if (error) {
-          errMessage = error.message;
+          errMessage = error;
         }
       });
 
@@ -220,7 +220,7 @@ exports.api = {
     if (initSuccess) {
       await fileInstance.deleteObject(docId, attachmentId).catch((error) => {
         if (error) {
-          errMessage = error.message;
+          errMessage = error;
         }
       });
 
