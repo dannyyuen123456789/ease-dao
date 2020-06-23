@@ -34,7 +34,8 @@
         "proxyLink":"",
         "region":"ap-southeast-1",
         "signatureVersion":"v4",
-        "sslEnabled": false
+        
+        "ssl_cert_ca_verify"=false
     }
   }
   
