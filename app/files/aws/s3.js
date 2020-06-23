@@ -22,6 +22,8 @@ class s3 extends fileUtils {
   async init() {
     //await this.getCredentials();
 
+    process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+
     await this.setProxyEnv();
 
     s3Object = new AWS.S3({
