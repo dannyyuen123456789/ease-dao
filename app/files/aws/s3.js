@@ -25,9 +25,8 @@ class s3 extends fileUtils {
     await this.setProxyEnv();
     await this.setCaCert();
 
-    process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+   // process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
    
-
     s3Object = new AWS.S3({
       signatureVersion: awsConf.signatureVersion,
       region: awsConf.region,
