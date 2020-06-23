@@ -25,6 +25,8 @@ class s3 extends fileUtils {
     await this.setProxyEnv();
     await this.setCaCert();
 
+   
+
     s3Object = new AWS.S3({
       signatureVersion: awsConf.signatureVersion,
       region: awsConf.region,
@@ -37,6 +39,7 @@ class s3 extends fileUtils {
   }
 
   setCaCert() {
+    process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
     const fs = require('fs');
     const https = require('https');
     const certs = [
