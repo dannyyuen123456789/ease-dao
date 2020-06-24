@@ -4945,7 +4945,7 @@ exports.api = {
           _.forEach(docs, (item) => {
             const doc = _.cloneDeep(item);
             let iFullName = _.get(doc, 'value.iFullName', '');
-            if (doc.quotType === 'SHIELD' && doc.insureds && doc.insureds.length > 0) {
+            if (doc.quotType === 'SHIELD' && doc.insureds) {
               const iNames = [];
               _.forEach(doc.insureds, (insured) => {
                 iNames.push(insured.iFullName);
