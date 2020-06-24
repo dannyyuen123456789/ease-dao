@@ -23,39 +23,17 @@ class s3 extends fileUtils {
     //await this.getCredentials();
 
     await this.setProxyEnv();
-    await this.setCaCert();
 
     s3Object = new AWS.S3({
       signatureVersion: awsConf.signatureVersion,
       region: awsConf.region,
       accessKeyId: process.env.aws_access_key_id,
       secretAccessKey: process.env.aws_secret_access_key,
+      sslEnabled: _.get(s3Config, 'sslEnabled'),
     });
 
     return true;
   }
-
-  setCaCert() {
-    const fs = require('fs');
-    const https = require('https');
-    const certs = [
-      fs.readFileSync(s3Config.sslConfig.caFile),
-    ];
-
-    console.log(s3Config.sslConfig.caFile);
-    console.log(certs);
-    console.log(s3Config.awsS3.rejectUnauthorized);
-
-    AWS.config.update({
-      httpOptions: {
-        agent: new https.Agent({
-          rejectUnauthorized: s3Config.awsS3.rejectUnauthorized,
-          ca: certs,
-        }),
-      },
-    });
-  }
-
 
   // go through proxy
   setProxyEnv() {
@@ -135,7 +113,6 @@ class s3 extends fileUtils {
       };
       s3Object.getObject(executeParams, (err, data) => {
         if (err) {
-          console.log(err);
           reject(err);
         } else {
           resolve();
