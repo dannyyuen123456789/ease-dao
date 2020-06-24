@@ -3972,7 +3972,7 @@ exports.api = {
           expiredDate: '$expiredDate',
           subApprovalList: '$subApprovalList',
           isShield: '$isShield',
-          proposalNumber: { $cond: { if: '$proposalNumber', then: '$proposalNumber', else: '$policyId' } },
+          proposalNumber: { $cond: { if: { $and: [{ $ne: ['$proposalNumber', ''] }] }, then: '$proposalNumber', else: '$policyId' } },
         },
       },
     };
@@ -4848,7 +4848,6 @@ exports.api = {
     if (!_.isEmpty(matchStr)) {
       aggregateStr.push(matchStr);
     }
-    // console.log(' >>>>> matchStr=', JSON.stringify(matchStr));
     if (CAN_ORDER || FIX_SORT_UI) { // 2020-06-11 fixed prod show list order
       aggregateStr.push({ $sort: { planInd: 1, covCode: 1 } });
     }
