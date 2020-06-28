@@ -164,7 +164,7 @@ exports.api = {
             result.push({
               id: doc.id,
               key: doc.key,
-              value: quotationCids,
+              value: { cids: quotationCids },
             });
           });
           resultTemp.total_rows = result.length;
