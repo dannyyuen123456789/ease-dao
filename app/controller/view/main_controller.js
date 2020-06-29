@@ -5,6 +5,7 @@ const _ = require('lodash');
 
 const CAN_ORDER = false;
 const FIX_SORT_UI = true;
+const FIX_SHIELD_PLAN_NAME = true;
 const printlnEndLog = (cnt) => {
   printLogWithTime(`Successful, result count: ${cnt}`);
   printLogWithTime('----------------------------------------------------------------------');
@@ -6452,6 +6453,17 @@ exports.api = {
       aggregateStr.push({ $sort: { 'quotation.agent.dealerGroup': 1, id: 1 } });
     }
     aggregateStr.push(projectStr);
+    const changShieldPlanName = (doc) => {
+      if (FIX_SHIELD_PLAN_NAME) {
+        if (_.get(doc, 'value.quotation.quotType', '') === 'SHIELD') {
+          const enProdName = _.get(doc, 'value.quotation.baseProductName.en');
+          if (enProdName) {
+            _.set(doc, 'value.quotation.baseProductName.en', `${enProdName} Plan`);
+          }
+        }
+      }
+    };
+
     mongoose.connection.collection('application').aggregate(aggregateStr).toArray((err, docs) => {
       if (err) {
         res.json({ status: 400, message: err.message });
@@ -6468,6 +6480,7 @@ exports.api = {
             )) {
               const doc = _.cloneDeep(item);
               _.set(doc, 'key', ['01', 'SINGPOST', doc.id]);
+              changShieldPlanName(doc);
               resultSingPost.push(_.omit(doc, ['branchInfo', 'dealerGroup']));
             }
             if (caseDirect && item.dealerGroup === 'DIRECT' && (
@@ -6475,6 +6488,7 @@ exports.api = {
             && _.some(directKeys, it => (it === item.id)))
             )) {
               const doc = _.cloneDeep(item);
+              changShieldPlanName(doc);
               _.set(doc, 'key', ['01', 'DIRECT', doc.id]);
               delete doc.value.bankRefId;
               resultDirect.push(_.omit(doc, ['branchInfo', 'dealerGroup']));
