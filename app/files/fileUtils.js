@@ -32,7 +32,10 @@ class fileUtils {
   }
 
   getBucketNameById(docId) {
-    let bucket = config.awsS3.transBucket;
+    const fileServerSetting = _.get(config, 'fileServerSetting');
+    const fileServerInUse = _.get(config, 'fileServerInUse');
+
+    let bucket = _.get(fileServerSetting, _.join([fileServerInUse, 'transBucket'], '.'));
 
     if (docId.substring(0, 2) === '10' || docId.substring(0, 2) === '30') {
     } else if (docId.substring(0, 2) === 'CP') {
@@ -48,16 +51,12 @@ class fileUtils {
     } else if (docId.length === 52 || docId.length === 50) {
     } else if (_.endsWith(docId, '-seq') || _.eq(docId, 'agentNumberMap')) {
     } else {
-      bucket = config.awsS3.masterBucket;
+      bucket = _.get(fileServerSetting, _.join([fileServerInUse, 'masterBucket'], '.'));;
     }
     const dao1 = new DAO();
     const awsDao = dao1.getInstance();
     const subFolder = awsDao.getCollectionNameById(docId);
-    if (_.eq(subFolder, 'masterData')) {
-      if (!_.eq(process.env.NODE_ENV, 'production')) {
-        bucket = `${bucket}-${process.env.NODE_ENV}`;
-      }
-    } else {
+    if (!_.eq(subFolder, 'masterData')) {
       bucket = `${bucket}/${awsDao.getCollectionNameById(docId)}`;
     }
     printLogWithTime(`docId = ${docId}`);

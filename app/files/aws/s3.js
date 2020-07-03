@@ -13,32 +13,42 @@ import printLogWithTime from '../../utils/log';
 
 const fileUtils = require('../fileUtils');
 
+const fileServerSetting = _.get(s3Config, 'fileServerSetting');
+const fileServerInUse = _.get(s3Config, 'fileServerInUse');
+
 const logger = console;
-const awsConf = s3Config.awsS3;
 
 let s3Object;
 
 class s3 extends fileUtils {
   async init() {
-    //await this.getCredentials();
-
     await this.setProxyEnv();
 
     s3Object = new AWS.S3({
-      signatureVersion: awsConf.signatureVersion,
-      region: awsConf.region,
+      signatureVersion: _.get(fileServerSetting, _.join([fileServerInUse, 'signatureVersion'], '.')),
+      region: _.get(fileServerSetting, _.join([fileServerInUse, 'region'], '.')),
       accessKeyId: process.env.aws_access_key_id,
       secretAccessKey: process.env.aws_secret_access_key,
-      sslEnabled: _.get(s3Config, 'sslEnabled'),
     });
+
+    const isAwsS3 = _.get(fileServerSetting, _.join([fileServerInUse, 'isAwsS3'], '.'));
+
+    // For non AWS S3 file use
+    if (isAwsS3 === false) {
+      AWS.config.update({
+        endpoint: _.get(fileServerSetting, _.join([fileServerInUse, 'endpoint'], '.')),
+        s3ForcePathStyle: true,
+        sslEnabled: false,
+      });
+    }
 
     return true;
   }
 
   // go through proxy
   setProxyEnv() {
-    const isProxy = _.get(s3Config, 'awsS3.isProxy');
-    const proxyLink = _.get(s3Config, 'awsS3.proxyLink');
+    const isProxy = _.get(fileServerSetting, _.join([fileServerInUse, 'isProxy'], '.'));
+    const proxyLink = _.get(fileServerSetting, _.join([fileServerInUse, 'proxyLink'], '.'));
 
     if (isProxy) {
       const HttpProxyAgent = require('https-proxy-agent');

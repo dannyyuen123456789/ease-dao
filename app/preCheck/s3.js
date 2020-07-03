@@ -7,8 +7,11 @@ import s3Config from '../../config/config.json';
 const checkS3Connection = async () => {
   printLogWithTime('========== 1 - Connect to AWS S3==========');
 
-  const isProxy = _.get(s3Config, 'awsS3.isProxy');
-  const proxyLink = _.get(s3Config, 'awsS3.proxyLink');
+  const fileServerSetting = _.get(s3Config, 'fileServerSetting');
+  const fileServerInUse = _.get(s3Config, 'fileServerInUse');
+
+  const isProxy = _.get(fileServerSetting, _.join([fileServerInUse, 'isProxy'], '.'));
+  const proxyLink = _.get(fileServerSetting, _.join([fileServerInUse, 'proxyLink'], '.'));
 
   if (isProxy) {
     printLogWithTime('Proxy enabled = true');
