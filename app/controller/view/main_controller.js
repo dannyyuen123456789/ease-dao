@@ -3392,7 +3392,7 @@ exports.api = {
       } else {
         const resultTemp = {};
         resultTemp.total_rows = docs.length;
-        resultTemp.rows = docs;
+        resultTemp.rows = _.sortBy(docs, o => _.toUpper(o.id));
         printlnEndLog(docs.length);
         res.json(resultTemp);
       }
