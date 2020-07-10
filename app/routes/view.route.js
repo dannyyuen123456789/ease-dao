@@ -62,6 +62,7 @@ router.get('/dataAnalyze/_view/documentsWithoutLstChgDate', $check.api.check, $d
 router.get('/invalidateViews/_view/quotationsByBaseProductCode', $check.api.check, $invalidateViews.api.quotationsByBaseProductCode);
 router.get('/invalidateViews/_view/quotationsByNHAFFund', $check.api.check, $invalidateViews.api.quotationsByNHAFFund);
 router.get('/invalidateViews/_view/validBundleInClient', $check.api.check, $invalidateViews.api.validBundleInClient);
+router.get('/invalidateViews/_view/quotationsByMutipleBaseProductCode', $check.api.check, $invalidateViews.api.quotationsByMutipleBaseProductCode);
 
 
 router.get('/report/_view/agentsDetail', $check.api.check, $report.api.agentsDetail);
