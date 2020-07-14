@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import printLogWithTime from '../../utils/log';
 
 const _ = require('lodash');
+const MasterData = require('../../models/masterData');
 
 const CAN_ORDER = false;
 const FIX_SORT_UI = true;
@@ -4742,6 +4743,7 @@ exports.api = {
 
       },
     };
+    const findWhere = { type: 'product' };
     if (startKey !== '' && endKey !== '') {
       const startKeys = JSON.parse(startKey);
       const endKeys = JSON.parse(endKey);
@@ -4750,17 +4752,20 @@ exports.api = {
           _.get(matchStr, '$match.$and', []).push({
             planInd: startKeys[1],
           });
+          _.set(findWhere, 'planInd', startKeys[1]);
           // _.set(matchStr, '$match.planInd', startKeys[1]);
           if (startKeys.length > 2) {
             _.get(matchStr, '$match.$and', []).push({
               covCode: startKeys[2],
             });
+            _.set(findWhere, 'covCode', startKeys[2]);
             // _.set(matchStr, '$match.covCode', startKeys[2]);
           }
         } else if (_.isEqual(startKeys[1], endKeys[1])) {
           _.get(matchStr, '$match.$and', []).push({
             planInd: startKeys[1],
           });
+          _.set(findWhere, 'planInd', startKeys[1]);
           const temp = {};
           if (startKeys.length > 2) {
             _.set(temp, '$gte', startKeys[2]);
@@ -4772,11 +4777,13 @@ exports.api = {
             _.get(matchStr, '$match.$and', []).push({
               covCode: temp,
             });
+            _.set(findWhere, 'covCode', temp);
           }
         } else {
           _.get(matchStr, '$match.$and', []).push({
             planInd: { $gte: startKeys[1], $lte: endKeys[1] },
           });
+          _.set(findWhere, 'planInd', { $gte: startKeys[1], $lte: endKeys[1] });
           const temp = [];
           const tempCovCode = {};
           if (startKeys.length > 2) {
@@ -4803,6 +4810,7 @@ exports.api = {
             _.get(matchStr, '$match.$and', []).push({
               $or: temp,
             });
+            _.set(findWhere, '$or', temp);
             // _.set(matchStr, '$match.$or', temp);
           }
         }
@@ -4829,6 +4837,7 @@ exports.api = {
         _.get(matchStr, '$match.$and', []).push({
           $or: inArray,
         });
+        _.set(findWhere, '$or', inArray);
         // _.set(matchStr, '$match.$or', inArray);
       }
     } else if (key !== '' && key !== '[null]') {
@@ -4837,12 +4846,14 @@ exports.api = {
         _.get(matchStr, '$match.$and', []).push({
           planInd: keyJson[1],
         });
+        _.set(findWhere, 'planInd', keyJson[1]);
         // _.set(matchStr, '$match.planInd', keyJson[1]);
       }
       if (keyJson && keyJson.length > 2) {
         _.get(matchStr, '$match.$and', []).push({
           covCode: keyJson[2],
         });
+        _.set(findWhere, 'covCode', keyJson[2]);
         // _.set(matchStr, '$match.covCode', keyJson[2]);
       }
     }
@@ -4853,17 +4864,97 @@ exports.api = {
       aggregateStr.push({ $sort: { planInd: 1, covCode: 1 } });
     }
     aggregateStr.push(projectStr);
-    mongoose.connection.collection('masterData').aggregate(aggregateStr).toArray((err, docs) => {
+    MasterData.find(findWhere, {
+      id: 1,
+      planInd: 1,
+      compCode: 1,
+      covCode: 1,
+      covName: 1,
+      version: 1,
+      planCode: 1,
+      productLine: 1,
+      productCategory: 1,
+      smokeInd: 1,
+      genderInd: 1,
+      ctyGroup: 1,
+      entryAge: 1,
+      currencies: 1,
+      quotForm: 1,
+      effDate: 1,
+      expDate: 1,
+      prodFeature: 1,
+      keyRisk: 1,
+      insuredAgeDesc: 1,
+      payModeDesc: 1,
+      polTermDesc: 1,
+      premTermDesc: 1,
+      illustrationInd: 1,
+      scrOrderSeq: 1,
+      tnc: 1,
+      _id: 0,
+    }, ((err, docs) => {
       if (err) {
         res.json({ status: 400, message: err.message });
       } else {
         const resultTemp = {};
         resultTemp.total_rows = docs.length;
-        resultTemp.rows = docs;
+        resultTemp.rows = [];
+        if (docs && docs.length > 0) {
+          const resultSort = _.sortBy(docs, ['planInd', 'covCode']);
+          _.forEach(resultSort, (item) => {
+            const doc = _.cloneDeep(item);
+            const temp = {
+              id: doc.id,
+              key: ['01', doc.planInd, doc.covCode],
+              value: {
+                compCode: doc.compCode,
+                covCode: doc.covCode,
+                covName: doc.covName,
+                version: doc.version,
+                planCode: doc.planCode,
+                productLine: doc.productLine,
+                productCategory: doc.productCategory,
+                smokeInd: doc.smokeInd,
+                genderInd: doc.genderInd,
+                ctyGroup: doc.ctyGroup,
+                entryAge: doc.entryAge,
+                currencies: doc.currencies,
+                quotForm: doc.quotForm ? doc.quotForm : '',
+                effDate: doc.effDate ? doc.effDate : 100000,
+                expDate: doc.expDate ? doc.expDate : 9999999900000,
+                prodFeature: doc.prodFeature ? doc.prodFeature : '',
+                keyRisk: doc.keyRisk ? doc.keyRisk : '',
+                insuredAgeDesc: doc.insuredAgeDesc ? doc.insuredAgeDesc : '',
+                payModeDesc: doc.payModeDesc ? doc.payModeDesc : '',
+                polTermDesc: doc.polTermDesc ? doc.polTermDesc : '',
+                premTermDesc: doc.premTermDesc ? doc.premTermDesc : '',
+                illustrationInd: doc.illustrationInd ? doc.illustrationInd : '',
+                scrOrderSeq: doc.scrOrderSeq ? doc.scrOrderSeq : 0,
+                tnc: doc.tnc ? doc.tnc : '',
+              },
+            };
+            if (_.isEmpty(doc.currencies)) {
+              delete temp.value.currencies;
+            }
+            resultTemp.rows.push(temp);
+          });
+        }
+
         printlnEndLog(docs.length);
         res.json(resultTemp);
       }
-    });
+    }));
+    // mongoose.connection.collection('masterData').aggregate(aggregateStr).toArray((err, docs) => {
+    //   if (err) {
+    //     res.json({ status: 400, message: err.message });
+    //   } else {
+    //     const resultTemp = {};
+    //     resultTemp.total_rows = docs.length;
+    //     resultTemp.rows = docs;
+    //     printlnEndLog(docs.length);
+    //     res.json(resultTemp);
+    //   }
+    // });
   },
   quickQuotes(req, res) {
     const aggregateStr = [];
