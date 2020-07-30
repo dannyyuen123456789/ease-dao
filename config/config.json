@@ -19,7 +19,7 @@
         "AWSDocumentDB":{
             "dbType":"aws",
             "databaseURL": "localhost:27016",
-            "databaseName":"AXASG_SIT3_DC"
+            "databaseName":"AXASG_SIT"
         },
         "mongoDB":{
             "dbType":"mongo",
