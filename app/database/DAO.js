@@ -61,14 +61,8 @@ class DAO {
   replaceDot(obj, rev) {
     _.forOwn(obj, (value, key) => {
       // if key has a period, replace all occurences with an underscore
-      let replaceKey = '.';
-      let replaceValue = '<|>';
-      if (rev) {
-        replaceValue = '.';
-        replaceKey = '<|>';
-      }
-      if (_.includes(key, replaceKey)) {
-        const cleanKey = _.replace(key, replaceKey, replaceValue);
+      if (_.includes(key, '.')) {
+        const cleanKey = _.replace(key, /\./g, '<|>');
         // eslint-disable-next-line no-param-reassign
         obj[`${cleanKey}`] = value;
         // eslint-disable-next-line no-param-reassign
