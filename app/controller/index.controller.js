@@ -5,6 +5,9 @@
 import printLogWithTime from '../utils/log';
 import DAO from '../database/DAO';
 import fileUtils from '../files/fileUtils';
+import systemConfig from '../../config/config.json';
+
+const request = require('request');
 
 const _ = require('lodash');
 
@@ -32,27 +35,28 @@ exports.api = {
       printLogWithTime(`Result - FAILED - ${result.result}`);
       res.json({ error: 'error', reason: result.result });
     }
-
     printLogWithTime('----------------------------------------------------------------------');
   },
 
   // Insert or update Json Document
   async updateDoc(req, res) {
     const docId = _.get(req.params, 'docId', _.get(req.query, 'docId'));
-    printLogWithTime(`updateDoc/${docId}`);
-    const data = req.body;
-    const dao = new DAO('AWS');
-    const awsDao = dao.getInstance();
-    const result = await awsDao.updateDoc(docId, data);
-
-    if (_.get(result, 'success')) {
-      printLogWithTime(`Result - Success - ${docId}`);
-      res.json({ id: docId, ok: true, rev: 1 });
-    } else {
-      printLogWithTime(`Result - FAILED - ${docId} - ${result.result}`);
-      res.json({ error: 400, reason: result.result });
-    }
-
+    const options = {
+      url: `${systemConfig.writeData.path}:${systemConfig.writeData.port}/${systemConfig.writeData.name}/updateDoc/${docId}`, // ,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      method: 'PUT',
+      body: JSON.stringify(req.body),
+    };
+    request.put(options, (error, response, body) => {
+      if (error) {
+        printLogWithTime(error);
+        res.json({ status: 400, error });
+      } else {
+        res.json(JSON.parse(body));
+      }
+    });
     printLogWithTime('----------------------------------------------------------------------');
   },
 
@@ -60,17 +64,17 @@ exports.api = {
   async deleteDoc(req, res) {
     const docId = _.get(req.params, 'docId', _.get(req.query, 'docId'));
     printLogWithTime(`deleteDoc/${docId}`);
-    const dao = new DAO('AWS');
-    const awsDao = dao.getInstance();
-    const result = await awsDao.deleteDoc(docId);
 
-    if (_.get(result, 'success')) {
-      printLogWithTime(`Result - Success - ${docId}`);
-      res.json({ id: docId, ok: true, rev: 1 });
-    } else {
-      printLogWithTime(`Result - FAILED - ${docId} - ${result.result}`);
-      res.json({ status: 400, result: result.result });
-    }
+    const url = `${systemConfig.writeData.path}:${systemConfig.writeData.port}/${systemConfig.writeData.name}/deleteDoc/${docId}`;
+
+    request.delete(url, (error, response, body) => {
+      if (error) {
+        printLogWithTime(error);
+        res.json({ status: 400, error });
+      } else {
+        res.json(JSON.parse(body));
+      }
+    });
 
     printLogWithTime('----------------------------------------------------------------------');
   },
@@ -256,5 +260,12 @@ exports.api = {
 
     printLogWithTime('----------------------------------------------------------------------');
   },
+  async addTest(req, res) {
+    printLogWithTime('addTest');
+
+    res.json({ ok: false });
+    printLogWithTime('----------------------------------------------------------------------');
+  },
+
 
 };
