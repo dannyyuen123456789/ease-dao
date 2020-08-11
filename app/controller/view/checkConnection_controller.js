@@ -4,8 +4,8 @@ import printLogWithTime from '../../utils/log';
 
 exports.api = {
   check(req, res, next) {
-    printLogWithTime('Get view');
-    printLogWithTime(`Request - ${req.originalUrl}`);
+    printLogWithTime(`Request view received - ${req.originalUrl}`);
+    printLogWithTime('----------------------------------------------------------------------');
     if (mongoose.connection.readyState === 1) {
       next();
     } else {

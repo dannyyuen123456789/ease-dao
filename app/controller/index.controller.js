@@ -15,6 +15,7 @@ exports.api = {
 
   // Get Json Document
   async getDoc(req, res) {
+    var now = Date.now();
     const docId = _.get(req.params, 'docId', _.get(req.query, 'docId'));
     printLogWithTime(`getDoc/${docId}`);
     const dao = new DAO('AWS');
@@ -25,14 +26,14 @@ exports.api = {
       const resResult = result.result;
 
       if (resResult) {
-        printLogWithTime(`Result - Success - ${docId}`);
+        printLogWithTime(`Result - Success - ${docId} - ${Date.now() - now}ms`);
         res.json(result.result);
       } else {
         printLogWithTime(`Result - FAILED - ${docId} - Document Not Found`);
         res.json({ error: 'not_found', reason: 'missing' });
       }
     } else {
-      printLogWithTime(`Result - FAILED - ${result.result}`);
+      printLogWithTime(`Result - FAILED - ${docId} - Document Not Found - ${Date.now() - now}ms`);
       res.json({ error: 'error', reason: result.result });
     }
     printLogWithTime('----------------------------------------------------------------------');
@@ -40,6 +41,7 @@ exports.api = {
 
   // Insert or update Json Document
   async updateDoc(req, res) {
+    var now = Date.now();
     const docId = _.get(req.params, 'docId', _.get(req.query, 'docId'));
     const options = {
       url: `${systemConfig.writeData.path}:${systemConfig.writeData.port}/${systemConfig.writeData.name}/updateDoc/${docId}`, // ,
@@ -51,9 +53,10 @@ exports.api = {
     };
     request.put(options, (error, response, body) => {
       if (error) {
-        printLogWithTime(error);
-        res.json({ status: 400, error });
+        printLogWithTime(`Result - FAILED - ${docId} - ${result.result} - ${Date.now() - now}ms`);
+        res.json({ error: 400, reason: error });
       } else {
+        printLogWithTime(`Result - Success - ${docId} - ${Date.now() - now}ms`);
         res.json(JSON.parse(body));
       }
     });
@@ -62,6 +65,7 @@ exports.api = {
 
   // Delete Json Document
   async deleteDoc(req, res) {
+    var now = Date.now();
     const docId = _.get(req.params, 'docId', _.get(req.query, 'docId'));
     printLogWithTime(`deleteDoc/${docId}`);
 
@@ -69,10 +73,11 @@ exports.api = {
 
     request.delete(url, (error, response, body) => {
       if (error) {
-        printLogWithTime(error);
-        res.json({ status: 400, error });
+        printLogWithTime(`Result - FAILED - ${docId} - ${result.result} - ${Date.now() - now}ms`);
+        res.json({ error: 400, reason: error });
       } else {
-        res.json(JSON.parse(body));
+        printLogWithTime(`Result - Success - ${docId} - ${Date.now() - now}ms`);
+        res.json(JSON.parse(body));;
       }
     });
 
@@ -81,6 +86,7 @@ exports.api = {
 
   // Get Attachment
   async getAttachment(req, res) {
+    var now = Date.now();
     let errMessage = '';
     const docId = _.get(req.params, 'docId', _.get(req.query, 'docId'));
     const attachmentId = _.get(req.params, 'attachment', _.get(req.query, 'attachment'));
@@ -93,7 +99,7 @@ exports.api = {
 
     if (initSuccess) {
       await fileInstance.getAttachment(docId, attachmentId, (attachment) => {
-        printLogWithTime(`Result - Success - ${docId}`);
+        printLogWithTime(`Result - Success - ${docId} - ${Date.now() - now}ms`);
         res.send(attachment);
       }).catch((error) => {
         if (error) {
@@ -105,7 +111,7 @@ exports.api = {
     }
 
     if (errMessage) {
-      printLogWithTime(`Result - Failed - ${docId} - ${errMessage}`);
+      printLogWithTime(`Result - Failed - ${docId} - ${errMessage} - ${Date.now() - now}ms`);
       res.json({ ok: false, message: errMessage });
     }
 
@@ -114,6 +120,7 @@ exports.api = {
 
   // Get Attachment URL
   async getAttachmentUrl(req, res) {
+    var now = Date.now();
     let errMessage = '';
     const docId = _.get(req.params, 'docId', _.get(req.query, 'docId'));
     const attachmentId = _.get(req.params, 'attachment', _.get(req.query, 'attachment'));
@@ -126,7 +133,7 @@ exports.api = {
 
     if (initSuccess) {
       await fileInstance.getAttachmentUrl(docId, attachmentId, (attachment) => {
-        printLogWithTime(`Result - Success - ${docId}`);
+        printLogWithTime(`Result - Success - ${docId} - ${Date.now() - now}ms`);
         res.json(attachment);
         printLogWithTime('----------------------------------------------------------------------');
       }).catch((error) => {
@@ -139,7 +146,7 @@ exports.api = {
     }
 
     if (errMessage) {
-      printLogWithTime(`Result Failed -  ${docId} - ${errMessage}`);
+      printLogWithTime(`Result Failed -  ${docId} - ${errMessage} - ${Date.now() - now}ms`);
       res.json({ ok: false, message: errMessage });
     }
 
@@ -148,6 +155,7 @@ exports.api = {
 
   // Upload Attachment by base64
   async uploadAttachmentByBase64(req, res) {
+    var now = Date.now();
     let errMessage = '';
     const docId = _.get(req.params, 'docId', _.get(req.query, 'docId'));
     const attachmentId = _.get(req.params, 'attachment', _.get(req.query, 'attachment'));
@@ -194,10 +202,10 @@ exports.api = {
     }
 
     if (errMessage) {
-      printLogWithTime(`Result - Failed - ${docId} - ${errMessage}`);
+      printLogWithTime(`Result - Failed - ${docId} - ${errMessage} - ${Date.now() - now}ms`);
       res.json({ error: false, reason: errMessage });
     } else {
-      printLogWithTime(`Result - Success - ${docId}`);
+      printLogWithTime(`Result - Success - ${docId} - ${Date.now() - now}ms`);
 
       res.json({
         id: `${docId}`,
@@ -211,6 +219,7 @@ exports.api = {
 
   // Delete Attachment
   async delAttachment(req, res) {
+    var now = Date.now();
     let errMessage = '';
     const docId = _.get(req.params, 'docId', _.get(req.query, 'docId'));
     const attachmentId = _.get(req.params, 'attachment', _.get(req.query, 'attachment'));
@@ -251,21 +260,14 @@ exports.api = {
     }
 
     if (errMessage) {
-      printLogWithTime(`Result - Failed - ${errMessage}`);
+      printLogWithTime(`Result - Failed - ${errMessage} - ${Date.now() - now}ms`);
       res.json({ ok: false, message: errMessage });
     } else {
-      printLogWithTime(`Result - success - ${docId}/${attachmentId}`);
+      printLogWithTime(`Result - success - ${docId}/${attachmentId} - ${Date.now() - now}ms`);
       res.json({ id: docId, ok: true, rev: 1 });
     }
 
     printLogWithTime('----------------------------------------------------------------------');
   },
-  async addTest(req, res) {
-    printLogWithTime('addTest');
-
-    res.json({ ok: false });
-    printLogWithTime('----------------------------------------------------------------------');
-  },
-
-
+  
 };

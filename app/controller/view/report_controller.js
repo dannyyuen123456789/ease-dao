@@ -4,11 +4,14 @@ import printLogWithTime from '../../utils/log';
 const _ = require('lodash');
 
 const CAN_ORDER = false;
-const printlnEndLog = (cnt) => {
-  printLogWithTime(`Successful, result count: ${cnt}`);
+const printlnEndLog = (cnt, now, req) => {
+  printLogWithTime('Get view');
+  printLogWithTime(`Request - ${req.originalUrl}`);
+  printLogWithTime(`Result - Success - result count: ${cnt} - ${Date.now() - now}ms`);
   printLogWithTime('----------------------------------------------------------------------');
 };
 const webVsIosReportBundle = async (req) => {
+  var now = Date.now();
   const aggregateStr = [];
   // This is the query result and alias -> projectStr
   const projectStr = {
@@ -148,6 +151,7 @@ const webVsIosReportBundle = async (req) => {
 };
 
 const webVsIosReportQuot = async (req) => {
+  var now = Date.now();
   const aggregateStr = [];
   const projectStr = {
     $project: {
@@ -399,6 +403,7 @@ const webVsIosReportQuot = async (req) => {
   return result;
 };
 const webVsIosReportApplication = async (req) => {
+  var now = Date.now();
   const aggregateStr = [];
   const projectStr = {
     $project: {
@@ -559,6 +564,7 @@ const webVsIosReportApplication = async (req) => {
   return result;
 };
 const webVsIosReportAgents = async (req) => {
+  var now = Date.now();
   const aggregateStr = [];
   // This is the query result and alias -> projectStr
   const projectStr = {
@@ -650,6 +656,7 @@ const webVsIosReportAgents = async (req) => {
   return [];
 };
 const webVsIosReportCust = async (req) => {
+  var now = Date.now();
   const aggregateStr = [];
   // This is the query result and alias -> projectStr
   const projectStr = {
@@ -824,6 +831,7 @@ const webVsIosReportCust = async (req) => {
 };
 exports.api = {
   agentsDetail(req, res) {
+    var now = Date.now();
     const aggregateStr = [];
     // This is the query result and alias -> projectStr
     const projectStr = {
@@ -903,7 +911,7 @@ exports.api = {
           const resultTemp = {};
           resultTemp.total_rows = docs.length;
           resultTemp.rows = docs;
-          printlnEndLog(docs.length);
+          printlnEndLog(docs.length, now, req);
           res.json(resultTemp);
         }
       });
@@ -911,7 +919,7 @@ exports.api = {
       const resultTemp = {};
       resultTemp.total_rows = 0;
       resultTemp.rows = [];
-      printlnEndLog(0);
+      printlnEndLog(0, now, req);
       res.json(resultTemp);
     }
   },
@@ -1318,7 +1326,7 @@ exports.api = {
         const result = _.concat(appIdResult, appStartResult, appSubResult);
         resultTemp.total_rows = result.length;
         resultTemp.rows = result;
-        printlnEndLog(result.length);
+        printlnEndLog(result.length, now, req);
         res.json(resultTemp);
       }
     });
@@ -1422,7 +1430,7 @@ exports.api = {
         }
         resultTemp.total_rows = result.length;
         resultTemp.rows = result;
-        printlnEndLog(result.length);
+        printlnEndLog(result.length, now, req);
         res.json(resultTemp);
       }
     });
@@ -1438,7 +1446,7 @@ exports.api = {
     const resultTemp = {};
     resultTemp.total_rows = result.length;
     resultTemp.rows = result;
-    printlnEndLog(result.length);
+    printlnEndLog(result.length, now, req);
     res.json(resultTemp);
   },
 };

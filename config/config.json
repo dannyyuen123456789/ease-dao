@@ -1,6 +1,6 @@
 {
     "apiPort":"3600",
-    "sshConnection":true,
+    "sshConnection":false,
     "sshConfig": {
         "sshUserName":"ec2-user",
         "sshHost":"13.250.186.245",
@@ -14,7 +14,7 @@
     "sslConfig": {
         "caFile":"./config/rds-combined-ca-bundle.pem"
     },
-    "dbInUse":"AWSDocumentDB",
+    "dbInUse":"mongoDB",
     "dbSetting":{
         "AWSDocumentDB":{
             "dbType":"aws",
@@ -24,7 +24,7 @@
         "mongoDB":{
             "dbType":"mongo",
             "databaseURL": "192.168.225.180:47017",
-            "databaseName":"AXASG_DEV"
+            "databaseName":"AXASG_SIT2"
         }
     },
     "fileServerInUse":"awsS3",
