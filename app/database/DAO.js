@@ -54,7 +54,7 @@ class DAO {
     } else {
       type = 'masterData';
     }
-    printLogWithTime(`Collection name - ${type}`);
+    //printLogWithTime(`Collection name - ${type}`);
     return type;
   }
 

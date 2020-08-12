@@ -4,12 +4,14 @@ import printLogWithTime from '../../utils/log';
 const _ = require('lodash');
 
 const CAN_ORDER = false;
-const printlnEndLog = (cnt) => {
-  printLogWithTime(`Successful, result count: ${cnt}`);
+const printlnEndLog = (cnt, req, now) => {
+  printLogWithTime(`Request - Get View ${req.originalUrl}`);
+  printLogWithTime(`Result  - Success - result count: ${cnt} - ${Date.now() - now}ms`);
   printLogWithTime('----------------------------------------------------------------------');
 };
 exports.api = {
   approvalDetails(req, res) {
+    const now = Date.now();
     // doc.type === 'approval') {
     //   emit(['01', doc.approvalStatus, doc.approvalCaseId], emitObj);
     const aggregateStr = [];
@@ -143,7 +145,7 @@ exports.api = {
         const resultTemp = {};
         resultTemp.total_rows = docs.length;
         resultTemp.rows = docs;
-        printlnEndLog(docs.length);
+        printlnEndLog(docs.length, req, now);
         res.json(resultTemp);
       }
     });

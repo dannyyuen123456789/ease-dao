@@ -32,7 +32,7 @@ class awsDAO extends DAO {
       }
     }
     result = this.replaceDot(result, true);
-    return { success: status, result };
+    return { success: status, result, docType };
   }
 
   async updateDoc(docId, data) {

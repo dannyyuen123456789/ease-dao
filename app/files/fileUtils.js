@@ -59,8 +59,8 @@ class fileUtils {
     if (!_.eq(subFolder, 'masterData')) {
       bucket = `${bucket}/${awsDao.getCollectionNameById(docId)}`;
     }
-    printLogWithTime(`docId = ${docId}`);
-    printLogWithTime(`bucket = ${bucket}`);
+    // printLogWithTime(`docId = ${docId}`);
+    // printLogWithTime(`bucket = ${bucket}`);
 
     return bucket;
   }

@@ -5,12 +5,14 @@ const _ = require('lodash');
 
 
 const CAN_ORDER = false;
-const printlnEndLog = (cnt) => {
-  printLogWithTime(`Successful, result count: ${cnt}`);
+const printlnEndLog = (cnt, req, now) => {
+  printLogWithTime(`Request - Get View ${req.originalUrl}`);
+  printLogWithTime(`Result  - Success - result count: ${cnt} - ${Date.now() - now}ms`);
   printLogWithTime('----------------------------------------------------------------------');
 };
 exports.api = {
   quotationsByBaseProductCode(req, res) {
+    const now = Date.now();
     // console.log(">>>>>",req.query);
     const aggregateStr = [];
     // This is the query result and alias -> projectStr
@@ -76,12 +78,13 @@ exports.api = {
         const resultTemp = {};
         resultTemp.total_rows = docs.length;
         resultTemp.rows = docs;
-        printlnEndLog(docs.length);
+        printlnEndLog(docs.length, req, now);
         res.json(resultTemp);
       }
     });
   },
   quotationsByNHAFFund(req, res) {
+    const now = Date.now();
     // console.log(">>>>>",req.query);
     const aggregateStr = [];
     // This is the query result and alias -> projectStr
@@ -169,17 +172,18 @@ exports.api = {
           });
           resultTemp.total_rows = result.length;
           resultTemp.rows = result;
-          printlnEndLog(result.length);
+          printlnEndLog(result.length, req, now);
         } else {
           resultTemp.total_rows = docs.length;
           resultTemp.rows = docs;
-          printlnEndLog(docs.length);
+          printlnEndLog(docs.length, req, now);
         }
         res.json(resultTemp);
       }
     });
   },
   validBundleInClient(req, res) {
+    const now = Date.now();
     // console.log(">>>>>",req.query);
     const aggregateStr = [];
     // This is the query result and alias -> projectStr
@@ -267,17 +271,18 @@ exports.api = {
           });
           resultTemp.total_rows = result.length;
           resultTemp.rows = result;
-          printlnEndLog(result.length);
+          printlnEndLog(result.length, req, now);
         } else {
           resultTemp.total_rows = docs.length;
           resultTemp.rows = docs;
-          printlnEndLog(docs.length);
+          printlnEndLog(docs.length, req, now);
         }
         res.json(resultTemp);
       }
     });
   },
   quotationsByMutipleBaseProductCode(req, res) {
+    const now = Date.now();
     // console.log(">>>>>",req.query);
     const aggregateStr = [];
     // This is the query result and alias -> projectStr
@@ -388,7 +393,7 @@ exports.api = {
         const resultTemp = {};
         resultTemp.total_rows = docs.length;
         resultTemp.rows = docs;
-        printlnEndLog(docs.length);
+        printlnEndLog(docs.length, req, now);
         res.json(resultTemp);
       }
     });

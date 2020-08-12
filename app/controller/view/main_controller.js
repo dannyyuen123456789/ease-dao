@@ -7,13 +7,15 @@ const MasterData = require('../../models/masterData');
 const CAN_ORDER = false;
 const FIX_SORT_UI = true;
 const FIX_SHIELD_PLAN_NAME = true;
-const printlnEndLog = (cnt) => {
-  printLogWithTime(`Successful, result count: ${cnt}`);
+const printlnEndLog = (cnt, req, now) => {
+  printLogWithTime(`Request - Get View ${req.originalUrl}`);
+  printLogWithTime(`Result  - Success - result count: ${cnt} - ${Date.now() - now}ms`);
   printLogWithTime('----------------------------------------------------------------------');
 };
 // xue.hua
 exports.api = {
   agentDetails(req, res) {
+    const now = Date.now();
     const aggregateStr = [];
     const projectStr = {};
     const startKey = req.query.startkey || '';
@@ -290,12 +292,13 @@ exports.api = {
           fafirmCodeResult, proxy1Result, proxy2Result);
         resultTemp.total_rows = result.length;
         resultTemp.rows = result;
-        printlnEndLog(result.length);
+        printlnEndLog(result.length, req, now);
         res.json(resultTemp);
       }
     });
   },
   agentWithDescendingOrder(req, res) {
+    const now = Date.now();
     const aggregateStr = [];
     // This is the query result and alias -> projectStr
     const projectStr = {
@@ -1171,12 +1174,13 @@ exports.api = {
         result = _.concat(resultAgent, resultTime);
         resultTemp.total_rows = result.length;
         resultTemp.rows = result;
-        printlnEndLog(result.length);
+        printlnEndLog(result.length, req, now);
         res.json(resultTemp);
       }
     });
   },
   agents(req, res) {
+    const now = Date.now();
     // console.log(">>>>>",req.query);
     const aggregateStr = [];
     // This is the query result and alias -> projectStr
@@ -1266,12 +1270,13 @@ exports.api = {
         }
         resultTemp.total_rows = result.length;
         resultTemp.rows = result;
-        printlnEndLog(result.length);
+        printlnEndLog(result.length, req, now);
         res.json(resultTemp);
       }
     });
   },
   allChannelApprovalCases(req, res) {
+    const now = Date.now();
     // doc.type === 'approval') {
     //   emit(['01', doc.approvalStatus, doc.approvalCaseId], emitObj);
     const aggregateStr = [];
@@ -1383,12 +1388,13 @@ exports.api = {
         }
         resultTemp.total_rows = result.length;
         resultTemp.rows = result;
-        printlnEndLog(result.length);
+        printlnEndLog(result.length, req, now);
         res.json(resultTemp);
       }
     });
   },
   appByPolNum(req, res) {
+    const now = Date.now();
     const aggregateStr = [];
     // This is the query result and alias -> projectStr
     // const projectStr = {
@@ -1468,12 +1474,13 @@ exports.api = {
         }
         resultTemp.total_rows = result.length;
         resultTemp.rows = result;
-        printlnEndLog(result.length);
+        printlnEndLog(result.length, req, now);
         res.json(resultTemp);
       }
     });
   },
   appWithSubmitDate(req, res) {
+    const now = Date.now();
     const aggregateStr = [];
     // This is the query result and alias -> projectStr
     const projectStr = {
@@ -1712,12 +1719,13 @@ exports.api = {
         }
         resultTemp.total_rows = result.length;
         resultTemp.rows = result;
-        printlnEndLog(result.length);
+        printlnEndLog(result.length, req, now);
         res.json(resultTemp);
       }
     });
   },
   appWithoutSubmitDate(req, res) {
+    const now = Date.now();
     const aggregateStr = [];
     // This is the query result and alias -> projectStr
     const projectStr = {
@@ -1922,12 +1930,13 @@ exports.api = {
         }
         resultTemp.total_rows = result.length;
         resultTemp.rows = result;
-        printlnEndLog(result.length);
+        printlnEndLog(result.length, req, now);
         res.json(resultTemp);
       }
     });
   },
   approvalApp(req, res) {
+    const now = Date.now();
     // doc.type === 'approval') {
     //   emit(['01', doc.approvalStatus, doc.approvalCaseId], emitObj);
     const aggregateStr = [];
@@ -2012,12 +2021,13 @@ exports.api = {
         const resultTemp = {};
         resultTemp.total_rows = docs.length;
         resultTemp.rows = docs;
-        printlnEndLog(docs.length);
+        printlnEndLog(docs.length, req, now);
         res.json(resultTemp);
       }
     });
   },
   approvalCases(req, res) {
+    const now = Date.now();
     // doc.type === 'approval') {
     //   emit(['01', doc.approvalStatus, doc.approvalCaseId], emitObj);
     const aggregateStr = [];
@@ -2132,12 +2142,13 @@ exports.api = {
         }
         resultTemp.total_rows = result.length;
         resultTemp.rows = result;
-        printlnEndLog(result.length);
+        printlnEndLog(result.length, req, now);
         res.json(resultTemp);
       }
     });
   },
   approvalDateCases(req, res) {
+    const now = Date.now();
     // doc.type === 'approval') {
     //   emit(['01', doc.approvalStatus, doc.approvalCaseId], emitObj);
     const aggregateStr = [];
@@ -2258,12 +2269,13 @@ exports.api = {
         }
         resultTemp.total_rows = result.length;
         resultTemp.rows = result;
-        printlnEndLog(result.length);
+        printlnEndLog(result.length, req, now);
         res.json(resultTemp);
       }
     });
   },
   async approvalDetails(req, res) {
+    const now = Date.now();
     // doc.type === 'approval') {
     //   emit(['01', doc.approvalStatus, doc.], emitObj);
     const aggregateStr = [];
@@ -2459,10 +2471,11 @@ exports.api = {
     const resultTemp = {};
     resultTemp.total_rows = result.length;
     resultTemp.rows = result;
-    printlnEndLog(result.length);
+    printlnEndLog(result.length, req, now);
     res.json(resultTemp);
   },
   bundleApp(req, res) {
+    const now = Date.now();
     // doc.type === 'bundle') {
     //   emit(['01', 'application',  app.applicationDocId]
     const aggregateStr = [];
@@ -2609,12 +2622,13 @@ exports.api = {
         // const result = _.concat(endTimeResult, docs);
         resultTemp.total_rows = result.length;
         resultTemp.rows = result;
-        printlnEndLog(result.length);
+        printlnEndLog(result.length, req, now);
         res.json(resultTemp);
       }
     });
   },
   bundleApplications(req, res) {
+    const now = Date.now();
     // doc.type === 'bundle') {
     //   emit(['01', 'application',  app.applicationDocId]
     const aggregateStr = [];
@@ -2890,12 +2904,13 @@ exports.api = {
         const result = _.concat(appResult, quotResult);
         resultTemp.total_rows = result.length;
         resultTemp.rows = result;
-        printlnEndLog(result.length);
+        printlnEndLog(result.length, req, now);
         res.json(resultTemp);
       }
     });
   },
   contacts(req, res) {
+    const now = Date.now();
     // console.log(">>>>>",req.query);
     const aggregateStr = [];
     // This is the query result and alias -> projectStr
@@ -2972,12 +2987,13 @@ exports.api = {
         const resultTemp = {};
         resultTemp.total_rows = docs.length;
         resultTemp.rows = docs;
-        printlnEndLog(docs.length);
+        printlnEndLog(docs.length, req, now);
         res.json(resultTemp);
       }
     });
   },
   cpfApps(req, res) {
+    const now = Date.now();
     // doc.type === 'application') {
     //  emit(['01',  payment.initPayMethod],
     const aggregateStr = [];
@@ -3106,12 +3122,13 @@ exports.api = {
         const resultTemp = {};
         resultTemp.total_rows = result.length;
         resultTemp.rows = result;
-        printlnEndLog(result.length);
+        printlnEndLog(result.length, req, now);
         res.json(resultTemp);
       }
     });
   },
   async applicationsByAgent(req, res) {
+    const now = Date.now();
     // console.log(">>>>>",req.query);
     const aggregateStr = [];
     // This is the query result and alias -> projectStr
@@ -3233,10 +3250,11 @@ exports.api = {
     const resultTemp = {};
     resultTemp.total_rows = result.length;
     resultTemp.rows = result;
-    printlnEndLog(result.length);
+    printlnEndLog(result.length, req, now);
     res.json(resultTemp);
   },
   directorDownline(req, res) {
+    const now = Date.now();
     const aggregateStr = [];
     // This is the query result and alias -> projectStr
     const projectStr = {
@@ -3307,12 +3325,13 @@ exports.api = {
         const resultTemp = {};
         resultTemp.total_rows = docs.length;
         resultTemp.rows = docs;
-        printlnEndLog(docs.length);
+        printlnEndLog(docs.length, req, now);
         res.json(resultTemp);
       }
     });
   },
   downloadMaterial(req, res) {
+    const now = Date.now();
     const aggregateStr = [];
     // This is the query result and alias -> projectStr
     const projectStr = {
@@ -3394,12 +3413,13 @@ exports.api = {
         const resultTemp = {};
         resultTemp.total_rows = docs.length;
         resultTemp.rows = _.sortBy(docs, o => _.toUpper(o.id));
-        printlnEndLog(docs.length);
+        printlnEndLog(docs.length, req, now);
         res.json(resultTemp);
       }
     });
   },
   funds(req, res) {
+    const now = Date.now();
     const aggregateStr = [];
     // This is the query result and alias -> projectStr
     const projectStr = {
@@ -3484,12 +3504,13 @@ exports.api = {
         const resultTemp = {};
         resultTemp.total_rows = docs.length;
         resultTemp.rows = docs;
-        printlnEndLog(docs.length);
+        printlnEndLog(docs.length, req, now);
         res.json(resultTemp);
       }
     });
   },
   healthDeclarationNotification(req, res) {
+    const now = Date.now();
     const aggregateStr = [];
     // This is the query result and alias -> projectStr
     const projectStr = {
@@ -3580,12 +3601,13 @@ exports.api = {
         }
         resultTemp.total_rows = result.length;
         resultTemp.rows = result;
-        printlnEndLog(result.length);
+        printlnEndLog(result.length, req, now);
         res.json(resultTemp);
       }
     });
   },
   async inProgressQuotFunds(req, res) { // 这个视图如果START-KEY和 END-KEY如果不同，将拿全部（查询代码这个视图是没有条件全部拿出来的）
+    const now = Date.now();
     // doc.type === 'approval') { //没加KEY
     //   emit(['01', doc.approvalStatus, doc.approvalCaseId], emitObj);
     const aggregateStr = [];
@@ -3855,10 +3877,11 @@ exports.api = {
     const resultTemp = {};
     resultTemp.total_rows = result.length;
     resultTemp.rows = result;
-    printlnEndLog(result.length);
+    printlnEndLog(result.length, req, now);
     res.json(resultTemp);
   },
   managerDownline(req, res) {
+    const now = Date.now();
     const aggregateStr = [];
     // This is the query result and alias -> projectStr
     const projectStr = {
@@ -3926,12 +3949,13 @@ exports.api = {
         const resultTemp = {};
         resultTemp.total_rows = docs.length;
         resultTemp.rows = docs;
-        printlnEndLog(docs.length);
+        printlnEndLog(docs.length, req, now);
         res.json(resultTemp);
       }
     });
   },
   async masterApprovalDetails(req, res) {
+    const now = Date.now();
     // doc.type === 'masterApproval') {
     //   emit(['01', doc.approvalStatus, doc.approvalCaseId], emitObj);
     const aggregateStr = [];
@@ -4148,10 +4172,11 @@ exports.api = {
     const resultTemp = {};
     resultTemp.total_rows = result.length;
     resultTemp.rows = result;
-    printlnEndLog(result.length);
+    printlnEndLog(result.length, req, now);
     res.json(resultTemp);
   },
   naById(req, res) {
+    const now = Date.now();
     const aggregateStr = [];
     // This is the query result and alias -> projectStr
     const projectStr = {
@@ -4216,12 +4241,13 @@ exports.api = {
         const resultTemp = {};
         resultTemp.total_rows = docs.length;
         resultTemp.rows = docs;
-        printlnEndLog(docs.length);
+        printlnEndLog(docs.length, req, now);
         res.json(resultTemp);
       }
     });
   },
   onlinePayment(req, res) {
+    const now = Date.now();
     const aggregateStr = [];
     // This is the query result and alias -> projectStr
     const projectStr = {
@@ -4613,12 +4639,13 @@ exports.api = {
         }
         resultTemp.total_rows = result.length;
         resultTemp.rows = result;
-        printlnEndLog(result.length);
+        printlnEndLog(result.length, req, now);
         res.json(resultTemp);
       }
     });
   },
   pdfTemplates(req, res) {
+    const now = Date.now();
     const aggregateStr = [];
     // This is the query result and alias -> projectStr
     const projectStr = {
@@ -4688,12 +4715,13 @@ exports.api = {
         const resultTemp = {};
         resultTemp.total_rows = docs.length;
         resultTemp.rows = docs;
-        printlnEndLog(docs.length);
+        printlnEndLog(docs.length, req, now);
         res.json(resultTemp);
       }
     });
   },
   products(req, res) {
+    const now = Date.now();
     const aggregateStr = [];
     // This is the query result and alias -> projectStr
     const projectStr = {
@@ -4940,7 +4968,7 @@ exports.api = {
           });
         }
 
-        printlnEndLog(docs.length);
+        printlnEndLog(docs.length, req, now);
         res.json(resultTemp);
       }
     }));
@@ -4957,6 +4985,7 @@ exports.api = {
     // });
   },
   quickQuotes(req, res) {
+    const now = Date.now();
     const aggregateStr = [];
     // This is the query result and alias -> projectStr
     const projectStr = {
@@ -5055,12 +5084,13 @@ exports.api = {
         }
         resultTemp.total_rows = result.length;
         resultTemp.rows = result;
-        printlnEndLog(result.length);
+        printlnEndLog(result.length, req, now);
         res.json(resultTemp);
       }
     });
   },
   quotationByAgent(req, res) {
+    const now = Date.now();
     const aggregateStr = [];
     // This is the query result and alias -> projectStr
     const projectStr = {
@@ -5151,12 +5181,13 @@ exports.api = {
         }
         resultTemp.total_rows = result.length;
         resultTemp.rows = result;
-        printlnEndLog(result.length);
+        printlnEndLog(result.length, req, now);
         res.json(resultTemp);
       }
     });
   },
   quotationCampaign(req, res) {
+    const now = Date.now();
     const aggregateStr = [];
     const startKey = req.query.startkey || '';
     const endKey = req.query.endkey || '';
@@ -5278,12 +5309,13 @@ exports.api = {
         const result = _.concat(endTimeResult, campaignIdResult);
         resultTemp.total_rows = result.length;
         resultTemp.rows = result;
-        printlnEndLog(result.length);
+        printlnEndLog(result.length, req, now);
         res.json(resultTemp);
       }
     });
   },
   async signatureExpire(req, res) {
+    const now = Date.now();
     // doc.type === 'masterApproval') {
     //   emit(['01', doc.approvalStatus, doc.approvalCaseId], emitObj);
     const aggregateStr = [];
@@ -5419,10 +5451,11 @@ exports.api = {
     const resultTemp = {};
     resultTemp.total_rows = result.length;
     resultTemp.rows = result;
-    printlnEndLog(result.length);
+    printlnEndLog(result.length, req, now);
     res.json(resultTemp);
   },
   async submission(req, res) {
+    const now = Date.now();
     const aggregateStr = [];
     const projectStr = {
       $project: {
@@ -6144,10 +6177,11 @@ exports.api = {
       expiredNotificationResult, secondaryProxyNotificationResult);
     resultTemp.total_rows = result.length;
     resultTemp.rows = result;
-    printlnEndLog(result.length);
+    printlnEndLog(result.length, req, now);
     res.json(resultTemp);
   },
   async summaryApps(req, res) {
+    const now = Date.now();
     // doc.type === 'masterApproval') {
     //   emit(['01', doc.approvalStatus, doc.approvalCaseId], emitObj);
     const aggregateStr = [];
@@ -6297,10 +6331,11 @@ exports.api = {
     const resultTemp = {};
     resultTemp.total_rows = result.length;
     resultTemp.rows = result;
-    printlnEndLog(result.length);
+    printlnEndLog(result.length, req, now);
     res.json(resultTemp);
   },
   submissionRptApps(req, res) {
+    const now = Date.now();
     // doc.type === 'application') {
     //  emit(['01',  payment.initPayMethod],
     const aggregateStr = [];
@@ -6590,12 +6625,13 @@ exports.api = {
         const resultTemp = {};
         resultTemp.total_rows = result.length;
         resultTemp.rows = result;
-        printlnEndLog(result.length);
+        printlnEndLog(result.length, req, now);
         res.json(resultTemp);
       }
     });
   },
   submissionRptPendingDetails(req, res) {
+    const now = Date.now();
     // doc.type === 'application') {
     //  emit(['01',  payment.initPayMethod],
     const aggregateStr = [];
@@ -6845,12 +6881,13 @@ exports.api = {
         const resultTemp = {};
         resultTemp.total_rows = result.length;
         resultTemp.rows = result;
-        printlnEndLog(result.length);
+        printlnEndLog(result.length, req, now);
         res.json(resultTemp);
       }
     });
   },
   summaryQuots(req, res) {
+    const now = Date.now();
     // doc.type === 'masterApproval') {
     //   emit(['01', doc.approvalStatus, doc.approvalCaseId], emitObj);
     const aggregateStr = [];
@@ -7030,12 +7067,13 @@ exports.api = {
         }
         resultTemp.total_rows = result.length;
         resultTemp.rows = result;
-        printlnEndLog(result.length);
+        printlnEndLog(result.length, req, now);
         res.json(resultTemp);
       }
     });
   },
   systemNotification(req, res) {
+    const now = Date.now();
     const aggregateStr = [];
     const projectStr = {
       $project: {
@@ -7170,12 +7208,13 @@ exports.api = {
         // const result = _.concat(endTimeResult, docs);
         resultTemp.total_rows = result.length;
         resultTemp.rows = result;
-        printlnEndLog(result.length);
+        printlnEndLog(result.length, req, now);
         res.json(resultTemp);
       }
     });
   },
   validBundleById(req, res) {
+    const now = Date.now();
     const aggregateStr = [];
     // This is the query result and alias -> projectStr
     const projectStr = {
@@ -7253,12 +7292,13 @@ exports.api = {
         const resultTemp = {};
         resultTemp.total_rows = docs.length;
         resultTemp.rows = docs;
-        printlnEndLog(docs.length);
+        printlnEndLog(docs.length, req, now);
         res.json(resultTemp);
       }
     });
   },
   validbundleApplicationsByAgent(req, res) {
+    const now = Date.now();
     const aggregateStr = [];
     // This is the query result and alias -> projectStr
     const projectStr = {
@@ -7369,7 +7409,7 @@ exports.api = {
         // const result = _.concat(endTimeResult, docs);
         resultTemp.total_rows = result.length;
         resultTemp.rows = result;
-        printlnEndLog(result.length);
+        printlnEndLog(result.length, req, now);
         res.json(resultTemp);
       }
     });

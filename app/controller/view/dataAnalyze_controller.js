@@ -5,12 +5,14 @@ const _ = require('lodash');
 // const moment = require('moment');
 
 const CAN_ORDER = false;
-const printlnEndLog = (cnt) => {
-  printLogWithTime(`Successful, result count: ${cnt}`);
+const printlnEndLog = (cnt, req, now) => {
+  printLogWithTime(`Request - Get View ${req.originalUrl}`);
+  printLogWithTime(`Result  - Success - result count: ${cnt} - ${Date.now() - now}ms`);
   printLogWithTime('----------------------------------------------------------------------');
 };
 exports.api = {
   async documentByLstChgDate(req, res) {
+    const now = Date.now();
     const aggregateStr = [];
     // This is the query result and alias -> projectStr
     // const projectStr = {
@@ -221,10 +223,11 @@ exports.api = {
     const resultTemp = {};
     resultTemp.total_rows = result.length;
     resultTemp.rows = result;
-    printlnEndLog(result.length);
+    printlnEndLog(result.length, req, now);
     res.json(resultTemp);
   },
   async documentsWithoutLstChgDate(req, res) {
+    const now = Date.now();
     // doc.type === 'approval') {
     //   emit(['01', doc.approvalStatus, doc.approvalCaseId], emitObj);
     const aggregateStr = [];
@@ -398,7 +401,7 @@ exports.api = {
     const resultTemp = {};
     resultTemp.total_rows = result.length;
     resultTemp.rows = result;
-    printlnEndLog(result.length);
+    printlnEndLog(result.length, req, now);
     res.json(resultTemp);
   },
 };

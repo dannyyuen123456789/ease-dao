@@ -3,12 +3,14 @@ import printLogWithTime from '../../utils/log';
 
 const _ = require('lodash');
 
-const printlnEndLog = (cnt) => {
-  printLogWithTime(`Successful, result count: ${cnt}`);
+const printlnEndLog = (cnt, req, now) => {
+  printLogWithTime(`Request - Get View ${req.originalUrl}`);
+  printLogWithTime(`Result  - Success - result count: ${cnt} - ${Date.now() - now}ms`);
   printLogWithTime('----------------------------------------------------------------------');
 };
 exports.api = {
   async agentDocuments(req, res) {
+    const now = Date.now();
     const aggregateStr = [];
     const projectStr = {
       $project: {
@@ -115,7 +117,7 @@ exports.api = {
     const resultTemp = {};
     resultTemp.total_rows = result.length;
     resultTemp.rows = result;
-    printlnEndLog(result.length);
+    printlnEndLog(result.length, req, now);
     res.json(resultTemp);
   },
 };

@@ -4,11 +4,13 @@ import printLogWithTime from '../../utils/log';
 const _ = require('lodash');
 
 const CAN_ORDER = false;
-const printlnEndLog = (cnt) => {
-  printLogWithTime(`Successful, result count: ${cnt}`);
+const printlnEndLog = (cnt, req, now) => {
+  printLogWithTime(`Request - Get View ${req.originalUrl}`);
+  printLogWithTime(`Result  - Success - result count: ${cnt} - ${Date.now() - now}ms`);
   printLogWithTime('----------------------------------------------------------------------');
 };
 const webVsIosReportBundle = async (req) => {
+  const now = Date.now();
   const aggregateStr = [];
   // This is the query result and alias -> projectStr
   const projectStr = {
@@ -148,6 +150,7 @@ const webVsIosReportBundle = async (req) => {
 };
 
 const webVsIosReportQuot = async (req) => {
+  const now = Date.now();
   const aggregateStr = [];
   const projectStr = {
     $project: {
@@ -399,6 +402,7 @@ const webVsIosReportQuot = async (req) => {
   return result;
 };
 const webVsIosReportApplication = async (req) => {
+  const now = Date.now();
   const aggregateStr = [];
   const projectStr = {
     $project: {
@@ -559,6 +563,7 @@ const webVsIosReportApplication = async (req) => {
   return result;
 };
 const webVsIosReportAgents = async (req) => {
+  const now = Date.now();
   const aggregateStr = [];
   // This is the query result and alias -> projectStr
   const projectStr = {
@@ -650,6 +655,7 @@ const webVsIosReportAgents = async (req) => {
   return [];
 };
 const webVsIosReportCust = async (req) => {
+  const now = Date.now();
   const aggregateStr = [];
   // This is the query result and alias -> projectStr
   const projectStr = {
@@ -824,6 +830,7 @@ const webVsIosReportCust = async (req) => {
 };
 exports.api = {
   agentsDetail(req, res) {
+    const now = Date.now();
     const aggregateStr = [];
     // This is the query result and alias -> projectStr
     const projectStr = {
@@ -916,6 +923,7 @@ exports.api = {
     }
   },
   allChannelAppCases(req, res) {
+    const now = Date.now();
     const aggregateStr = [];
     // This is the query result and alias -> projectStr
     const projectStr = {
@@ -1324,6 +1332,7 @@ exports.api = {
     });
   },
   allChannelPolicyCases(req, res) {
+    const now = Date.now();
     // emit(['01', 'approveRejectDate', approveRejectDate], {
     //   applicationId: doc.applicationId
     // });
