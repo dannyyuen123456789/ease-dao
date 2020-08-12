@@ -41,6 +41,7 @@ exports.api = {
   // Insert or update Json Document
   async updateDoc(req, res) {
     const docId = _.get(req.params, 'docId', _.get(req.query, 'docId'));
+    printLogWithTime(`updateDoc/${docId}`);
     const options = {
       url: `${systemConfig.writeData.path}:${systemConfig.writeData.port}/${systemConfig.writeData.name}/updateDoc/${docId}`, // ,
       headers: {
@@ -180,11 +181,24 @@ exports.api = {
           const doc = _.get(docResult, 'result');
           const docAttachment = _.get(doc, 'attachments', {});
           _.set(docAttachment, attachmentId, { key: fileName, content_type: mime, fileSize });
-          const updResult = await awsDao.updateDoc(docId, { attachments: docAttachment });
-
-          if (!_.get(updResult, 'success')) {
-            errMessage = _.get(updResult, 'result');
-          }
+          // const updResult = await awsDao.updateDoc(docId, { attachments: docAttachment });
+          printLogWithTime(`updateDoc/${docId}`);
+          const options = {
+            url: `${systemConfig.writeData.path}:${systemConfig.writeData.port}/${systemConfig.writeData.name}/updateDoc/${docId}`, // ,
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            method: 'PUT',
+            body: JSON.stringify({ attachments: docAttachment }),
+          };
+          await request.put(options, (error, response, body) => {
+            if (error) {
+              printLogWithTime(error);
+              errMessage = error;
+            } else {
+              printLogWithTime(`updateDoc Result - ${body} `);
+            }
+          });
         } else {
           errMessage = _.get(docResult, 'result');
         }
@@ -237,11 +251,23 @@ exports.api = {
           const doc = _.get(docResult, 'result');
           const docAttachment = _.get(doc, 'attachments', {});
           _.unset(docAttachment, attachmentId);
-          const updResult = await awsDao.updateDoc(docId, { attachments: docAttachment });
-
-          if (!_.get(updResult, 'success')) {
-            errMessage = _.get(updResult, 'result');
-          }
+          printLogWithTime(`updateDoc/${docId}`);
+          const options = {
+            url: `${systemConfig.writeData.path}:${systemConfig.writeData.port}/${systemConfig.writeData.name}/updateDoc/${docId}`, // ,
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            method: 'PUT',
+            body: JSON.stringify({ attachments: docAttachment }),
+          };
+          await request.put(options, (error, response, body) => {
+            if (error) {
+              printLogWithTime(error);
+              errMessage = error;
+            } else {
+              printLogWithTime(`updateDoc Result - ${body} `);
+            }
+          });
         } else {
           errMessage = _.get(docResult, 'result');
         }
