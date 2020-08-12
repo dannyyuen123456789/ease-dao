@@ -191,13 +191,16 @@ exports.api = {
             method: 'PUT',
             body: JSON.stringify({ attachments: docAttachment }),
           };
-          await request.put(options, (error, response, body) => {
-            if (error) {
-              printLogWithTime(error);
-              errMessage = error;
-            } else {
-              printLogWithTime(`updateDoc Result - ${body} `);
-            }
+          await new Promise((resolve) => {
+            request.put(options, (error, response, body) => {
+              if (error) {
+                printLogWithTime(error);
+                resolve(error);
+                errMessage = error;
+              } else {
+                printLogWithTime(`updateDoc Result - ${body} `);
+              }
+            });
           });
         } else {
           errMessage = _.get(docResult, 'result');
@@ -260,13 +263,16 @@ exports.api = {
             method: 'PUT',
             body: JSON.stringify({ attachments: docAttachment }),
           };
-          await request.put(options, (error, response, body) => {
-            if (error) {
-              printLogWithTime(error);
-              errMessage = error;
-            } else {
-              printLogWithTime(`updateDoc Result - ${body} `);
-            }
+          await new Promise((resolve) => {
+            request.put(options, (error, response, body) => {
+              if (error) {
+                printLogWithTime(error);
+                resolve(error);
+                errMessage = error;
+              } else {
+                printLogWithTime(`updateDoc Result - ${body} `);
+              }
+            });
           });
         } else {
           errMessage = _.get(docResult, 'result');
