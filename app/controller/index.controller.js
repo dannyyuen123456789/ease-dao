@@ -195,11 +195,12 @@ exports.api = {
             request.put(options, (error, response, body) => {
               if (error) {
                 printLogWithTime(error);
-                resolve(error);
                 errMessage = error;
               } else {
                 printLogWithTime(`updateDoc Result - ${body} `);
               }
+              printLogWithTime('update Doc Done by uploadAttachmentByBase64');
+              resolve('update Doc Done by uploadAttachmentByBase64');
             });
           });
         } else {
@@ -267,11 +268,12 @@ exports.api = {
             request.put(options, (error, response, body) => {
               if (error) {
                 printLogWithTime(error);
-                resolve(error);
                 errMessage = error;
               } else {
                 printLogWithTime(`updateDoc Result - ${body} `);
               }
+              printLogWithTime('update Doc Done by uploadAttachmentByBase64');
+              resolve('update Doc Done by uploadAttachmentByBase64');
             });
           });
         } else {
