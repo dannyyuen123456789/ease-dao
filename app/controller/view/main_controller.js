@@ -16,7 +16,7 @@ const printlnEndLog = (cnt, now, req) => {
 // xue.hua
 exports.api = {
   agentDetails(req, res) {
-    var now = Date.now();
+    const now = Date.now();
     const aggregateStr = [];
     const projectStr = {};
     const startKey = req.query.startkey || '';
@@ -299,7 +299,7 @@ exports.api = {
     });
   },
   agentWithDescendingOrder(req, res) {
-    var now = Date.now();
+    const now = Date.now();
     const aggregateStr = [];
     // This is the query result and alias -> projectStr
     const projectStr = {
@@ -1181,7 +1181,7 @@ exports.api = {
     });
   },
   agents(req, res) {
-    var now = Date.now();
+    const now = Date.now();
     // console.log(">>>>>",req.query);
     const aggregateStr = [];
     // This is the query result and alias -> projectStr
@@ -1277,7 +1277,7 @@ exports.api = {
     });
   },
   allChannelApprovalCases(req, res) {
-    var now = Date.now();
+    const now = Date.now();
     // doc.type === 'approval') {
     //   emit(['01', doc.approvalStatus, doc.approvalCaseId], emitObj);
     const aggregateStr = [];
@@ -1395,7 +1395,7 @@ exports.api = {
     });
   },
   appByPolNum(req, res) {
-    var now = Date.now();
+    const now = Date.now();
     const aggregateStr = [];
     // This is the query result and alias -> projectStr
     // const projectStr = {
@@ -1481,7 +1481,7 @@ exports.api = {
     });
   },
   appWithSubmitDate(req, res) {
-    var now = Date.now();
+    const now = Date.now();
     const aggregateStr = [];
     // This is the query result and alias -> projectStr
     const projectStr = {
@@ -1726,7 +1726,7 @@ exports.api = {
     });
   },
   appWithoutSubmitDate(req, res) {
-    var now = Date.now();
+    const now = Date.now();
     const aggregateStr = [];
     // This is the query result and alias -> projectStr
     const projectStr = {
@@ -1937,7 +1937,7 @@ exports.api = {
     });
   },
   approvalApp(req, res) {
-    var now = Date.now();
+    const now = Date.now();
     // doc.type === 'approval') {
     //   emit(['01', doc.approvalStatus, doc.approvalCaseId], emitObj);
     const aggregateStr = [];
@@ -2028,7 +2028,7 @@ exports.api = {
     });
   },
   approvalCases(req, res) {
-    var now = Date.now();
+    const now = Date.now();
     // doc.type === 'approval') {
     //   emit(['01', doc.approvalStatus, doc.approvalCaseId], emitObj);
     const aggregateStr = [];
@@ -2149,7 +2149,7 @@ exports.api = {
     });
   },
   approvalDateCases(req, res) {
-    var now = Date.now();
+    const now = Date.now();
     // doc.type === 'approval') {
     //   emit(['01', doc.approvalStatus, doc.approvalCaseId], emitObj);
     const aggregateStr = [];
@@ -2276,7 +2276,7 @@ exports.api = {
     });
   },
   async approvalDetails(req, res) {
-    var now = Date.now();
+    const now = Date.now();
     // doc.type === 'approval') {
     //   emit(['01', doc.approvalStatus, doc.], emitObj);
     const aggregateStr = [];
@@ -2476,7 +2476,7 @@ exports.api = {
     res.json(resultTemp);
   },
   bundleApp(req, res) {
-    var now = Date.now();
+    const now = Date.now();
     // doc.type === 'bundle') {
     //   emit(['01', 'application',  app.applicationDocId]
     const aggregateStr = [];
@@ -2629,7 +2629,7 @@ exports.api = {
     });
   },
   bundleApplications(req, res) {
-    var now = Date.now();
+    const now = Date.now();
     // doc.type === 'bundle') {
     //   emit(['01', 'application',  app.applicationDocId]
     const aggregateStr = [];
@@ -2911,7 +2911,7 @@ exports.api = {
     });
   },
   contacts(req, res) {
-    var now = Date.now();
+    const now = Date.now();
     // console.log(">>>>>",req.query);
     const aggregateStr = [];
     // This is the query result and alias -> projectStr
@@ -2994,7 +2994,7 @@ exports.api = {
     });
   },
   cpfApps(req, res) {
-    var now = Date.now();
+    const now = Date.now();
     // doc.type === 'application') {
     //  emit(['01',  payment.initPayMethod],
     const aggregateStr = [];
@@ -3129,7 +3129,7 @@ exports.api = {
     });
   },
   async applicationsByAgent(req, res) {
-    var now = Date.now();
+    const now = Date.now();
     // console.log(">>>>>",req.query);
     const aggregateStr = [];
     // This is the query result and alias -> projectStr
@@ -3255,7 +3255,7 @@ exports.api = {
     res.json(resultTemp);
   },
   directorDownline(req, res) {
-    var now = Date.now();
+    const now = Date.now();
     const aggregateStr = [];
     // This is the query result and alias -> projectStr
     const projectStr = {
@@ -3332,7 +3332,7 @@ exports.api = {
     });
   },
   downloadMaterial(req, res) {
-    var now = Date.now();
+    const now = Date.now();
     const aggregateStr = [];
     // This is the query result and alias -> projectStr
     const projectStr = {
@@ -3420,7 +3420,7 @@ exports.api = {
     });
   },
   funds(req, res) {
-    var now = Date.now();
+    const now = Date.now();
     const aggregateStr = [];
     // This is the query result and alias -> projectStr
     const projectStr = {
@@ -3511,7 +3511,7 @@ exports.api = {
     });
   },
   healthDeclarationNotification(req, res) {
-    var now = Date.now();
+    const now = Date.now();
     const aggregateStr = [];
     // This is the query result and alias -> projectStr
     const projectStr = {
@@ -3608,7 +3608,7 @@ exports.api = {
     });
   },
   async inProgressQuotFunds(req, res) { // 这个视图如果START-KEY和 END-KEY如果不同，将拿全部（查询代码这个视图是没有条件全部拿出来的）
-    var now = Date.now();
+    const now = Date.now();
     // doc.type === 'approval') { //没加KEY
     //   emit(['01', doc.approvalStatus, doc.approvalCaseId], emitObj);
     const aggregateStr = [];
@@ -3882,7 +3882,7 @@ exports.api = {
     res.json(resultTemp);
   },
   managerDownline(req, res) {
-    var now = Date.now();
+    const now = Date.now();
     const aggregateStr = [];
     // This is the query result and alias -> projectStr
     const projectStr = {
@@ -3956,7 +3956,7 @@ exports.api = {
     });
   },
   async masterApprovalDetails(req, res) {
-    var now = Date.now();
+    const now = Date.now();
     // doc.type === 'masterApproval') {
     //   emit(['01', doc.approvalStatus, doc.approvalCaseId], emitObj);
     const aggregateStr = [];
@@ -4177,7 +4177,7 @@ exports.api = {
     res.json(resultTemp);
   },
   naById(req, res) {
-    var now = Date.now();
+    const now = Date.now();
     const aggregateStr = [];
     // This is the query result and alias -> projectStr
     const projectStr = {
@@ -4248,7 +4248,7 @@ exports.api = {
     });
   },
   onlinePayment(req, res) {
-    var now = Date.now();
+    const now = Date.now();
     const aggregateStr = [];
     // This is the query result and alias -> projectStr
     const projectStr = {
@@ -4646,7 +4646,7 @@ exports.api = {
     });
   },
   pdfTemplates(req, res) {
-    var now = Date.now();
+    const now = Date.now();
     const aggregateStr = [];
     // This is the query result and alias -> projectStr
     const projectStr = {
@@ -4722,7 +4722,7 @@ exports.api = {
     });
   },
   products(req, res) {
-    var now = Date.now();
+    const now = Date.now();
     const aggregateStr = [];
     // This is the query result and alias -> projectStr
     const projectStr = {
@@ -4986,7 +4986,7 @@ exports.api = {
     // });
   },
   quickQuotes(req, res) {
-    var now = Date.now();
+    const now = Date.now();
     const aggregateStr = [];
     // This is the query result and alias -> projectStr
     const projectStr = {
@@ -5091,7 +5091,7 @@ exports.api = {
     });
   },
   quotationByAgent(req, res) {
-    var now = Date.now();
+    const now = Date.now();
     const aggregateStr = [];
     // This is the query result and alias -> projectStr
     const projectStr = {
@@ -5188,7 +5188,7 @@ exports.api = {
     });
   },
   quotationCampaign(req, res) {
-    var now = Date.now();
+    const now = Date.now();
     const aggregateStr = [];
     const startKey = req.query.startkey || '';
     const endKey = req.query.endkey || '';
@@ -5316,7 +5316,7 @@ exports.api = {
     });
   },
   async signatureExpire(req, res) {
-    var now = Date.now();
+    const now = Date.now();
     // doc.type === 'masterApproval') {
     //   emit(['01', doc.approvalStatus, doc.approvalCaseId], emitObj);
     const aggregateStr = [];
@@ -5456,7 +5456,7 @@ exports.api = {
     res.json(resultTemp);
   },
   async submission(req, res) {
-    var now = Date.now();
+    const now = Date.now();
     const aggregateStr = [];
     const projectStr = {
       $project: {
@@ -6182,7 +6182,7 @@ exports.api = {
     res.json(resultTemp);
   },
   async summaryApps(req, res) {
-    var now = Date.now();
+    const now = Date.now();
     // doc.type === 'masterApproval') {
     //   emit(['01', doc.approvalStatus, doc.approvalCaseId], emitObj);
     const aggregateStr = [];
@@ -6336,7 +6336,7 @@ exports.api = {
     res.json(resultTemp);
   },
   submissionRptApps(req, res) {
-    var now = Date.now();
+    const now = Date.now();
     // doc.type === 'application') {
     //  emit(['01',  payment.initPayMethod],
     const aggregateStr = [];
@@ -6632,7 +6632,7 @@ exports.api = {
     });
   },
   submissionRptPendingDetails(req, res) {
-    var now = Date.now();
+    const now = Date.now();
     // doc.type === 'application') {
     //  emit(['01',  payment.initPayMethod],
     const aggregateStr = [];
@@ -6888,7 +6888,7 @@ exports.api = {
     });
   },
   summaryQuots(req, res) {
-    var now = Date.now();
+    const now = Date.now();
     // doc.type === 'masterApproval') {
     //   emit(['01', doc.approvalStatus, doc.approvalCaseId], emitObj);
     const aggregateStr = [];
@@ -7074,7 +7074,7 @@ exports.api = {
     });
   },
   systemNotification(req, res) {
-    var now = Date.now();
+    const now = Date.now();
     const aggregateStr = [];
     const projectStr = {
       $project: {
@@ -7215,7 +7215,7 @@ exports.api = {
     });
   },
   validBundleById(req, res) {
-    var now = Date.now();
+    const now = Date.now();
     const aggregateStr = [];
     // This is the query result and alias -> projectStr
     const projectStr = {
@@ -7299,7 +7299,7 @@ exports.api = {
     });
   },
   validbundleApplicationsByAgent(req, res) {
-    var now = Date.now();
+    const now = Date.now();
     const aggregateStr = [];
     // This is the query result and alias -> projectStr
     const projectStr = {

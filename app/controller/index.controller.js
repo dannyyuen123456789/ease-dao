@@ -15,7 +15,7 @@ exports.api = {
 
   // Get Json Document
   async getDoc(req, res) {
-    var now = Date.now();
+    const now = Date.now();
     const docId = _.get(req.params, 'docId', _.get(req.query, 'docId'));
     printLogWithTime(`getDoc/${docId}`);
     const dao = new DAO('AWS');
@@ -29,7 +29,7 @@ exports.api = {
         printLogWithTime(`Result - Success - ${docId} - ${Date.now() - now}ms`);
         res.json(result.result);
       } else {
-        printLogWithTime(`Result - FAILED - ${docId} - Document Not Found`);
+        printLogWithTime(`Result - FAILED - ${docId} - Document Not Found - ${Date.now() - now}ms`);
         res.json({ error: 'not_found', reason: 'missing' });
       }
     } else {
@@ -41,8 +41,9 @@ exports.api = {
 
   // Insert or update Json Document
   async updateDoc(req, res) {
-    var now = Date.now();
+    const now = Date.now();
     const docId = _.get(req.params, 'docId', _.get(req.query, 'docId'));
+    printLogWithTime(`updateDoc/${docId}`);
     const options = {
       url: `${systemConfig.writeData.path}:${systemConfig.writeData.port}/${systemConfig.writeData.name}/updateDoc/${docId}`, // ,
       headers: {
@@ -53,7 +54,7 @@ exports.api = {
     };
     request.put(options, (error, response, body) => {
       if (error) {
-        printLogWithTime(`Result - FAILED - ${docId} - ${result.result} - ${Date.now() - now}ms`);
+        printLogWithTime(`Result - FAILED - ${docId} - ${error} - ${Date.now() - now}ms`);
         res.json({ error: 400, reason: error });
       } else {
         printLogWithTime(`Result - Success - ${docId} - ${Date.now() - now}ms`);
@@ -65,7 +66,7 @@ exports.api = {
 
   // Delete Json Document
   async deleteDoc(req, res) {
-    var now = Date.now();
+    const now = Date.now();
     const docId = _.get(req.params, 'docId', _.get(req.query, 'docId'));
     printLogWithTime(`deleteDoc/${docId}`);
 
@@ -73,11 +74,11 @@ exports.api = {
 
     request.delete(url, (error, response, body) => {
       if (error) {
-        printLogWithTime(`Result - FAILED - ${docId} - ${result.result} - ${Date.now() - now}ms`);
+        printLogWithTime(`Result - FAILED - ${docId} - ${error} - ${Date.now() - now}ms`);
         res.json({ error: 400, reason: error });
       } else {
         printLogWithTime(`Result - Success - ${docId} - ${Date.now() - now}ms`);
-        res.json(JSON.parse(body));;
+        res.json(JSON.parse(body));
       }
     });
 
@@ -86,7 +87,7 @@ exports.api = {
 
   // Get Attachment
   async getAttachment(req, res) {
-    var now = Date.now();
+    const now = Date.now();
     let errMessage = '';
     const docId = _.get(req.params, 'docId', _.get(req.query, 'docId'));
     const attachmentId = _.get(req.params, 'attachment', _.get(req.query, 'attachment'));
@@ -120,7 +121,7 @@ exports.api = {
 
   // Get Attachment URL
   async getAttachmentUrl(req, res) {
-    var now = Date.now();
+    const now = Date.now();
     let errMessage = '';
     const docId = _.get(req.params, 'docId', _.get(req.query, 'docId'));
     const attachmentId = _.get(req.params, 'attachment', _.get(req.query, 'attachment'));
@@ -155,7 +156,7 @@ exports.api = {
 
   // Upload Attachment by base64
   async uploadAttachmentByBase64(req, res) {
-    var now = Date.now();
+    const now = Date.now();
     let errMessage = '';
     const docId = _.get(req.params, 'docId', _.get(req.query, 'docId'));
     const attachmentId = _.get(req.params, 'attachment', _.get(req.query, 'attachment'));
@@ -219,7 +220,7 @@ exports.api = {
 
   // Delete Attachment
   async delAttachment(req, res) {
-    var now = Date.now();
+    const now = Date.now();
     let errMessage = '';
     const docId = _.get(req.params, 'docId', _.get(req.query, 'docId'));
     const attachmentId = _.get(req.params, 'attachment', _.get(req.query, 'attachment'));
@@ -269,5 +270,5 @@ exports.api = {
 
     printLogWithTime('----------------------------------------------------------------------');
   },
-  
+
 };
