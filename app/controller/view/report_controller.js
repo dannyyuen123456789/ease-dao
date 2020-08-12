@@ -910,7 +910,7 @@ exports.api = {
           const resultTemp = {};
           resultTemp.total_rows = docs.length;
           resultTemp.rows = docs;
-          printlnEndLog(docs.length);
+          printlnEndLog(docs.length, req, now);
           res.json(resultTemp);
         }
       });
@@ -1326,7 +1326,7 @@ exports.api = {
         const result = _.concat(appIdResult, appStartResult, appSubResult);
         resultTemp.total_rows = result.length;
         resultTemp.rows = result;
-        printlnEndLog(result.length);
+        printlnEndLog(result.length, req, now);
         res.json(resultTemp);
       }
     });
@@ -1431,7 +1431,7 @@ exports.api = {
         }
         resultTemp.total_rows = result.length;
         resultTemp.rows = result;
-        printlnEndLog(result.length);
+        printlnEndLog(result.length, req, now);
         res.json(resultTemp);
       }
     });
@@ -1447,7 +1447,7 @@ exports.api = {
     const resultTemp = {};
     resultTemp.total_rows = result.length;
     resultTemp.rows = result;
-    printlnEndLog(result.length);
+    printlnEndLog(result.length, req, now);
     res.json(resultTemp);
   },
 };
