@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import printLogWithTime from '../../utils/log';
 
 const _ = require('lodash');
+const moment = require('moment');
 const MasterData = require('../../models/masterData');
 
 const CAN_ORDER = false;
@@ -3184,7 +3185,7 @@ exports.api = {
         });
       }
       if (!_.isEmpty(inArray)) {
-        matchStr.$match = { 'quotation.agent.agentCode': { $in: inArray } };
+        matchStr.$match = { 'quotation.agent.agentCode': { $in: inArray }, createDate: { $gte: moment(new Date()).subtract(1, 'months').toISOString() } };
       }
     } else if (key !== '' && key !== '[null]') {
       const keyJson = JSON.parse(key);
@@ -5138,7 +5139,7 @@ exports.api = {
         });
       }
       if (!_.isEmpty(inArray)) {
-        matchStr.$match = { 'agent.agentCode': { $in: inArray } };
+        matchStr.$match = { 'agent.agentCode': { $in: inArray }, createDate: { $gte: moment(new Date()).subtract(1, 'months').toISOString() } };
       }
     } else if (key !== '' && key !== '[null]') {
       const keyJson = JSON.parse(key);
