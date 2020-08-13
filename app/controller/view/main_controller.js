@@ -2402,7 +2402,7 @@ exports.api = {
         matchStr.$match = { $or: inArray };
       }
       if (!_.isEmpty(inAgentArray)) {
-        matchStrAgent.$match = { $or: inAgentArray };
+        matchStrAgent.$match = { $or: inAgentArray, approveRejectDate: { $gte: moment(new Date()).subtract(1, 'months').toISOString() } };
       }
     } else if (key !== '' && key !== '[null]') {
       const keyJson = JSON.parse(key);
@@ -2426,7 +2426,7 @@ exports.api = {
     } else {
       addCase1 = true;
       fullCase = true;
-      addCaseAgent = false;
+      addCaseAgent = true;
     }
 
     if (!_.isEmpty(matchStr)) {
@@ -4080,7 +4080,7 @@ exports.api = {
         matchStr.$match = { $or: inArray };
       }
       if (!_.isEmpty(inAgentArray)) {
-        matchStrAgent.$match = { $or: inAgentArray };
+        matchStrAgent.$match = { $or: inAgentArray, approveRejectDate: { $gte: moment(new Date()).subtract(1, 'months').toISOString() } };
       }
     } else if (key !== '' && key !== '[null]') {
       const keyJson = JSON.parse(key);
@@ -4104,7 +4104,7 @@ exports.api = {
     } else {
       addCase1 = true;
       fullCase = true;
-      addCaseAgent = false;
+      addCaseAgent = true;
     }
 
     if (!_.isEmpty(matchStr)) {
