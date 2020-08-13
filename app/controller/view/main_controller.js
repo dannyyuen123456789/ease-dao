@@ -2402,7 +2402,7 @@ exports.api = {
         matchStr.$match = { $or: inArray };
       }
       if (!_.isEmpty(inAgentArray)) {
-        matchStrAgent.$match = { $or: inAgentArray, approveRejectDate: { $gte: moment(new Date()).subtract(1, 'months').toISOString() } };
+        matchStrAgent.$match = { $or: inAgentArray, submittedDate: { $gte: moment(new Date()).subtract(1, 'months').toISOString() } };
       }
     } else if (key !== '' && key !== '[null]') {
       const keyJson = JSON.parse(key);
@@ -4080,7 +4080,7 @@ exports.api = {
         matchStr.$match = { $or: inArray };
       }
       if (!_.isEmpty(inAgentArray)) {
-        matchStrAgent.$match = { $or: inAgentArray, approveRejectDate: { $gte: moment(new Date()).subtract(1, 'months').toISOString() } };
+        matchStrAgent.$match = { $or: inAgentArray, submittedDate: { $gte: moment(new Date()).subtract(1, 'months').toISOString() } };
       }
     } else if (key !== '' && key !== '[null]') {
       const keyJson = JSON.parse(key);
