@@ -41,11 +41,11 @@ exports.api = {
           agentName: '$quotation.agent.name',
           iName: '$quotation.iFullName',
           iSmoke: '$quotation.iSmoke',
-          iIdCardNo: '$applicationForm.values.proposer.personalInfo.idCardNo',
+          iIdCardNo: { $cond: { if: '$applicationForm.values.insured[0].personalInfo', then: '$applicationForm.values.insured.personalInfo.idCardNo', else: '$applicationForm.values.proposer.personalInfo.idCardNo' } },
           iDob: '$quotation.iDob',
           pName: '$quotation.pFullName',
           pSmoke: '$quotation.pSmoke',
-          // pIdCardNo: '$pIdCardNo',
+          pIdCardNo: { $cond: { if: '$applicationForm.values.proposer.personalInfo', then: '$applicationForm.values.proposer.personalInfo.idCardNo', else: '' } },
           pDob: '$quotation.pDob',
           baseProductCode: '$quotation.baseProductCode',
           baseProductName: '$quotation.baseProductName',
@@ -63,12 +63,8 @@ exports.api = {
 
     if (key !== '' && key !== '[null]') {
       const keyJson = JSON.parse(key);
-      const where = {};
       if (keyJson && keyJson.length > 0) {
-        _.set(where, 'applicationForm.values.proposer.personalInfo.idCardNo', keyJson[1]);
-      }
-      if (!_.isEmpty(where)) {
-        matchStr.$match = where;
+        matchStr.$match = { 'applicationForm.values.proposer.personalInfo.idCardNo': keyJson[1] };
       }
     }
     if (!_.isEmpty(matchStr)) {
@@ -119,11 +115,11 @@ exports.api = {
           agentName: '$quotation.agent.name',
           iName: '$quotation.iFullName',
           iSmoke: '$quotation.iSmoke',
-          iIdCardNo: '$applicationForm.values.proposer.personalInfo.idCardNo',
+          iIdCardNo: { $cond: { if: '$applicationForm.values.insured[0].personalInfo', then: '$applicationForm.values.insured.personalInfo.idCardNo', else: '$applicationForm.values.proposer.personalInfo.idCardNo' } },
           iDob: '$quotation.iDob',
           pName: '$quotation.pFullName',
           pSmoke: '$quotation.pSmoke',
-          // pIdCardNo: '$pIdCardNo',
+          pIdCardNo: { $cond: { if: '$applicationForm.values.proposer.personalInfo', then: '$applicationForm.values.proposer.personalInfo.idCardNo', else: '' } },
           pDob: '$quotation.pDob',
           baseProductCode: '$quotation.baseProductCode',
           baseProductName: '$quotation.baseProductName',
@@ -149,16 +145,15 @@ exports.api = {
         }
       }
       if (!_.isEmpty(wheres)) {
-        matchStr.$match = wheres;
+        matchStr.$match = { 'quotation.iFullName': keyJson[1], 'quotation.iDob': keyJson[2] };
       }
     }
     if (!_.isEmpty(matchStr)) {
       aggregateStr.push(matchStr);
     }
-
     // console.log(' >>>>> matchStr=', JSON.stringify(matchStr));
     aggregateStr.push(projectStr);
-    mongoose.connection.collection('approval').aggregate(aggregateStr).toArray((err, docs) => {
+    mongoose.connection.collection('application').aggregate(aggregateStr).toArray((err, docs) => {
       if (err) {
         res.json({ status: 400, message: err.message });
       } else {
