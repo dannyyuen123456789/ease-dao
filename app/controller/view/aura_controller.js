@@ -137,14 +137,7 @@ exports.api = {
 
     if (key !== '' && key !== '[null]') {
       const keyJson = JSON.parse(key);
-      const wheres = {};
       if (keyJson && keyJson.length > 0) {
-        _.set(wheres, 'quotation.iFullName', keyJson[1]);
-        if (keyJson.length > 1) {
-          _.set(wheres, 'quotation.iDob', keyJson[2]);
-        }
-      }
-      if (!_.isEmpty(wheres)) {
         matchStr.$match = { 'quotation.iFullName': keyJson[1], 'quotation.iDob': keyJson[2] };
       }
     }
