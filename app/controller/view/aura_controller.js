@@ -59,12 +59,12 @@ exports.api = {
     };
 
     const matchStr = {};
-    const key = req.query.key || '';
+    const keys = req.query.keys || '';
 
-    if (key !== '' && key !== '[null]') {
-      const keyJson = JSON.parse(key);
+    if (keys !== '' && keys !== '[null]') {
+      const keyJson = JSON.parse(keys);
       if (keyJson && keyJson.length > 0) {
-        matchStr.$match = { 'applicationForm.values.proposer.personalInfo.idCardNo': keyJson[1] };
+        matchStr.$match = { 'applicationForm.values.proposer.personalInfo.idCardNo': keyJson[2] };
       }
     }
     if (!_.isEmpty(matchStr)) {
@@ -138,7 +138,7 @@ exports.api = {
     if (key !== '' && key !== '[null]') {
       const keyJson = JSON.parse(key);
       if (keyJson && keyJson.length > 0) {
-        matchStr.$match = { 'quotation.iFullName': keyJson[1], 'quotation.iDob': keyJson[2] };
+        matchStr.$match = { 'quotation.iFullName': keyJson[2], 'quotation.iDob': keyJson[3] };
       }
     }
     if (!_.isEmpty(matchStr)) {
