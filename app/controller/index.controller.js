@@ -25,18 +25,18 @@ exports.api = {
       const resResult = result.result;
 
       if (resResult) {
-        printLogWithTime(`Request - getDoc/${docId}`)
+        printLogWithTime(`Request - getDoc/${docId}`);
         printLogWithTime(`Result  - Success - ${Date.now() - now}ms`);
         printLogWithTime('----------------------------------------------------------------------');
         res.json(result.result);
       } else {
-        printLogWithTime(`Request - getDoc/${docId}`)
+        printLogWithTime(`Request - getDoc/${docId}`);
         printLogWithTime(`Result  - Failed - Document Not Found - ${Date.now() - now}ms`);
         printLogWithTime('----------------------------------------------------------------------');
         res.json({ error: 'not_found', reason: 'missing' });
       }
     } else {
-      printLogWithTime(`Request - getDoc/${docId}`)
+      printLogWithTime(`Request - getDoc/${docId}`);
       printLogWithTime(`Result  - Failed - Document Not Found - ${Date.now() - now}ms`);
       printLogWithTime('----------------------------------------------------------------------');
       res.json({ error: 'error', reason: result.result });
@@ -57,12 +57,12 @@ exports.api = {
     };
     request.put(options, (error, response, body) => {
       if (error) {
-        printLogWithTime(`Request - updateDoc/${docId}`)
+        printLogWithTime(`Request - updateDoc/${docId}`);
         printLogWithTime(`Result  - Failed - ${error} - ${Date.now() - now}ms`);
         printLogWithTime('----------------------------------------------------------------------');
         res.json({ status: 400, error });
       } else {
-        printLogWithTime(`Request - updateDoc/${docId}`)
+        printLogWithTime(`Request - updateDoc/${docId}`);
         printLogWithTime(`Result  - Success - ${Date.now() - now}ms`);
         printLogWithTime('----------------------------------------------------------------------');
 
@@ -75,18 +75,18 @@ exports.api = {
   async deleteDoc(req, res) {
     const now = Date.now();
     const docId = _.get(req.params, 'docId', _.get(req.query, 'docId'));
-    //printLogWithTime(`deleteDoc/${docId}`);
+    // printLogWithTime(`deleteDoc/${docId}`);
 
     const url = `${systemConfig.writeData.path}:${systemConfig.writeData.port}/${systemConfig.writeData.name}/deleteDoc/${docId}`;
 
     request.delete(url, (error, response, body) => {
       if (error) {
-        printLogWithTime(`Request - deleteDoc/${docId}`)
+        printLogWithTime(`Request - deleteDoc/${docId}`);
         printLogWithTime(`Result  - Failed - ${error} - ${Date.now() - now}ms`);
         printLogWithTime('----------------------------------------------------------------------');
         res.json({ status: 400, error });
       } else {
-        printLogWithTime(`Request - deleteDoc/${docId}`)
+        printLogWithTime(`Request - deleteDoc/${docId}`);
         printLogWithTime(`Result  - Success - ${Date.now() - now}ms`);
         printLogWithTime('----------------------------------------------------------------------');
 
@@ -102,7 +102,7 @@ exports.api = {
     const docId = _.get(req.params, 'docId', _.get(req.query, 'docId'));
     const attachmentId = _.get(req.params, 'attachment', _.get(req.query, 'attachment'));
 
-    //printLogWithTime(`getAttachment/${docId}/${attachmentId}`);
+    // printLogWithTime(`getAttachment/${docId}/${attachmentId}`);
 
     const fileUtil = new fileUtils('AWS-S3');
     const fileInstance = await fileUtil.getInstance();
@@ -140,7 +140,7 @@ exports.api = {
     const docId = _.get(req.params, 'docId', _.get(req.query, 'docId'));
     const attachmentId = _.get(req.params, 'attachment', _.get(req.query, 'attachment'));
 
-    //printLogWithTime(`getAttachmentUrl/${docId}/${attachmentId}`);
+    // printLogWithTime(`getAttachmentUrl/${docId}/${attachmentId}`);
 
     const fileUtil = new fileUtils('AWS-S3');
     const fileInstance = await fileUtil.getInstance();
@@ -178,7 +178,7 @@ exports.api = {
     const docId = _.get(req.params, 'docId', _.get(req.query, 'docId'));
     const attachmentId = _.get(req.params, 'attachment', _.get(req.query, 'attachment'));
 
-    //printLogWithTime(`uploadAttachmentByBase64/${docId}/${attachmentId}`);
+    // printLogWithTime(`uploadAttachmentByBase64/${docId}/${attachmentId}`);
 
     const attachment = req.body.data;
     const { mime } = req.body;
@@ -188,7 +188,7 @@ exports.api = {
     const fileName = fileInstance.getFileKeyById(docId, attachmentId);
 
     if (initSuccess) {
-      //printLogWithTime('Uploading...');
+      // printLogWithTime('Uploading...');
 
       await fileInstance.uploadBase64(docId, attachmentId, attachment, mime).catch((error) => {
         if (error) {
@@ -197,7 +197,6 @@ exports.api = {
       });
 
       if (!errMessage || _.isEmpty(errMessage)) {
-       
         const dao = new DAO('AWS');
         const awsDao = dao.getInstance();
         const fileSize = fileInstance.calBase64FileSize(attachment);
@@ -208,7 +207,7 @@ exports.api = {
           const docAttachment = _.get(doc, 'attachments', {});
           _.set(docAttachment, attachmentId, { key: fileName, content_type: mime, fileSize });
           // const updResult = await awsDao.updateDoc(docId, { attachments: docAttachment });
-          //printLogWithTime(`updateDoc/${docId}`);
+          // printLogWithTime(`updateDoc/${docId}`);
           const now1 = Date.now();
           const options = {
             url: `${systemConfig.writeData.path}:${systemConfig.writeData.port}/${systemConfig.writeData.name}/updateDoc/${docId}`, // ,
@@ -221,21 +220,20 @@ exports.api = {
 
           await new Promise((resolve) => {
             request.put(options, (error, response, body) => {
-              
               if (error) {
-                printLogWithTime(`Request - updateDoc/${docId}`)
+                printLogWithTime(`Request - updateDoc/${docId}`);
                 printLogWithTime(`Result  - Failed - ${error} - ${Date.now() - now1}ms`);
                 printLogWithTime('update Doc Done by uploadAttachmentByBase64');
                 printLogWithTime('----------------------------------------------------------------------');
-                
+
                 errMessage = error;
               } else {
-                printLogWithTime(`Request - updateDoc/${docId}`)
+                printLogWithTime(`Request - updateDoc/${docId}`);
                 printLogWithTime(`Result  - Success - ${Date.now() - now1}ms`);
                 printLogWithTime('update Doc Done by uploadAttachmentByBase64');
                 printLogWithTime('----------------------------------------------------------------------');
               }
-              
+
               resolve('update Doc Done by uploadAttachmentByBase64');
             });
           });
@@ -273,7 +271,7 @@ exports.api = {
     const docId = _.get(req.params, 'docId', _.get(req.query, 'docId'));
     const attachmentId = _.get(req.params, 'attachment', _.get(req.query, 'attachment'));
 
-   // printLogWithTime(`delAttachment/${docId}/${attachmentId}`);
+    // printLogWithTime(`delAttachment/${docId}/${attachmentId}`);
 
     const fileUtil = new fileUtils('AWS-S3');
     const fileInstance = await fileUtil.getInstance();
@@ -295,7 +293,7 @@ exports.api = {
           const doc = _.get(docResult, 'result');
           const docAttachment = _.get(doc, 'attachments', {});
           _.unset(docAttachment, attachmentId);
-         // printLogWithTime(`updateDoc/${docId}`);
+          // printLogWithTime(`updateDoc/${docId}`);
           const now1 = Date.now();
           const options = {
             url: `${systemConfig.writeData.path}:${systemConfig.writeData.port}/${systemConfig.writeData.name}/updateDoc/${docId}`, // ,
@@ -307,16 +305,15 @@ exports.api = {
           };
           await new Promise((resolve) => {
             request.put(options, (error, response, body) => {
-              
               if (error) {
-                printLogWithTime(`Request - updateDoc/${docId}`)
+                printLogWithTime(`Request - updateDoc/${docId}`);
                 printLogWithTime(`Result  - Failed - ${error} - ${Date.now() - now1}ms`);
                 printLogWithTime('update Doc Done by delAttachment');
                 printLogWithTime('----------------------------------------------------------------------');
-                
+
                 errMessage = error;
               } else {
-                printLogWithTime(`Request - updateDoc/${docId}`)
+                printLogWithTime(`Request - updateDoc/${docId}`);
                 printLogWithTime(`Result  - Success - ${Date.now() - now1}ms`);
                 printLogWithTime('update Doc Done by delAttachment');
                 printLogWithTime('----------------------------------------------------------------------');
