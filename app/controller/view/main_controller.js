@@ -7,6 +7,7 @@ const _ = require('lodash');
 const moment = require('moment');
 const MasterData = require('../../models/masterData');
 
+const SEARCH_DATE = false;
 const CAN_ORDER = false;
 const FIX_SORT_UI = true;
 const FIX_SHIELD_PLAN_NAME = true;
@@ -2139,7 +2140,13 @@ exports.api = {
         matchStr.$match = { $or: inArray };
       }
       if (!_.isEmpty(inAgentArray)) {
-        matchStrAgent.$match = { $or: inAgentArray, submittedDate: { $gte: moment(new Date()).subtract(1, 'months').toISOString() } };
+        if (SEARCH_DATE) {
+          // This is because the performance is slow.
+          // We added filters to take a month's worth of data
+          matchStrAgent.$match = { $or: inAgentArray, submittedDate: { $gte: moment(new Date()).subtract(1, 'months').toISOString() } };
+        } else {
+          matchStrAgent.$match = { $or: inAgentArray };
+        }
       }
     } else if (key !== '' && key !== '[null]') {
       const keyJson = JSON.parse(key);
@@ -2922,7 +2929,13 @@ exports.api = {
         });
       }
       if (!_.isEmpty(inArray)) {
-        matchStr.$match = { 'quotation.agent.agentCode': { $in: inArray }, createDate: { $gte: moment(new Date()).subtract(1, 'months').toISOString() } };
+        if (SEARCH_DATE) {
+          // This is because the performance is slow.
+          // We added filters to take a month's worth of data
+          matchStr.$match = { 'quotation.agent.agentCode': { $in: inArray }, createDate: { $gte: moment(new Date()).subtract(1, 'months').toISOString() } };
+        } else {
+          matchStr.$match = { 'quotation.agent.agentCode': { $in: inArray } };
+        }
       }
     } else if (key !== '' && key !== '[null]') {
       const keyJson = JSON.parse(key);
@@ -3817,7 +3830,13 @@ exports.api = {
         matchStr.$match = { $or: inArray };
       }
       if (!_.isEmpty(inAgentArray)) {
-        matchStrAgent.$match = { $or: inAgentArray, submittedDate: { $gte: moment(new Date()).subtract(1, 'months').toISOString() } };
+        if (SEARCH_DATE) {
+          // This is because the performance is slow.
+          // We added filters to take a month's worth of data
+          matchStrAgent.$match = { $or: inAgentArray, submittedDate: { $gte: moment(new Date()).subtract(1, 'months').toISOString() } };
+        } else {
+          matchStrAgent.$match = { $or: inAgentArray };
+        }
       }
     } else if (key !== '' && key !== '[null]') {
       const keyJson = JSON.parse(key);
@@ -4876,7 +4895,13 @@ exports.api = {
         });
       }
       if (!_.isEmpty(inArray)) {
-        matchStr.$match = { 'agent.agentCode': { $in: inArray }, createDate: { $gte: moment(new Date()).subtract(1, 'months').toISOString() } };
+        if (SEARCH_DATE) {
+          // This is because the performance is slow.
+          // We added filters to take a month's worth of data
+          matchStr.$match = { 'agent.agentCode': { $in: inArray }, createDate: { $gte: moment(new Date()).subtract(1, 'months').toISOString() } };
+        } else {
+          matchStr.$match = { 'agent.agentCode': { $in: inArray } };
+        }
       }
     } else if (key !== '' && key !== '[null]') {
       const keyJson = JSON.parse(key);
