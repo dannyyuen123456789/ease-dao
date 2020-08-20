@@ -7,7 +7,7 @@ const _ = require('lodash');
 const moment = require('moment');
 const MasterData = require('../../models/masterData');
 
-const SEARCH_DATE = false;
+const SEARCH_DATE = true;
 const CAN_ORDER = false;
 const FIX_SORT_UI = true;
 const FIX_SHIELD_PLAN_NAME = true;
