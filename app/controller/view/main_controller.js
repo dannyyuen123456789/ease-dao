@@ -4126,6 +4126,10 @@ exports.api = {
                   },
                   {
                     'payment.trxStartTime': startKeys[2],
+                    $or: [
+                      { 'payment.trxTime': { $exists: false } },
+                      { 'payment.trxTime': 0 },
+                    ],
                   },
                 ],
               });
@@ -4167,26 +4171,34 @@ exports.api = {
           if (!_.isEmpty(temp)) {
             _.get(matchStr, '$match.$and', []).push({
               $or: [
+                { 'payment.trxTime': temp },
                 {
-                  $and: [
-                    { 'payment.trxTime': temp },
-                    { 'payment.trxTime': { $exists: true } },
-                    { 'payment.trxTime': { $ne: 0 } },
-                    { 'payment.trxStartTime': { $exists: false } },
+                  'payment.trxStartTime': temp,
+                  $or: [
+                    { 'payment.trxTime': { $exists: false } },
+                    { 'payment.trxTime': 0 },
                   ],
                 },
-                {
-                  $and: [
-                    {
-                      $or: [
-                        { 'payment.trxTime': { $exists: false } },
-                        { 'payment.trxTime': 0 },
-                      ],
-                    },
-                    { 'payment.trxStartTime': temp },
-                    { 'payment.trxStartTime': { $exists: true } },
-                  ],
-                },
+                // {
+                //   $and: [
+                //     { 'payment.trxTime': temp },
+                //     { 'payment.trxTime': { $exists: true } },
+                //     { 'payment.trxTime': { $ne: 0 } },
+                //     { 'payment.trxStartTime': { $exists: false } },
+                //   ],
+                // },
+                // {
+                //   $and: [
+                //     {
+                //       $or: [
+                //         { 'payment.trxTime': { $exists: false } },
+                //         { 'payment.trxTime': 0 },
+                //       ],
+                //     },
+                //     { 'payment.trxStartTime': temp },
+                //     { 'payment.trxStartTime': { $exists: true } },
+                //   ],
+                // },
               ],
             });
           }
@@ -4247,6 +4259,10 @@ exports.api = {
                     },
                     {
                       'payment.trxStartTime': keyItem[2],
+                      $or: [
+                        { 'payment.trxTime': { $exists: false } },
+                        { 'payment.trxTime': 0 },
+                      ],
                     },
                   ],
                 });
@@ -4313,6 +4329,10 @@ exports.api = {
                 },
                 {
                   'payment.trxStartTime': keyJson[2],
+                  $or: [
+                    { 'payment.trxTime': { $exists: false } },
+                    { 'payment.trxTime': 0 },
+                  ],
                 },
               ],
             });
@@ -4326,7 +4346,6 @@ exports.api = {
     if (CAN_ORDER) {
       aggregateStr.push({ $sort: { 'payment.initPayMethod': 1 } });
     }
-    // console.log(' >>>>> matchStr=', JSON.stringify(matchStr));
     aggregateStr.push(projectStr);
     mongoose.connection.collection('application').aggregate(aggregateStr).toArray((err, docs) => {
       if (err) {
