@@ -246,13 +246,13 @@ exports.api = {
     }
 
     if (errMessage) {
-      printLogWithTime(`Request - getAttachmentUrl/${docId}/${attachmentId}`);
+      printLogWithTime(`Request - uploadAttachmentByBase64/${docId}/${attachmentId}`);
       printLogWithTime(`Result  - Failed - ${errMessage} - ${Date.now() - now}ms`);
       printLogWithTime('----------------------------------------------------------------------');
 
       res.json({ error: false, reason: errMessage });
     } else {
-      printLogWithTime(`Request - getAttuploadAttachmentByBase64achmentUrl/${docId}/${attachmentId}`);
+      printLogWithTime(`Request - uploadAttachmentByBase64/${docId}/${attachmentId}`);
       printLogWithTime(`Result  - Success - ${Date.now() - now}ms`);
       printLogWithTime('----------------------------------------------------------------------');
 
@@ -336,7 +336,7 @@ exports.api = {
       printLogWithTime('----------------------------------------------------------------------');
 
       res.json({ ok: false, message: errMessage });
-    } else {
+    } else {delAttachment/${docId}/${attachmentId}
       printLogWithTime(`Request - delAttachment/${docId}/${attachmentId}`);
       printLogWithTime(`Result  - Success - ${Date.now() - now}ms`);
       printLogWithTime('----------------------------------------------------------------------');
