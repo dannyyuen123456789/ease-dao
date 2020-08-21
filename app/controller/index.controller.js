@@ -336,7 +336,7 @@ exports.api = {
       printLogWithTime('----------------------------------------------------------------------');
 
       res.json({ ok: false, message: errMessage });
-    } else {delAttachment/${docId}/${attachmentId}
+    } else {
       printLogWithTime(`Request - delAttachment/${docId}/${attachmentId}`);
       printLogWithTime(`Result  - Success - ${Date.now() - now}ms`);
       printLogWithTime('----------------------------------------------------------------------');
