@@ -2983,8 +2983,8 @@ exports.api = {
         policyId: doc.policyNumber || doc.id,
         lifeAssuredName: _.get(doc, 'lifeAssuredName'),
         isShield,
-        iCid: _.get(doc, 'iCid', ''),
-        iCids: _.get(doc, 'iCids', [])
+        iCid: doc.iCid || '',
+        iCids: doc.iCids || []
       };
       return temp;
     };
