@@ -2897,7 +2897,8 @@ exports.api = {
         quotType: '$quotation.quotType',
         plans: '$quotation.plans',
         baseProductName: '$quotation.baseProductName',
-
+        iCid: '$iCid',
+        iCids: '$iCids',
         // isShield: isShield
       },
     };
@@ -2983,8 +2984,8 @@ exports.api = {
         policyId: doc.policyNumber || doc.id,
         lifeAssuredName: _.get(doc, 'lifeAssuredName'),
         isShield,
-        iCid: doc.iCid || '',
-        iCids: doc.iCids || []
+        iCid: _.get(doc, 'iCid', ''),
+        iCids: _.get(doc, 'iCids', [])
       };
       return temp;
     };
