@@ -79,36 +79,38 @@ exports.api = {
         resultTemp.total_rows = docs.length;
         resultTemp.rows = docs;
         printlnEndLog(docs.length, req, now);
-        _.forEach(resultTemp.rows, (obj) => {
+        const newRows = [];
+        const newRows2 = [];
+        _.forEach(docs, (obj) => {
           if (obj.value.pIdCardNo !== null) {
             // eslint-disable-next-line no-param-reassign
             obj.key = ['01', 'PH', obj.value.pIdCardNo];
-          } else if (obj.value.iIdCardNo !== null) {
+            newRows.push(obj);
+          }
+          if (obj.value.iIdCardNo !== null) {
             if (obj.value.sameAs === 'Y') {
               // eslint-disable-next-line no-param-reassign
-              obj.key = ['01', 'LA', obj.value.pIdCardNo];
+              obj.key = ['01', 'LA', obj.value.iIdCardNo];
+              newRows2.push(obj);
             } else {
               // eslint-disable-next-line no-param-reassign
-              obj.key = ['01', 'LA', obj.value.iIdCardNo];
+              obj.key = ['01', 'LA', obj.value.pIdCardNo];
+              newRows2.push(obj);
             }
           }
         });
         if (JSON.parse(keys)[1] === 'PH') {
-          const newRows = [];
-          _.forEach(resultTemp.rows, (obj) => {
-            if (obj.key[1] === 'PH') {
-              newRows.push(obj);
-            }
+          _.forEach(newRows, (obj) => {
+            // eslint-disable-next-line no-param-reassign
+            obj.key[1] = 'PH';
           });
           resultTemp.rows = newRows;
         } else if (JSON.parse(keys)[1] === 'LA') {
-          const newRows = [];
-          _.forEach(resultTemp.rows, (obj) => {
-            if (obj.key[1] === 'LA') {
-              newRows.push(obj);
-            }
+          _.forEach(newRows2, (obj) => {
+            // eslint-disable-next-line no-param-reassign
+            obj.key[1] = 'LA';
           });
-          resultTemp.rows = newRows;
+          resultTemp.rows = newRows2;
         }
         res.json(resultTemp);
       }
@@ -183,36 +185,38 @@ exports.api = {
         resultTemp.total_rows = docs.length;
         resultTemp.rows = docs;
         printlnEndLog(docs.length, req, now);
-        _.forEach(resultTemp.rows, (obj) => {
+        const newRows = [];
+        const newRows2 = [];
+        _.forEach(docs, (obj) => {
           if (obj.value.pIdCardNo !== null) {
             // eslint-disable-next-line no-param-reassign
             obj.key = ['01', 'PH', obj.value.pIdCardNo];
-          } else if (obj.value.iIdCardNo !== null) {
+            newRows.push(obj);
+          }
+          if (obj.value.iIdCardNo !== null) {
             if (obj.value.sameAs === 'Y') {
               // eslint-disable-next-line no-param-reassign
-              obj.key = ['01', 'LA', obj.value.pIdCardNo];
+              obj.key = ['01', 'LA', obj.value.iIdCardNo];
+              newRows2.push(obj);
             } else {
               // eslint-disable-next-line no-param-reassign
-              obj.key = ['01', 'LA', obj.value.iIdCardNo];
+              obj.key = ['01', 'LA', obj.value.pIdCardNo];
+              newRows2.push(obj);
             }
           }
         });
         if (JSON.parse(keys)[1] === 'PH') {
-          const newRows = [];
-          _.forEach(resultTemp.rows, (obj) => {
-            if (obj.key[1] === 'PH') {
-              newRows.push(obj);
-            }
+          _.forEach(newRows, (obj) => {
+            // eslint-disable-next-line no-param-reassign
+            obj.key[1] = 'PH';
           });
           resultTemp.rows = newRows;
         } else if (JSON.parse(keys)[1] === 'LA') {
-          const newRows = [];
-          _.forEach(resultTemp.rows, (obj) => {
-            if (obj.key[1] === 'LA') {
-              newRows.push(obj);
-            }
+          _.forEach(newRows2, (obj) => {
+            // eslint-disable-next-line no-param-reassign
+            obj.key[1] = 'LA';
           });
-          resultTemp.rows = newRows;
+          resultTemp.rows = newRows2;
         }
         res.json(resultTemp);
       }
