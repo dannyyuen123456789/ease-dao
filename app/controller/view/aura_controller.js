@@ -20,7 +20,6 @@ exports.api = {
       $project: {
         _id: 0, // 0 is not selected
         id: '$id',
-        key: ['01', '$applicationForm.values.proposer.personalInfo.idCardNo'],
         value: {
           type: '$type',
           isValid: '$isValid',
@@ -41,7 +40,7 @@ exports.api = {
           agentName: '$quotation.agent.name',
           iName: '$quotation.iFullName',
           iSmoke: '$quotation.iSmoke',
-          iIdCardNo: { $cond: { if: '$applicationForm.values.insured[0].personalInfo', then: '$applicationForm.values.insured.personalInfo.idCardNo', else: '$applicationForm.values.proposer.personalInfo.idCardNo' } },
+          iIdCardNo: { $cond: { if: '$applicationForm.values.insured[0].personalInfo', then: '$applicationForm.values.insured[0].personalInfo.idCardNo', else: '$applicationForm.values.proposer.personalInfo.idCardNo' } },
           iDob: '$quotation.iDob',
           pName: '$quotation.pFullName',
           pSmoke: '$quotation.pSmoke',
@@ -80,6 +79,37 @@ exports.api = {
         resultTemp.total_rows = docs.length;
         resultTemp.rows = docs;
         printlnEndLog(docs.length, req, now);
+        _.forEach(resultTemp.rows, (obj) => {
+          if (obj.value.pIdCardNo !== null) {
+            // eslint-disable-next-line no-param-reassign
+            obj.key = ['01', 'PH', obj.value.pIdCardNo];
+          } else if (obj.value.iIdCardNo !== null) {
+            if (obj.value.sameAs === 'Y') {
+              // eslint-disable-next-line no-param-reassign
+              obj.key = ['01', 'LA', obj.value.pIdCardNo];
+            } else {
+              // eslint-disable-next-line no-param-reassign
+              obj.key = ['01', 'LA', obj.value.iIdCardNo];
+            }
+          }
+        });
+        if (JSON.parse(keys)[1] === 'PH') {
+          const newRows = [];
+          _.forEach(resultTemp.rows, (obj) => {
+            if (obj.key[1] === 'PH') {
+              newRows.push(obj);
+            }
+          });
+          resultTemp.rows = newRows;
+        } else if (JSON.parse(keys)[1] === 'LA') {
+          const newRows = [];
+          _.forEach(resultTemp.rows, (obj) => {
+            if (obj.key[1] === 'LA') {
+              newRows.push(obj);
+            }
+          });
+          resultTemp.rows = newRows;
+        }
         res.json(resultTemp);
       }
     });
