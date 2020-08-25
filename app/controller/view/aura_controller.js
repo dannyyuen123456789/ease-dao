@@ -1,3 +1,4 @@
+/* eslint-disable no-param-reassign */
 import mongoose from 'mongoose';
 import printLogWithTime from '../../utils/log';
 
@@ -40,11 +41,11 @@ exports.api = {
           agentName: '$quotation.agent.name',
           iName: '$quotation.iFullName',
           iSmoke: '$quotation.iSmoke',
-          iIdCardNo: { $cond: { if: '$applicationForm.values.insured[0].personalInfo', then: '$applicationForm.values.insured[0].personalInfo.idCardNo', else: '$applicationForm.values.proposer.personalInfo.idCardNo' } },
+          insured: '$applicationForm.values.insured',
           iDob: '$quotation.iDob',
           pName: '$quotation.pFullName',
           pSmoke: '$quotation.pSmoke',
-          pIdCardNo: { $cond: { if: '$applicationForm.values.proposer.personalInfo', then: '$applicationForm.values.proposer.personalInfo.idCardNo', else: '' } },
+          pIdCardNo: { $cond: { if: '$applicationForm.values.proposer.personalInfo.idCardNo', then: '$applicationForm.values.proposer.personalInfo.idCardNo', else: '' } },
           pDob: '$quotation.pDob',
           baseProductCode: '$quotation.baseProductCode',
           baseProductName: '$quotation.baseProductName',
@@ -81,35 +82,33 @@ exports.api = {
         printlnEndLog(docs.length, req, now);
         const newRows = [];
         const newRows2 = [];
+        let iIdCardNo = null;
         _.forEach(docs, (obj) => {
+          if (obj.value.insured.length > 0 && obj.value.insured[0].personalInfo.idCardNo) {
+            iIdCardNo = _.get(obj.value.insured, obj.value.insured[0].personalInfo.idCardNo);
+          } else {
+            iIdCardNo = obj.value.pIdCardNo;
+          }
           if (obj.value.pIdCardNo !== null) {
-            // eslint-disable-next-line no-param-reassign
             obj.key = ['01', 'PH', obj.value.pIdCardNo];
+            obj.value.iIdCardNo = iIdCardNo;
+            delete obj.value.insured;
             newRows.push(obj);
           }
-          if (obj.value.iIdCardNo !== null) {
-            if (obj.value.sameAs === 'Y') {
-              // eslint-disable-next-line no-param-reassign
-              obj.key = ['01', 'LA', obj.value.iIdCardNo];
-              newRows2.push(obj);
-            } else {
-              // eslint-disable-next-line no-param-reassign
-              obj.key = ['01', 'LA', obj.value.pIdCardNo];
-              newRows2.push(obj);
-            }
+          if (iIdCardNo !== null || obj.value.sameAs === 'Y') {
+            obj.key = ['01', 'LA', iIdCardNo];
+            obj.value.iIdCardNo = iIdCardNo;
+            delete obj.value.insured;
+            newRows2.push(obj);
           }
         });
         if (JSON.parse(keys)[1] === 'PH') {
           _.forEach(newRows, (obj) => {
-            // eslint-disable-next-line no-param-reassign
             obj.key[1] = 'PH';
+            obj.key[2] = obj.value.pIdCardNo;
           });
           resultTemp.rows = newRows;
         } else if (JSON.parse(keys)[1] === 'LA') {
-          _.forEach(newRows2, (obj) => {
-            // eslint-disable-next-line no-param-reassign
-            obj.key[1] = 'LA';
-          });
           resultTemp.rows = newRows2;
         }
         res.json(resultTemp);
@@ -146,11 +145,11 @@ exports.api = {
           agentName: '$quotation.agent.name',
           iName: '$quotation.iFullName',
           iSmoke: '$quotation.iSmoke',
-          iIdCardNo: { $cond: { if: '$applicationForm.values.insured[0].personalInfo', then: '$applicationForm.values.insured[0].personalInfo.idCardNo', else: '$applicationForm.values.proposer.personalInfo.idCardNo' } },
+          insured: '$applicationForm.values.insured',
           iDob: '$quotation.iDob',
           pName: '$quotation.pFullName',
           pSmoke: '$quotation.pSmoke',
-          pIdCardNo: { $cond: { if: '$applicationForm.values.proposer.personalInfo', then: '$applicationForm.values.proposer.personalInfo.idCardNo', else: '' } },
+          pIdCardNo: { $cond: { if: '$applicationForm.values.proposer.personalInfo.idCardNo', then: '$applicationForm.values.proposer.personalInfo.idCardNo', else: '' } },
           pDob: '$quotation.pDob',
           baseProductCode: '$quotation.baseProductCode',
           baseProductName: '$quotation.baseProductName',
@@ -187,35 +186,33 @@ exports.api = {
         printlnEndLog(docs.length, req, now);
         const newRows = [];
         const newRows2 = [];
+        let iIdCardNo = null;
         _.forEach(docs, (obj) => {
+          if (obj.value.insured.length > 0 && obj.value.insured[0].personalInfo.idCardNo) {
+            iIdCardNo = _.get(obj.value.insured, obj.value.insured[0].personalInfo.idCardNo);
+          } else {
+            iIdCardNo = obj.value.pIdCardNo;
+          }
           if (obj.value.pIdCardNo !== null) {
-            // eslint-disable-next-line no-param-reassign
             obj.key = ['01', 'PH', obj.value.pIdCardNo];
+            obj.value.iIdCardNo = iIdCardNo;
+            delete obj.value.insured;
             newRows.push(obj);
           }
-          if (obj.value.iIdCardNo !== null) {
-            if (obj.value.sameAs === 'Y') {
-              // eslint-disable-next-line no-param-reassign
-              obj.key = ['01', 'LA', obj.value.iIdCardNo];
-              newRows2.push(obj);
-            } else {
-              // eslint-disable-next-line no-param-reassign
-              obj.key = ['01', 'LA', obj.value.pIdCardNo];
-              newRows2.push(obj);
-            }
+          if (iIdCardNo !== null || obj.value.sameAs === 'Y') {
+            obj.key = ['01', 'LA', iIdCardNo];
+            obj.value.iIdCardNo = iIdCardNo;
+            delete obj.value.insured;
+            newRows2.push(obj);
           }
         });
         if (JSON.parse(keys)[1] === 'PH') {
           _.forEach(newRows, (obj) => {
-            // eslint-disable-next-line no-param-reassign
             obj.key[1] = 'PH';
+            obj.key[2] = obj.value.pIdCardNo;
           });
           resultTemp.rows = newRows;
         } else if (JSON.parse(keys)[1] === 'LA') {
-          _.forEach(newRows2, (obj) => {
-            // eslint-disable-next-line no-param-reassign
-            obj.key[1] = 'LA';
-          });
           resultTemp.rows = newRows2;
         }
         res.json(resultTemp);
