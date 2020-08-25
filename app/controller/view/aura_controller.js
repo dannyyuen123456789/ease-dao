@@ -77,8 +77,6 @@ exports.api = {
         res.json({ status: 400, message: err.message });
       } else {
         const resultTemp = {};
-        resultTemp.total_rows = docs.length;
-        resultTemp.rows = docs;
         printlnEndLog(docs.length, req, now);
         const newRows = [];
         const newRows2 = [];
@@ -107,8 +105,10 @@ exports.api = {
             obj.key[1] = 'PH';
             obj.key[2] = obj.value.pIdCardNo;
           });
+          resultTemp.total_rows = newRows.length;
           resultTemp.rows = newRows;
         } else if (JSON.parse(keys)[1] === 'LA') {
+          resultTemp.total_rows = newRows2.length;
           resultTemp.rows = newRows2;
         }
         res.json(resultTemp);
@@ -181,8 +181,6 @@ exports.api = {
         res.json({ status: 400, message: err.message });
       } else {
         const resultTemp = {};
-        resultTemp.total_rows = docs.length;
-        resultTemp.rows = docs;
         printlnEndLog(docs.length, req, now);
         const newRows = [];
         const newRows2 = [];
@@ -211,8 +209,10 @@ exports.api = {
             obj.key[1] = 'PH';
             obj.key[2] = obj.value.pIdCardNo;
           });
+          resultTemp.total_rows = newRows.length;
           resultTemp.rows = newRows;
         } else if (JSON.parse(keys)[1] === 'LA') {
+          resultTemp.total_rows = newRows2.length;
           resultTemp.rows = newRows2;
         }
         res.json(resultTemp);
