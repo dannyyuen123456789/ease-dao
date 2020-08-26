@@ -83,7 +83,7 @@ exports.api = {
         let iIdCardNo = null;
         _.forEach(docs, (obj) => {
           if (obj.value.insured.length > 0 && obj.value.insured[0].personalInfo.idCardNo) {
-            iIdCardNo = _.get(obj.value.insured, obj.value.insured[0].personalInfo.idCardNo);
+            iIdCardNo = obj.value.insured[0].personalInfo.idCardNo;
           } else {
             iIdCardNo = obj.value.pIdCardNo;
           }
