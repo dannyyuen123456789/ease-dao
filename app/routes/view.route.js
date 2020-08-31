@@ -7,7 +7,6 @@ const $main = require('../controller/view/main_controller.js');
 const $approval = require('../controller/view/approval_controller.js');
 const $dataAnalyze = require('../controller/view/dataAnalyze_controller.js');
 const $aura = require('../controller/view/aura_controller.js');
-
 const $dataSync = require('../controller/view/dataSync_controller.js');
 const $invalidateViews = require('../controller/view/invalidateViews_controller.js');
 const $report = require('../controller/view/report_controller.js');
@@ -55,8 +54,6 @@ router.get('/main/_view/validBundleById', $check.api.check, $main.api.validBundl
 
 router.get('/dataSync/_view/agentDocuments', $check.api.check, $dataSync.api.agentDocuments);
 router.get('/approval/_view/approvalDetails', $check.api.check, $approval.api.approvalDetails);
-router.get('/aura/_view/SummaryAppsById', $check.api.check, $aura.api.summaryAppsByID);
-router.get('/aura/_view/summaryAppsByNameDob', $check.api.check, $aura.api.summaryAppsByNameDob);
 
 router.get('/dataAnalyze/_view/documentByLstChgDate', $check.api.check, $dataAnalyze.api.documentByLstChgDate);
 router.get('/dataAnalyze/_view/documentsWithoutLstChgDate', $check.api.check, $dataAnalyze.api.documentsWithoutLstChgDate);
@@ -73,5 +70,7 @@ router.get('/report/_view/allChannelAppCases', $check.api.check, $report.api.all
 router.get('/report/_view/allChannelPolicyCases', $check.api.check, $report.api.allChannelPolicyCases);
 router.get('/report/_view/webvsiosReport', $check.api.check, $report.api.webvsiosReport);
 
+router.get('/aura/_view/SummaryAppsById', $check.api.check, $aura.api.summaryAppsByID);
+router.get('/aura/_view/summaryAppsByNameDob', $check.api.check, $aura.api.summaryAppsByNameDob);
 
 module.exports = router;
