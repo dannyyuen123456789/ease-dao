@@ -1,6 +1,6 @@
 {
   "name": "ease-dao",
-  "version": "25.99.0",
+  "version": "25.99.2",
   "private": true,
   "scripts": {
     "dev": "cross-env NODE_ENV=dev nodemon --exec babel-node ./bin/www",
